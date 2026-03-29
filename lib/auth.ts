@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 import { type User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
@@ -82,6 +83,19 @@ export async function requireCurrentSession() {
     throw new Error("Unauthenticated");
   }
   return session;
+}
+
+export function setSessionCookie(
+  response: NextResponse,
+  payload: SessionPayload
+) {
+  response.cookies.set(SESSION_COOKIE_NAME, encodeSessionCookie(payload), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 8
+  });
 }
 
 export { DEMO_PASSWORD, encodeSessionCookie, isOwner, isWorker, SESSION_COOKIE_NAME };

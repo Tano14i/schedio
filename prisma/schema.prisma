@@ -244,7 +244,8 @@ model User {
   role         UserRole
   name         String
   email        String   @unique
-  passwordHash String
+  googleId     String?  @unique
+  passwordHash String?
   createdAt    DateTime @default(now())
   jobs         Job[]    @relation("AssignedJobs")
   availabilitySlots AvailabilitySlot[]

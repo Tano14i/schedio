@@ -2,6 +2,19 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+const LOGIN_ERROR_MESSAGES: Record<string, string> = {
+  invalid_credentials:
+    "Credenziali non valide. Usa uno degli account demo sotto con password demo1234.",
+  google_not_configured:
+    "Google access non configurato. Aggiungi GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET nelle variabili ambiente.",
+  google_auth_failed:
+    "Accesso con Google non riuscito. Riprova tra un attimo.",
+  missing_email:
+    "Google non ha restituito un indirizzo email verificato per questo account.",
+  account_conflict:
+    "Esiste gia un account con questa email collegato a un altro profilo Google."
+};
+
 export default async function LoginPage({
   searchParams
 }: {
@@ -9,7 +22,10 @@ export default async function LoginPage({
 }) {
   const resolvedSearchParams = await searchParams;
   const next = resolvedSearchParams.next ?? "/";
-  const hasError = resolvedSearchParams.error === "invalid_credentials";
+  const errorMessage = resolvedSearchParams.error
+    ? LOGIN_ERROR_MESSAGES[resolvedSearchParams.error] || LOGIN_ERROR_MESSAGES.google_auth_failed
+    : null;
+  const googleUrl = `/api/auth/google/start?next=${encodeURIComponent(next)}`;
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
@@ -36,18 +52,33 @@ export default async function LoginPage({
         </div>
 
         <div className="p-8 lg:p-10">
-          <p className="text-sm font-medium text-primary-600">Demo access</p>
+          <p className="text-sm font-medium text-primary-600">Accesso</p>
           <h2 className="mt-2 text-3xl font-semibold text-ink">Accedi</h2>
           <p className="mt-2 text-sm text-slate-500">
-            Accesso protetto con ruoli base. Usa un account owner o worker della demo.
+            Entra con Google oppure usa gli account demo con ruoli base owner e worker.
           </p>
 
-          {hasError ? (
+          {errorMessage ? (
             <div className="mt-4 rounded-2xl border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700">
-              Credenziali non valide. Usa uno degli account demo sotto con password{" "}
-              <span className="font-medium">demo1234</span>.
+              {errorMessage}
             </div>
           ) : null}
+
+          <Link
+            href={googleUrl}
+            className="mt-6 inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-medium text-ink transition hover:border-brand-300 hover:bg-slate-50"
+          >
+            <span className="grid h-5 w-5 place-items-center rounded-full border border-slate-300 text-[11px] font-semibold">
+              G
+            </span>
+            Continua con Google
+          </Link>
+
+          <div className="mt-4 flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-slate-400">
+            <span className="h-px flex-1 bg-slate-200" />
+            oppure
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
 
           <div className="mt-6 grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
             <div>

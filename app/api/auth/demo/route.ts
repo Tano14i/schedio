@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { DEMO_PASSWORD, encodeSessionCookie, SESSION_COOKIE_NAME } from "@/lib/auth";
+import { DEMO_PASSWORD, setSessionCookie } from "@/lib/auth";
 import { getPostLoginPath } from "@/lib/authz";
 
 export async function POST(request: Request) {
@@ -29,15 +29,10 @@ export async function POST(request: Request) {
 
   const redirectTarget = getPostLoginPath(user.role, next);
   const response = NextResponse.redirect(new URL(redirectTarget, request.url), 303);
-  response.cookies.set(SESSION_COOKIE_NAME, encodeSessionCookie({
+  setSessionCookie(response, {
     userId: user.id,
     companyId: user.companyId,
     role: user.role
-  }), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 8
   });
 
   return response;

@@ -29,15 +29,28 @@ Il progetto non e piu solo uno scaffold UI. Oggi include:
 - worker: `sara@schedio.it`
 - password: `demo1234`
 
+## Accesso Google
+
+Puoi abilitare anche `Continua con Google` impostando:
+
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+
+Callback OAuth da registrare nel progetto Google Cloud:
+
+- `http://localhost:3000/api/auth/google/callback`
+- `https://TUO-DOMINIO/api/auth/google/callback`
+
 ## Avvio locale
 
 1. Copia `.env.example` in `.env`
 2. Configura `DATABASE_URL`
 3. Configura `NEXT_PUBLIC_APP_URL` se vuoi testare link pubblici da un host diverso
-4. Esegui `npx prisma generate`
-5. Esegui `npx prisma migrate deploy`
-6. Esegui `npm.cmd run seed`
-7. Esegui `npm.cmd run dev`
+4. Se vuoi usare Google, configura anche `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`
+5. Esegui `npx prisma generate`
+6. Esegui `npx prisma migrate deploy`
+7. Esegui `npm.cmd run seed`
+8. Esegui `npm.cmd run dev`
 
 Apri poi [http://localhost:3000](http://localhost:3000).
 
@@ -59,6 +72,8 @@ Schedio e pronto per una beta privata online. Per il primo deploy:
    - `WHATSAPP_ACCESS_TOKEN`
    - `WHATSAPP_PHONE_NUMBER_ID`
    - `WHATSAPP_GRAPH_VERSION`
+   - `GOOGLE_CLIENT_ID`
+   - `GOOGLE_CLIENT_SECRET`
 3. esegui migrate e seed sul database online
 4. pubblica l'app Next.js su Vercel
 
