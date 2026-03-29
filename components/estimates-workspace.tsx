@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/button";
+import { Button, ButtonLink } from "@/components/button";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
@@ -427,6 +427,13 @@ export function EstimatesWorkspace({
                 >
                   Invia al cliente
                 </Button>
+                <ButtonLink
+                  href={`/public/estimates/${selectedEstimate.publicToken}`}
+                  variant="secondary"
+                  className="w-full sm:w-auto"
+                >
+                  Apri pagina cliente
+                </ButtonLink>
                 {selectedEstimate.status === "accepted" ? (
                   <Button
                     variant="secondary"
