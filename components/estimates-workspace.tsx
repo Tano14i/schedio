@@ -166,29 +166,71 @@ export function EstimatesWorkspace({
         <MiniStat label="Follow-up" value={`${estimateStats.followUp}`} detail="da non perdere" />
       </div>
 
+      {selectedEstimate ? (
+        <SectionCard
+          className="sticky top-3 z-20 border-primary-100 bg-white/95 backdrop-blur xl:static xl:bg-white"
+          title="Azioni rapide"
+          subtitle="Muovi il preventivo selezionato senza entrare ogni volta nel composer."
+        >
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Meta label="Cliente" value={selectedCustomerName} />
+              <Meta label="Preventivo" value={selectedEstimate.number} />
+              <Meta label="Stato" value={statusLabel(selectedEstimate.status)} />
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+              <Button
+                className="w-full sm:w-auto"
+                disabled={isPending}
+                onClick={() => sendEstimate(selectedEstimate.id)}
+              >
+                {selectedEstimate.status === "draft" ? "Invia al cliente" : "Reinvia"}
+              </Button>
+              <ButtonLink
+                href={`/public/estimates/${selectedEstimate.publicToken}`}
+                variant="secondary"
+                className="w-full sm:w-auto"
+              >
+                Apri pagina cliente
+              </ButtonLink>
+              {selectedEstimate.status === "accepted" ? (
+                <Button
+                  variant="secondary"
+                  className="w-full sm:w-auto"
+                  disabled={isPending}
+                  onClick={() => createInvoiceDraft(selectedEstimate.id)}
+                >
+                  Crea fattura
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        </SectionCard>
+      ) : null}
+
       <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
         <SectionCard
           className="order-2 xl:order-1"
           title="Lista preventivi"
-          subtitle="Apri una bozza, controlla lo stato e invia senza perdere contesto."
+          subtitle="Filtra l'elenco e apri il preventivo da lavorare adesso."
           aside={
             <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
               {[
-                ["all", "Tutti"],
-                ["waiting", "In attesa"],
-                ["viewed", "Visti"],
-                ["follow_up", "Da seguire"],
-                ["accepted", "Accettati"],
-                ["rejected", "Rifiutati"]
+                ["all", `Tutti (${estimates.length})`],
+                ["waiting", `In attesa (${estimateStats.waiting})`],
+                ["viewed", `Visti (${estimates.filter((estimate) => estimate.status === "viewed").length})`],
+                ["follow_up", `Da seguire (${estimateStats.followUp})`],
+                ["accepted", `Accettati (${estimates.filter((estimate) => estimate.status === "accepted").length})`],
+                ["rejected", `Rifiutati (${estimates.filter((estimate) => estimate.status === "rejected").length})`]
               ].map(([value, label]) => (
                 <button
                   key={value}
                   type="button"
                   onClick={() => setFilter(value as typeof filter)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-                    filter === value
-                      ? "bg-primary-100 text-primary-700"
-                      : "bg-neutral-100 text-neutral-600"
+                    className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium ${
+                      filter === value
+                        ? "bg-primary-100 text-primary-700"
+                        : "bg-neutral-100 text-neutral-600"
                   }`}
                 >
                   {label}
@@ -557,6 +599,19 @@ function followUpBadgeLabel(status: "scheduled" | "sent" | "canceled" | "failed"
     sent: "Follow-up inviato",
     canceled: "Follow-up annullato",
     failed: "Follow-up fallito"
+  };
+
+  return labels[status];
+}
+
+function statusLabel(status: Estimate["status"]) {
+  const labels: Record<Estimate["status"], string> = {
+    draft: "Bozza",
+    sent: "Inviato",
+    viewed: "Visto",
+    accepted: "Accettato",
+    rejected: "Rifiutato",
+    expired: "Scaduto"
   };
 
   return labels[status];
