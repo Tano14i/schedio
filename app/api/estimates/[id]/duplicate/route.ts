@@ -1,0 +1,54 @@
+import { jsonCreated } from "@/lib/api";
+import { prisma } from "@/lib/prisma";
+import { calculateEstimateTotals } from "@/lib/estimates-server";
+
+export async function POST(_: Request, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params;
+  const existing = await prisma.estimate.findUniqueOrThrow({
+    where: { id },
+    include: { items: { orderBy: { sortOrder: "asc" } } }
+  });
+
+  const totals = calculateEstimateTotals(
+    existing.items.map((item) => ({
+      label: item.label,
+      description: item.description,
+      qty: item.qty,
+      unitPrice: item.unitPrice,
+      sortOrder: item.sortOrder
+    }))
+  );
+  const number = `Q-2026-${String((await prisma.estimate.count({ where: { companyId: existing.companyId } })) + 1).padStart(3, "0")}`;
+
+  const item = await prisma.estimate.create({
+    data: {
+      companyId: existing.companyId,
+      customerId: existing.customerId,
+      leadId: existing.leadId,
+      jobId: existing.jobId,
+      number,
+      status: "DRAFT",
+      title: existing.title,
+      introText: existing.introText,
+      scopeSummary: existing.scopeSummary,
+      notes: existing.notes,
+      terms: existing.terms,
+      validUntil: existing.validUntil,
+      subtotal: totals.subtotal,
+      tax: totals.tax,
+      total: totals.total,
+      publicToken: crypto.randomUUID(),
+      items: {
+        create: totals.items
+      }
+    },
+    include: {
+      items: { orderBy: { sortOrder: "asc" } }
+    }
+  });
+
+  return jsonCreated({
+    message: "Preventivo duplicato in bozza.",
+    item
+  });
+}

@@ -1,0 +1,579 @@
+"use client";
+
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/button";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { SectionCard } from "@/components/section-card";
+import { StatusBadge } from "@/components/status-badge";
+import type { Customer, Estimate, EstimateTemplate, Lead } from "@/lib/types";
+import { formatCompactDate, formatCurrency } from "@/lib/utils";
+
+type EstimateRecord = Estimate & {
+  customerName?: string;
+};
+
+export function EstimatesWorkspace({
+  initialCustomers,
+  initialEstimates,
+  initialLeads,
+  initialTemplates
+}: {
+  initialCustomers: Customer[];
+  initialEstimates: EstimateRecord[];
+  initialLeads: Lead[];
+  initialTemplates: EstimateTemplate[];
+}) {
+  const router = useRouter();
+  const [estimates, setEstimates] = useState(initialEstimates);
+  const [selectedId, setSelectedId] = useState(initialEstimates[0]?.id ?? "");
+  const [filter, setFilter] = useState<"all" | "waiting" | "viewed" | "follow_up" | "accepted" | "rejected">("all");
+  const [feedback, setFeedback] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  const selectedEstimate = useMemo(
+    () => estimates.find((estimate) => estimate.id === selectedId) ?? estimates[0] ?? null,
+    [estimates, selectedId]
+  );
+  const selectedLead = initialLeads.find((lead) => lead.id === selectedEstimate?.leadId);
+  const selectedCustomerName =
+    selectedEstimate?.customerName ??
+    initialCustomers.find((customer) => customer.id === selectedEstimate?.customerId)?.fullName ??
+    "Cliente";
+  const filteredEstimates = estimates.filter((estimate) => {
+    if (filter === "all") return true;
+    if (filter === "waiting") return ["sent", "draft"].includes(estimate.status);
+    if (filter === "viewed") return estimate.status === "viewed";
+    if (filter === "follow_up") return estimate.followUpStatus === "scheduled" || estimate.followUpStatus === "failed";
+    if (filter === "accepted") return estimate.status === "accepted";
+    return estimate.status === "rejected";
+  });
+  const estimateStats = {
+    total: estimates.length,
+    waiting: estimates.filter((estimate) => ["draft", "sent"].includes(estimate.status)).length,
+    followUp: estimates.filter(
+      (estimate) => estimate.followUpStatus === "scheduled" || estimate.followUpStatus === "failed"
+    ).length
+  };
+
+  function updateLocalEstimate(next: EstimateRecord) {
+    setEstimates((current) => current.map((estimate) => (estimate.id === next.id ? next : estimate)));
+    setSelectedId(next.id);
+  }
+
+  async function patchEstimate(payload: Partial<EstimateRecord>) {
+    if (!selectedEstimate) {
+      return;
+    }
+
+    setFeedback("");
+    startTransition(async () => {
+      const response = await fetch(`/api/estimates/${selectedEstimate.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setFeedback(result?.message ?? "Qualcosa non ha funzionato, riprova.");
+        return;
+      }
+
+      updateLocalEstimate({
+        ...result.item,
+        status: result.item.status.toLowerCase(),
+        customerName: selectedCustomerName
+      });
+      setFeedback("Preventivo aggiornato.");
+    });
+  }
+
+  async function sendEstimate(estimateId: string) {
+    setFeedback("");
+    startTransition(async () => {
+      const currentEstimate = estimates.find((estimate) => estimate.id === estimateId);
+      if (!currentEstimate) {
+        setFeedback("Preventivo non trovato.");
+        return;
+      }
+
+      const saveResponse = await fetch(`/api/estimates/${estimateId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: currentEstimate.title,
+          scopeSummary: currentEstimate.scopeSummary,
+          notes: currentEstimate.notes,
+          terms: currentEstimate.terms,
+          items: currentEstimate.items
+        })
+      });
+
+      if (!saveResponse.ok) {
+        const saveResult = await saveResponse.json().catch(() => null);
+        setFeedback(saveResult?.message ?? "Impossibile salvare la bozza prima dell'invio.");
+        return;
+      }
+
+      const response = await fetch(`/api/estimates/${estimateId}/send`, { method: "POST" });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setFeedback(result?.message ?? "Impossibile inviare il preventivo.");
+        return;
+      }
+
+      updateLocalEstimate({
+        ...result.item,
+        status: result.item.status.toLowerCase(),
+        customerName:
+          estimates.find((estimate) => estimate.id === estimateId)?.customerName ?? selectedCustomerName
+      });
+      setFeedback("Preventivo inviato al cliente.");
+    });
+  }
+
+  async function createInvoiceDraft(estimateId: string) {
+    setFeedback("");
+    startTransition(async () => {
+      const response = await fetch(`/api/estimates/${estimateId}/create-invoice-draft`, { method: "POST" });
+      const result = await response.json();
+
+      if (!response.ok) {
+        setFeedback(result?.message ?? "Impossibile creare la bozza fattura.");
+        return;
+      }
+
+      setFeedback("Bozza fattura creata.");
+      router.push("/invoices");
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Preventivi"
+        title="Da sopralluogo completato a preventivo inviato in pochi click."
+        description="Apri una bozza precompilata, rivedi i dettagli e inviala al cliente senza partire da una pagina vuota."
+      />
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <MiniStat label="Totali" value={`${estimateStats.total}`} detail="in elenco" />
+        <MiniStat label="In attesa" value={`${estimateStats.waiting}`} detail="da inviare o seguire" />
+        <MiniStat label="Follow-up" value={`${estimateStats.followUp}`} detail="da non perdere" />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+        <SectionCard
+          title="Lista preventivi"
+          subtitle="Apri una bozza, controlla lo stato e invia senza perdere contesto."
+          aside={
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+              {[
+                ["all", "Tutti"],
+                ["waiting", "In attesa"],
+                ["viewed", "Visti"],
+                ["follow_up", "Da seguire"],
+                ["accepted", "Accettati"],
+                ["rejected", "Rifiutati"]
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFilter(value as typeof filter)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium ${
+                    filter === value
+                      ? "bg-primary-100 text-primary-700"
+                      : "bg-neutral-100 text-neutral-600"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          }
+        >
+          {filteredEstimates.length ? (
+            <div className="space-y-3">
+              {filteredEstimates.map((estimate) => {
+                const active = selectedEstimate?.id === estimate.id;
+                const customerName =
+                  estimate.customerName ??
+                  initialCustomers.find((customer) => customer.id === estimate.customerId)?.fullName ??
+                  "-";
+
+                return (
+                  <div
+                    key={estimate.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedId(estimate.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setSelectedId(estimate.id);
+                      }
+                    }}
+                    className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
+                      active
+                        ? "border-primary-300 bg-primary-50 shadow-soft"
+                        : "border-neutral-200 bg-white hover:border-primary-200 hover:bg-neutral-50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-ink">{estimate.number}</p>
+                        <p className="mt-1 text-sm text-neutral-700">{customerName}</p>
+                      </div>
+                      <StatusBadge status={estimate.status} />
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <Meta label="Totale" value={formatCurrency(estimate.total)} />
+                      <Meta
+                        label="Inviato"
+                        value={estimate.sentAt ? formatCompactDate(estimate.sentAt) : "Bozza"}
+                      />
+                      <Meta label="Visto" value={estimate.viewedAt ? "Si" : "No"} />
+                      <Meta
+                        label="Titolo"
+                        value={estimate.title ?? "Preventivo da completare"}
+                      />
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {estimate.followUpStatus ? (
+                        <span className="rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
+                          {followUpBadgeLabel(estimate.followUpStatus)}
+                        </span>
+                      ) : null}
+                      {estimate.followUpReason ? (
+                        <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">
+                          {estimate.followUpReason === "no_view" ? "Nessuna risposta" : "Visto non accettato"}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Button
+                        size="md"
+                        variant={estimate.status === "draft" ? "primary" : "secondary"}
+                        disabled={isPending}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          sendEstimate(estimate.id);
+                        }}
+                      >
+                        {estimate.status === "draft" ? "Invia al cliente" : "Reinvia"}
+                      </Button>
+                      {estimate.status === "accepted" ? (
+                        <Button
+                          size="md"
+                          variant="secondary"
+                          disabled={isPending}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            createInvoiceDraft(estimate.id);
+                          }}
+                        >
+                          Crea fattura
+                        </Button>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState
+              title="Nessun preventivo ancora"
+              description="Completa un sopralluogo e crea la prima bozza in un click."
+            />
+          )}
+        </SectionCard>
+
+        <SectionCard title="Composer preventivo" subtitle="Precompilato dai dati del sopralluogo.">
+          {selectedEstimate ? (
+            <div className="space-y-5">
+              <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 md:grid-cols-[minmax(0,1fr)_220px]">
+                <div>
+                  <p className="text-sm font-medium text-ink">Cliente</p>
+                  <p className="mt-1 text-base text-neutral-700">{selectedCustomerName}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <InfoChip label={selectedEstimate.number} />
+                    {selectedEstimate.sentAt ? (
+                      <InfoChip label={`Inviato ${formatCompactDate(selectedEstimate.sentAt)}`} />
+                    ) : (
+                      <InfoChip label="Bozza non inviata" />
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-ink">Stato</p>
+                  <div className="mt-2">
+                    <StatusBadge status={selectedEstimate.status} />
+                  </div>
+                </div>
+              </div>
+
+              <Field
+                label="Titolo preventivo"
+                value={selectedEstimate.title ?? ""}
+                onChange={(value) => updateLocalEstimate({ ...selectedEstimate, title: value })}
+              />
+              <Field
+                label="Riepilogo intervento"
+                value={selectedEstimate.scopeSummary ?? ""}
+                textarea
+                onChange={(value) => updateLocalEstimate({ ...selectedEstimate, scopeSummary: value })}
+              />
+              <Field
+                label="Note"
+                value={selectedEstimate.notes ?? ""}
+                textarea
+                onChange={(value) => updateLocalEstimate({ ...selectedEstimate, notes: value })}
+              />
+              <Field
+                label="Termini"
+                value={selectedEstimate.terms ?? ""}
+                textarea
+                onChange={(value) => updateLocalEstimate({ ...selectedEstimate, terms: value })}
+              />
+
+              <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Voci preventivo</p>
+                  <p className="text-xs text-neutral-500">Quantita e prezzo modificabili</p>
+                </div>
+                <div className="mt-3 space-y-3">
+                  {selectedEstimate.items.map((item, index) => (
+                    <div
+                      key={item.id}
+                      className="grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_minmax(110px,0.7fr)_minmax(140px,0.7fr)]"
+                    >
+                      <input
+                        className="min-w-0 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                        value={item.label}
+                        onChange={(event) => {
+                          const items = [...selectedEstimate.items];
+                          items[index] = { ...items[index], label: event.target.value };
+                          updateLocalEstimate({ ...selectedEstimate, items });
+                        }}
+                      />
+                      <input
+                        type="number"
+                        className="min-w-0 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                        value={item.qty}
+                        onChange={(event) => {
+                          const items = [...selectedEstimate.items];
+                          items[index] = { ...items[index], qty: Number(event.target.value) };
+                          updateLocalEstimate({ ...selectedEstimate, items });
+                        }}
+                      />
+                      <input
+                        type="number"
+                        className="min-w-0 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                        value={item.unitPrice}
+                        onChange={(event) => {
+                          const items = [...selectedEstimate.items];
+                          items[index] = { ...items[index], unitPrice: Number(event.target.value) };
+                          updateLocalEstimate({ ...selectedEstimate, items });
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-4 md:grid-cols-3">
+                <Meta label="Tipo lavoro" value={selectedLead?.serviceType ?? "n/d"} />
+                <Meta
+                  label="Validita"
+                  value={selectedEstimate.validUntil ? formatCompactDate(selectedEstimate.validUntil) : "Da definire"}
+                />
+                <Meta
+                  label="Totale"
+                  value={formatCurrency(
+                    selectedEstimate.items.reduce((sum, item) => sum + item.qty * item.unitPrice, 0)
+                  )}
+                  valueClassName="text-lg font-semibold text-ink"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:flex sm:flex-wrap">
+                <Button
+                  variant="secondary"
+                  className="w-full sm:w-auto"
+                  disabled={isPending}
+                  onClick={() =>
+                    patchEstimate({
+                      title: selectedEstimate.title,
+                      scopeSummary: selectedEstimate.scopeSummary,
+                      notes: selectedEstimate.notes,
+                      terms: selectedEstimate.terms,
+                      items: selectedEstimate.items
+                    })
+                  }
+                >
+                  Salva bozza
+                </Button>
+                <Button
+                  className="w-full sm:w-auto"
+                  disabled={isPending}
+                  onClick={() => sendEstimate(selectedEstimate.id)}
+                >
+                  Invia al cliente
+                </Button>
+                {selectedEstimate.status === "accepted" ? (
+                  <Button
+                    variant="secondary"
+                    className="w-full sm:w-auto"
+                    disabled={isPending}
+                    onClick={() => createInvoiceDraft(selectedEstimate.id)}
+                  >
+                    Crea fattura
+                  </Button>
+                ) : null}
+              </div>
+
+              {initialTemplates.length ? (
+                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Template suggeriti</p>
+                  <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+                    {initialTemplates.map((template) => (
+                      <button
+                        key={template.id}
+                        type="button"
+                        className="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-700"
+                        onClick={() =>
+                          updateLocalEstimate({
+                            ...selectedEstimate,
+                            title: selectedEstimate.title || `Preventivo ${template.name}`,
+                            introText: template.introText,
+                            scopeSummary: selectedEstimate.scopeSummary || template.scopeSummary,
+                            notes: selectedEstimate.notes || template.notes,
+                            terms: selectedEstimate.terms || template.terms,
+                            items: template.itemsJson.map((item, index) => ({
+                              id: `tmp-${index}`,
+                              label: item.label,
+                              description: item.description,
+                              qty: item.qty,
+                              unitPrice: item.unitPrice
+                            }))
+                          })
+                        }
+                      >
+                        {template.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {feedback ? <p className="text-sm text-primary-700">{feedback}</p> : null}
+            </div>
+          ) : (
+            <EmptyState
+              title="Seleziona un preventivo"
+              description="Qui puoi rifinire la bozza precompilata e inviarla al cliente."
+            />
+          )}
+        </SectionCard>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  textarea,
+  readOnly
+}: {
+  label: string;
+  value: string;
+  onChange?: (value: string) => void;
+  textarea?: boolean;
+  readOnly?: boolean;
+}) {
+  const shared = "mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink";
+
+  return (
+    <label className="block">
+      <span className="text-sm font-medium text-ink">{label}</span>
+      {textarea ? (
+        <textarea
+          className={`${shared} min-h-[96px]`}
+          value={value}
+          readOnly={readOnly}
+          onChange={(event) => onChange?.(event.target.value)}
+        />
+      ) : (
+        <input
+          className={shared}
+          value={value}
+          readOnly={readOnly}
+          onChange={(event) => onChange?.(event.target.value)}
+        />
+      )}
+    </label>
+  );
+}
+
+function Meta({
+  label,
+  value,
+  valueClassName
+}: {
+  label: string;
+  value: string;
+  valueClassName?: string;
+}) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">{label}</p>
+      <p className={`mt-1 text-sm text-neutral-700 ${valueClassName ?? ""}`}>{value}</p>
+    </div>
+  );
+}
+
+function followUpBadgeLabel(status: "scheduled" | "sent" | "canceled" | "failed") {
+  const labels = {
+    scheduled: "Follow-up schedulato",
+    sent: "Follow-up inviato",
+    canceled: "Follow-up annullato",
+    failed: "Follow-up fallito"
+  };
+
+  return labels[status];
+}
+
+function MiniStat({
+  label,
+  value,
+  detail
+}: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-soft">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-ink">{value}</p>
+      <p className="text-sm text-neutral-600">{detail}</p>
+    </div>
+  );
+}
+
+function InfoChip({ label }: { label: string }) {
+  return (
+    <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-700 shadow-soft">
+      {label}
+    </span>
+  );
+}

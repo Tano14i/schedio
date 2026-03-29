@@ -1,0 +1,7 @@
+import "./whatsapp-p0.test";
+import "./lead-qualification.test";
+import "./beta-core-flows.test";
+import "./authz-role.test";
+import "./estimate-lifecycle.test";
+import "./estimate-followup-p3.test";
+import "./invoice-lifecycle-p4.test";

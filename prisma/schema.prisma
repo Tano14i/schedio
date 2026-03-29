@@ -1,0 +1,676 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  OWNER
+  WORKER
+}
+
+enum LeadSource {
+  MANUAL
+  WEB_FORM
+  PHONE
+  WHATSAPP
+  REFERRAL
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  SCHEDULED
+  QUOTED
+  WON
+  LOST
+}
+
+enum QualificationStatus {
+  UNQUALIFIED
+  QUALIFIED
+  NEEDS_CLARIFICATION
+  OUT_OF_AREA
+  LOW_PRIORITY
+  REJECTED
+}
+
+enum ServiceAreaMatch {
+  UNKNOWN
+  INSIDE
+  OUTSIDE
+}
+
+enum JobSize {
+  UNKNOWN
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum BudgetRange {
+  UNKNOWN
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum NextBestAction {
+  PROPOSE_VISIT
+  ASK_CLARIFICATION
+  REJECT
+  DEFER
+}
+
+enum QualificationConfidence {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum JobType {
+  ESTIMATE_VISIT
+  JOB
+}
+
+enum JobStatus {
+  SCHEDULED
+  ON_THE_WAY
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+}
+
+enum JobCompletionStatus {
+  PENDING
+  COMPLETED
+}
+
+enum EstimateStatus {
+  DRAFT
+  SENT
+  VIEWED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  VOID
+}
+
+enum InvoiceReminderStatus {
+  SCHEDULED
+  SENT
+  CANCELED
+  FAILED
+}
+
+enum InvoiceReminderReason {
+  BEFORE_DUE
+  OVERDUE
+}
+
+enum ReviewRequestStatus {
+  PENDING
+  SENT
+  CLICKED
+  CANCELED
+}
+
+enum AutomationType {
+  APPOINTMENT_CONFIRMATION
+  APPOINTMENT_REMINDER
+  ESTIMATE_FOLLOWUP
+  INVOICE_REMINDER
+  REVIEW_REQUEST
+}
+
+enum AutomationChannel {
+  SMS
+  EMAIL
+}
+
+enum AutomationLogStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum WhatsAppThreadStatus {
+  OPEN
+  WAITING_PHOTOS
+  WAITING_INTERNAL_APPROVAL
+  WAITING_CUSTOMER_CONFIRMATION
+  CLOSED
+}
+
+enum WhatsAppMessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum WhatsAppMessageType {
+  TEXT
+  INTERACTIVE_BUTTON
+  INTERACTIVE_LIST
+  TEMPLATE
+  IMAGE
+  DOCUMENT
+  SYSTEM
+}
+
+enum WhatsAppMessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum MessageTemplateKind {
+  META_TEMPLATE
+  SESSION_TEXT
+}
+
+enum AvailabilitySlotStatus {
+  FREE
+  RESERVED
+  BOOKED
+  BLOCKED
+}
+
+enum AvailabilitySlotSource {
+  MANUAL
+  WORKING_HOURS
+  GENERATED
+}
+
+enum SchedulingProposalStatus {
+  DRAFT
+  PENDING_HANDYMAN_APPROVAL
+  APPROVED
+  SENT_TO_CUSTOMER
+  CUSTOMER_CONFIRMED
+  EXPIRED
+  REJECTED
+}
+
+enum ProposalApprovedVia {
+  PANEL
+  WHATSAPP
+}
+
+model Company {
+  id             String          @id @default(cuid())
+  name           String
+  phone          String?
+  email          String?
+  address        String?
+  createdAt      DateTime        @default(now())
+  users          User[]
+  customers      Customer[]
+  leads          Lead[]
+  jobs           Job[]
+  estimates      Estimate[]
+  estimateFollowUps EstimateFollowUp[]
+  estimateTemplates EstimateTemplate[]
+  invoiceReminders InvoiceReminder[]
+  invoices       Invoice[]
+  reviewRequests ReviewRequest[]
+  automations    Automation[]
+  automationLogs AutomationLog[]
+  activityLogs   ActivityLog[]
+  whatsappContacts WhatsAppContact[]
+  whatsappThreads WhatsAppThread[]
+  whatsappMessages WhatsAppMessage[]
+  messageTemplates MessageTemplate[]
+  availabilitySlots AvailabilitySlot[]
+  schedulingProposals SchedulingProposal[]
+  serviceAreas     ServiceArea[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  role         UserRole
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  jobs         Job[]    @relation("AssignedJobs")
+  availabilitySlots AvailabilitySlot[]
+  schedulingProposals SchedulingProposal[] @relation("SchedulingProposalHandyman")
+}
+
+model Customer {
+  id        String     @id @default(cuid())
+  companyId String
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  fullName  String
+  phone     String
+  email     String?
+  address   String?
+  notes     String?
+  createdAt DateTime   @default(now())
+  leads     Lead[]
+  jobs      Job[]
+  estimates Estimate[]
+  invoices  Invoice[]
+  reviewRequests ReviewRequest[]
+  whatsappContacts WhatsAppContact[]
+  whatsappThreads WhatsAppThread[]
+}
+
+model Lead {
+  id            String     @id @default(cuid())
+  companyId     String
+  company       Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customerId    String
+  customer      Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  source        LeadSource
+  serviceType   String
+  description   String
+  urgency       String
+  preferredDate DateTime?
+  status        LeadStatus @default(NEW)
+  qualificationStatus QualificationStatus @default(UNQUALIFIED)
+  serviceAreaMatch ServiceAreaMatch @default(UNKNOWN)
+  jobSize       JobSize    @default(UNKNOWN)
+  budgetRange   BudgetRange @default(UNKNOWN)
+  urgencyLevel  String?
+  qualificationReason String?
+  qualificationConfidence QualificationConfidence?
+  nextBestAction NextBestAction?
+  qualifiedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  jobs          Job[]
+  estimates     Estimate[]
+  invoices      Invoice[]
+  schedulingProposals SchedulingProposal[]
+  whatsappThreads WhatsAppThread[]
+}
+
+model Job {
+  id             String     @id @default(cuid())
+  companyId      String
+  company        Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leadId         String?
+  lead           Lead?      @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  customerId     String
+  customer       Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  assignedUserId String?
+  assignedUser   User?      @relation("AssignedJobs", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  title          String
+  type           JobType
+  startAt        DateTime
+  endAt          DateTime?
+  status         JobStatus  @default(SCHEDULED)
+  address        String
+  notes          String?
+  completionStatus JobCompletionStatus @default(PENDING)
+  completedAt    DateTime?
+  completionNotes String?
+  internalSummary String?
+  estimateDraftedAt DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  estimates      Estimate[]
+  invoices       Invoice[]
+  reviewRequests ReviewRequest[]
+}
+
+model Estimate {
+  id          String         @id @default(cuid())
+  companyId   String
+  company     Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  leadId      String?
+  lead        Lead?          @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  jobId       String?
+  job         Job?           @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  number      String
+  status      EstimateStatus @default(DRAFT)
+  title       String?
+  introText   String?
+  scopeSummary String?
+  notes       String?
+  terms       String?
+  subtotal    Float
+  tax         Float
+  total       Float
+  validUntil  DateTime?
+  sentAt      DateTime?
+  viewedAt    DateTime?
+  acceptedAt  DateTime?
+  rejectedAt  DateTime?
+  publicToken String         @unique
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  items       EstimateItem[]
+  followUps   EstimateFollowUp[]
+  invoices    Invoice[]
+}
+
+model EstimateItem {
+  id          String   @id @default(cuid())
+  estimateId  String
+  estimate    Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  label       String
+  description String?
+  qty         Float
+  unitPrice   Float
+  sortOrder   Int      @default(0)
+}
+
+model EstimateTemplate {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name         String
+  serviceType  String?
+  active       Boolean  @default(true)
+  introText    String?
+  scopeSummary String?
+  notes        String?
+  terms        String?
+  itemsJson    Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([companyId, active])
+}
+
+model EstimateFollowUp {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  estimateId   String
+  estimate     Estimate @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  channel      String
+  scheduledFor DateTime
+  sentAt       DateTime?
+  canceledAt   DateTime?
+  status       String
+  reason       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([companyId, status, scheduledFor])
+  @@index([estimateId])
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  companyId   String
+  company     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  leadId      String?
+  lead        Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  jobId       String?
+  job         Job?          @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  estimateId  String?
+  estimate    Estimate?     @relation(fields: [estimateId], references: [id], onDelete: SetNull)
+  number      String
+  status      InvoiceStatus @default(DRAFT)
+  title       String?
+  notes       String?
+  terms       String?
+  subtotal    Float
+  tax         Float
+  total       Float
+  dueDate     DateTime?
+  sentAt      DateTime?
+  viewedAt    DateTime?
+  paidAt      DateTime?
+  voidedAt    DateTime?
+  publicToken String        @unique
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  items       InvoiceItem[]
+  reminders   InvoiceReminder[]
+  reviewRequests ReviewRequest[]
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  label       String
+  description String?
+  qty         Float
+  unitPrice   Float
+  sortOrder   Int      @default(0)
+}
+
+model InvoiceReminder {
+  id           String                @id @default(cuid())
+  companyId    String
+  company      Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invoiceId    String
+  invoice      Invoice               @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  channel      String
+  scheduledFor DateTime
+  sentAt       DateTime?
+  canceledAt   DateTime?
+  status       InvoiceReminderStatus @default(SCHEDULED)
+  reason       InvoiceReminderReason
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  @@index([companyId, status, scheduledFor])
+  @@index([invoiceId])
+}
+
+model ReviewRequest {
+  id           String              @id @default(cuid())
+  companyId    String
+  company      Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customerId   String
+  customer     Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  jobId        String?
+  job          Job?                @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  invoiceId    String?
+  invoice      Invoice?            @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  channel      String
+  reviewLink   String?
+  scheduledFor DateTime?
+  sentAt       DateTime?
+  clickedAt    DateTime?
+  status       ReviewRequestStatus @default(PENDING)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([companyId, status, scheduledFor])
+  @@index([customerId])
+}
+
+model Automation {
+  id             String            @id @default(cuid())
+  companyId      String
+  company        Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  type           AutomationType
+  channel        AutomationChannel
+  enabled        Boolean           @default(true)
+  delayMinutes   Int
+  template       String
+  conditionsJson Json?
+}
+
+model AutomationLog {
+  id                String              @id @default(cuid())
+  companyId         String
+  company           Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  automationType    AutomationType
+  customerId        String
+  relatedEntityType String
+  relatedEntityId   String
+  channel           AutomationChannel
+  status            AutomationLogStatus
+  scheduledFor      DateTime
+  sentAt            DateTime?
+  errorMessage      String?
+}
+
+model ActivityLog {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  entityType   String
+  entityId     String
+  eventType    String
+  metadataJson Json?
+  createdAt    DateTime @default(now())
+}
+
+model ServiceArea {
+  id               String   @id @default(cuid())
+  companyId        String
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  label            String
+  city             String?
+  postalCodePrefix String?
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([companyId, active])
+}
+
+model WhatsAppContact {
+  id             String   @id @default(cuid())
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  waId           String
+  profileName    String?
+  lastInboundAt  DateTime?
+  lastOutboundAt DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  threads        WhatsAppThread[]
+  messages       WhatsAppMessage[]
+
+  @@unique([companyId, waId])
+}
+
+model WhatsAppThread {
+  id              String               @id @default(cuid())
+  companyId       String
+  company         Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactId       String
+  contact         WhatsAppContact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  customerId      String?
+  customer        Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  leadId          String?
+  lead            Lead?                @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  status          WhatsAppThreadStatus @default(OPEN)
+  lastMessageAt   DateTime
+  lastInboundAt   DateTime?
+  lastOutboundAt  DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  messages        WhatsAppMessage[]
+  proposals       SchedulingProposal[]
+
+  @@index([companyId, lastMessageAt])
+}
+
+model WhatsAppMessage {
+  id                   String                   @id @default(cuid())
+  companyId            String
+  company              Company                  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  threadId             String
+  thread               WhatsAppThread           @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  contactId            String
+  contact              WhatsAppContact          @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  direction            WhatsAppMessageDirection
+  messageType          WhatsAppMessageType
+  metaMessageId        String?                  @unique
+  replyToMetaMessageId String?
+  textBody             String?
+  mediaId              String?
+  mediaUrl             String?
+  mimeType             String?
+  storagePath          String?
+  templateName         String?
+  interactivePayload   Json?
+  status               WhatsAppMessageStatus?
+  rawPayload           Json?
+  sentAt               DateTime?
+  receivedAt           DateTime?
+  createdAt            DateTime                 @default(now())
+
+  @@index([companyId, threadId, createdAt])
+}
+
+model MessageTemplate {
+  id               String              @id @default(cuid())
+  companyId        String
+  company          Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  code             String
+  channel          String
+  templateKind     MessageTemplateKind
+  metaTemplateName String?
+  locale           String
+  body             String
+  variablesJson    Json?
+  active           Boolean             @default(true)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@unique([companyId, code])
+}
+
+model AvailabilitySlot {
+  id            String                 @id @default(cuid())
+  companyId     String
+  company       Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startsAt      DateTime
+  endsAt        DateTime
+  status        AvailabilitySlotStatus @default(FREE)
+  source        AvailabilitySlotSource
+  relatedLeadId String?
+  relatedJobId  String?
+  createdAt     DateTime               @default(now())
+  proposals     SchedulingProposal[]   @relation("SelectedAvailabilitySlot")
+
+  @@index([companyId, userId, startsAt])
+}
+
+model SchedulingProposal {
+  id                 String                   @id @default(cuid())
+  companyId          String
+  company            Company                  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leadId             String
+  lead               Lead                     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  handymanUserId     String
+  handymanUser       User                     @relation("SchedulingProposalHandyman", fields: [handymanUserId], references: [id], onDelete: Cascade)
+  threadId           String?
+  thread             WhatsAppThread?          @relation(fields: [threadId], references: [id], onDelete: SetNull)
+  status             SchedulingProposalStatus @default(DRAFT)
+  approvedVia        ProposalApprovedVia?
+  selectedSlotId     String?
+  selectedSlot       AvailabilitySlot?        @relation("SelectedAvailabilitySlot", fields: [selectedSlotId], references: [id], onDelete: SetNull)
+  candidateSlotsJson Json
+  publicToken        String                   @unique
+  expiresAt          DateTime?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  @@index([companyId, leadId, status])
+}
