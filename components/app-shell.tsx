@@ -6,6 +6,7 @@ import {
   ClipboardList,
   FileText,
   Gauge,
+  Grid2x2,
   LogOut,
   MessageSquare,
   Receipt,
@@ -52,15 +53,21 @@ export async function AppShell({
     .slice(0, 2)
     .toUpperCase() ?? "SC";
   const currentSection =
-    visibleNavItems.find(
-      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
-    )?.label ?? "Schedio";
+    getSectionLabel(pathname) ?? "Schedio";
   const mobileNavItems = isWorker
     ? [
         { href: "/jobs", label: "Lavori", icon: CalendarDays },
         { href: "/calendar", label: "Calendario", icon: CalendarDays }
       ]
-    : [navItems[0], navItems[1], navItems[2], { href: "/automations", label: "Altro", icon: Settings }];
+    : [
+        navItems[0],
+        navItems[1],
+        navItems[2],
+        { href: "/more", label: "Altro", icon: Grid2x2 }
+      ];
+  const mobileShortcuts = getMobileShortcuts(pathname, isWorker);
+  const showDesktopHero = pathname === "/" || !isWorker;
+  const showMobileFullHero = pathname === "/";
 
   return (
     <div className="min-h-screen bg-neutral-50 text-ink">
@@ -153,36 +160,81 @@ export async function AppShell({
               </div>
             </div>
 
-            <div className="rounded-[24px] bg-gradient-to-r from-primary-900 via-primary-700 to-primary-600 px-4 py-4 text-white shadow-panel sm:px-5 sm:py-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-xs text-primary-100 sm:text-sm">
-                    {isWorker
-                      ? "Il tuo calendario e i tuoi lavori, senza confusione."
-                      : "Richieste, appuntamenti e preventivi in ordine."}
-                  </p>
-                  <h1 className="mt-1 max-w-2xl text-lg font-semibold leading-tight sm:text-2xl">
-                    {isWorker ? "Vedi solo quello che devi fare adesso." : "Meno caos. Piu lavori chiusi."}
-                  </h1>
+            {showDesktopHero ? (
+              <>
+                <div className="hidden rounded-[24px] bg-gradient-to-r from-primary-900 via-primary-700 to-primary-600 px-4 py-4 text-white shadow-panel sm:block sm:px-5 sm:py-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <p className="text-xs text-primary-100 sm:text-sm">
+                        {isWorker
+                          ? "Il tuo calendario e i tuoi lavori, senza confusione."
+                          : "Richieste, appuntamenti e preventivi in ordine."}
+                      </p>
+                      <h1 className="mt-1 max-w-2xl text-lg font-semibold leading-tight sm:text-2xl">
+                        {isWorker ? "Vedi solo quello che devi fare adesso." : "Meno caos. Piu lavori chiusi."}
+                      </h1>
+                    </div>
+                    {isWorker ? null : (
+                      <div className="hidden gap-2 sm:grid sm:grid-cols-2 lg:flex">
+                        <QuickPill href="/leads?action=new">Nuova richiesta</QuickPill>
+                        <QuickPill href="/calendar">Nuovo appuntamento</QuickPill>
+                        <QuickPill href="/estimates">Nuovo preventivo</QuickPill>
+                        <QuickPill href="/invoices">Nuova fattura</QuickPill>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {isWorker ? null : (
-                  <>
-                    <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:hidden">
-                      <QuickPill href="/leads?action=new">Nuova richiesta</QuickPill>
-                      <QuickPill href="/estimates">Nuovo preventivo</QuickPill>
-                      <QuickPill href="/calendar">Appuntamento</QuickPill>
-                      <QuickPill href="/invoices">Fattura</QuickPill>
+
+                {showMobileFullHero ? (
+                  <div className="rounded-[24px] bg-gradient-to-r from-primary-900 via-primary-700 to-primary-600 px-4 py-4 text-white shadow-panel sm:hidden">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-xs text-primary-100">
+                          {isWorker
+                            ? "Il tuo calendario e i tuoi lavori, senza confusione."
+                            : "Richieste, appuntamenti e preventivi in ordine."}
+                        </p>
+                        <h1 className="mt-1 max-w-2xl text-lg font-semibold leading-tight">
+                          {isWorker ? "Vedi solo quello che devi fare adesso." : "Meno caos. Piu lavori chiusi."}
+                        </h1>
+                      </div>
+                      {isWorker ? null : (
+                        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                          <QuickPill href="/leads?action=new">Nuova richiesta</QuickPill>
+                          <QuickPill href="/estimates">Nuovo preventivo</QuickPill>
+                          <QuickPill href="/calendar">Appuntamento</QuickPill>
+                          <QuickPill href="/invoices">Fattura</QuickPill>
+                        </div>
+                      )}
                     </div>
-                    <div className="hidden gap-2 sm:grid sm:grid-cols-2 lg:flex">
-                      <QuickPill href="/leads?action=new">Nuova richiesta</QuickPill>
-                      <QuickPill href="/calendar">Nuovo appuntamento</QuickPill>
-                      <QuickPill href="/estimates">Nuovo preventivo</QuickPill>
-                      <QuickPill href="/invoices">Nuova fattura</QuickPill>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-soft sm:hidden">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-600">
+                          {currentSection}
+                        </p>
+                        <p className="mt-1 text-sm text-neutral-600">
+                          {mobileShortcuts.length
+                            ? "Scorciatoie rapide per questa sezione."
+                            : "Apri il menu in basso per le sezioni secondarie."}
+                        </p>
+                      </div>
                     </div>
-                  </>
+                    {mobileShortcuts.length ? (
+                      <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
+                        {mobileShortcuts.map((shortcut) => (
+                          <CompactShortcut key={shortcut.href} href={shortcut.href}>
+                            {shortcut.label}
+                          </CompactShortcut>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 )}
-              </div>
-            </div>
+              </>
+            ) : null}
           </header>
 
           <main className="pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-8">{children}</main>
@@ -203,7 +255,9 @@ export async function AppShell({
                   href={item.href}
                   className={cn(
                     "flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium",
-                    active ? "bg-primary-50 text-primary-700" : "text-neutral-500"
+                    isMobileNavActive(pathname, item.href)
+                      ? "bg-primary-50 text-primary-700"
+                      : "text-neutral-500"
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -235,4 +289,124 @@ function QuickPill({
       {children}
     </ButtonLink>
   );
+}
+
+function CompactShortcut({
+  href,
+  children
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <ButtonLink
+      href={href}
+      variant="secondary"
+      size="md"
+      className="min-w-[132px] border-neutral-200 bg-neutral-50 px-3 text-sm text-neutral-800"
+    >
+      {children}
+    </ButtonLink>
+  );
+}
+
+function getSectionLabel(pathname: string) {
+  const labels: Array<[string, string]> = [
+    ["/", "Dashboard"],
+    ["/leads", "Richieste"],
+    ["/calendar", "Calendario"],
+    ["/whatsapp", "WhatsApp"],
+    ["/jobs", "Lavori"],
+    ["/customers", "Clienti"],
+    ["/estimates", "Preventivi"],
+    ["/invoices", "Fatture"],
+    ["/automations", "Automazioni"],
+    ["/activity", "Attivita"],
+    ["/settings/company", "Impostazioni"],
+    ["/more", "Altro"]
+  ];
+
+  return labels.find(([href]) => pathname === href || pathname.startsWith(`${href}/`))?.[1];
+}
+
+function getMobileShortcuts(pathname: string, isWorker: boolean) {
+  if (isWorker) {
+    return pathname.startsWith("/jobs")
+      ? [
+          { href: "/calendar", label: "Calendario" },
+          { href: "/jobs", label: "I miei lavori" }
+        ]
+      : [
+          { href: "/jobs", label: "I miei lavori" },
+          { href: "/calendar", label: "Oggi" }
+        ];
+  }
+
+  if (pathname.startsWith("/leads")) {
+    return [
+      { href: "/leads?action=new", label: "Nuova richiesta" },
+      { href: "/calendar", label: "Pianifica" }
+    ];
+  }
+
+  if (pathname.startsWith("/calendar")) {
+    return [
+      { href: "/calendar?action=schedule", label: "Nuovo appuntamento" },
+      { href: "/jobs", label: "Apri lavori" }
+    ];
+  }
+
+  if (pathname.startsWith("/whatsapp")) {
+    return [
+      { href: "/whatsapp?action=intake", label: "Nuova richiesta WA" },
+      { href: "/leads", label: "Apri richieste" }
+    ];
+  }
+
+  if (pathname.startsWith("/estimates")) {
+    return [
+      { href: "/estimates", label: "Da seguire" },
+      { href: "/invoices", label: "Vai alle fatture" }
+    ];
+  }
+
+  if (pathname.startsWith("/invoices")) {
+    return [
+      { href: "/invoices", label: "Da incassare" },
+      { href: "/activity", label: "Attivita" }
+    ];
+  }
+
+  if (pathname.startsWith("/customers")) {
+    return [
+      { href: "/customers", label: "Rubrica clienti" },
+      { href: "/leads?action=new", label: "Nuova richiesta" }
+    ];
+  }
+
+  if (pathname.startsWith("/automations")) {
+    return [
+      { href: "/automations", label: "Runner" },
+      { href: "/activity", label: "Ultime attivita" }
+    ];
+  }
+
+  if (pathname.startsWith("/activity")) {
+    return [
+      { href: "/estimates", label: "Preventivi" },
+      { href: "/invoices", label: "Fatture" }
+    ];
+  }
+
+  return [];
+}
+
+function isMobileNavActive(pathname: string, href: string) {
+  if (href === "/more") {
+    return ["/whatsapp", "/customers", "/estimates", "/invoices", "/automations", "/activity", "/settings/company", "/more"].some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`)
+    );
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
