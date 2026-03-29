@@ -93,6 +93,26 @@ export function AutomationsWorkspace({
         description="Qui controlli cosa deve partire, lanci i runner e vedi subito se qualcosa si blocca."
       />
 
+      <SectionCard title="Azioni rapide" subtitle="Controllo veloce delle automazioni operative.">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Button className="w-full" disabled={isPending} onClick={runNow}>
+            {isPending ? "Esecuzione..." : "Esegui automazioni ora"}
+          </Button>
+          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Follow-up</p>
+            <p className="mt-1 text-lg font-semibold text-ink">{queueSummary.estimateFollowUps}</p>
+          </div>
+          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Reminder fatture</p>
+            <p className="mt-1 text-lg font-semibold text-ink">{queueSummary.invoiceReminders}</p>
+          </div>
+          <div className="rounded-2xl border border-danger-200 bg-danger-50 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-danger-700">Errori recenti</p>
+            <p className="mt-1 text-lg font-semibold text-ink">{queueSummary.failedRuns}</p>
+          </div>
+        </div>
+      </SectionCard>
+
       {feedback ? (
         <div className="rounded-2xl border border-primary-200 bg-primary-50 px-4 py-3 text-sm text-primary-700">
           {feedback}
@@ -110,7 +130,7 @@ export function AutomationsWorkspace({
             <SummaryCard label="Review request" value={queueSummary.reviewRequests} />
             <SummaryCard label="Errori recenti" value={queueSummary.failedRuns} tone="danger" />
           </div>
-          <Button disabled={isPending} onClick={runNow}>
+          <Button className="w-full lg:w-auto" disabled={isPending} onClick={runNow}>
             {isPending ? "Esecuzione..." : "Esegui automazioni ora"}
           </Button>
         </div>
@@ -136,10 +156,11 @@ export function AutomationsWorkspace({
           >
             <div className="space-y-4">
               <p className="text-sm text-neutral-600">{automation.template}</p>
-              <div className="flex gap-2">
+              <div className="grid gap-2 sm:flex">
                 <Button
                   variant={automation.enabled ? "secondary" : "primary"}
                   size="md"
+                  className="w-full sm:w-auto"
                   disabled={isPending}
                   onClick={() => toggleAutomation(automation.id, automation.enabled)}
                 >

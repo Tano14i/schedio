@@ -352,6 +352,32 @@ export function WhatsAppAdminPanel({
           </Button>
         </div>
 
+        <SectionCard title="Azioni rapide" subtitle="Da thread a sopralluogo senza perdere tempo.">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Button className="w-full" onClick={openIntakeDrawer}>
+              Nuova richiesta WhatsApp
+            </Button>
+            <Link
+              href="/leads"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+            >
+              Apri richieste
+            </Link>
+            <Link
+              href="/calendar"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+            >
+              Apri calendario
+            </Link>
+            <Link
+              href="/jobs"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+            >
+              Apri lavori
+            </Link>
+          </div>
+        </SectionCard>
+
         {notice ? (
           <div className="rounded-2xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
             {notice}
@@ -580,13 +606,13 @@ export function WhatsAppAdminPanel({
             className="order-2 xl:order-1"
           >
             {items.length ? (
-              <div className="space-y-3">
+              <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 xl:mx-0 xl:block xl:space-y-3 xl:overflow-visible xl:px-0">
                 {items.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setSelectedId(item.id)}
-                    className={`w-full rounded-2xl border p-4 text-left transition ${
+                    className={`w-[280px] shrink-0 rounded-2xl border p-4 text-left transition xl:w-full ${
                       selected?.id === item.id
                         ? "border-primary-300 bg-primary-50"
                         : "border-neutral-200 bg-white hover:border-primary-200"

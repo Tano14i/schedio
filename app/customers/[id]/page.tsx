@@ -53,10 +53,10 @@ export default async function CustomerDetailPage({
             action={{ href: "/leads?action=new", label: "Nuova richiesta" }}
           />
 
-          <div className="flex flex-wrap gap-2">
-            <ButtonLink href="/leads?action=new" size="md">Nuova richiesta</ButtonLink>
-            <ButtonLink href="/calendar" variant="secondary" size="md">Nuovo appuntamento</ButtonLink>
-            <ButtonLink href="/estimates" variant="secondary" size="md">Nuovo preventivo</ButtonLink>
+          <div className="grid gap-2 sm:flex sm:flex-wrap">
+            <ButtonLink href="/leads?action=new" size="md" className="w-full sm:w-auto">Nuova richiesta</ButtonLink>
+            <ButtonLink href="/calendar" variant="secondary" size="md" className="w-full sm:w-auto">Nuovo appuntamento</ButtonLink>
+            <ButtonLink href="/estimates" variant="secondary" size="md" className="w-full sm:w-auto">Nuovo preventivo</ButtonLink>
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[1.1fr_1fr]">
@@ -84,6 +84,9 @@ export default async function CustomerDetailPage({
                       <StatusBadge status={job.status.toLowerCase() as "scheduled" | "on_the_way" | "in_progress" | "completed" | "canceled"} />
                     </div>
                     <p className="mt-2 text-sm text-neutral-500">{formatDateTime(job.startAt.toISOString())}</p>
+                    <ButtonLink href={`/jobs/${job.id}`} variant="secondary" size="md" className="mt-3 w-full">
+                      Apri lavoro
+                    </ButtonLink>
                   </div>
                 )) : (
                   <p className="text-sm text-neutral-600">Nessun lavoro collegato.</p>
@@ -100,6 +103,9 @@ export default async function CustomerDetailPage({
                       <StatusBadge status={estimate.status.toLowerCase() as "draft" | "sent" | "viewed" | "accepted" | "rejected" | "expired"} />
                     </div>
                     <p className="mt-2 text-sm text-neutral-500">{formatCurrency(estimate.total)}</p>
+                    <ButtonLink href="/estimates" variant="secondary" size="md" className="mt-3 w-full">
+                      Apri preventivi
+                    </ButtonLink>
                   </div>
                 )) : (
                   <p className="text-sm text-neutral-600">Nessun preventivo collegato.</p>
@@ -116,6 +122,9 @@ export default async function CustomerDetailPage({
                       <StatusBadge status={invoice.status.toLowerCase() as "draft" | "sent" | "paid" | "overdue" | "void"} />
                     </div>
                     <p className="mt-2 text-sm text-neutral-500">{formatCurrency(invoice.total)}</p>
+                    <ButtonLink href="/invoices" variant="secondary" size="md" className="mt-3 w-full">
+                      Apri fatture
+                    </ButtonLink>
                   </div>
                 )) : (
                   <p className="text-sm text-neutral-600">Nessuna fattura collegata.</p>

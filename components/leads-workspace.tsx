@@ -158,13 +158,39 @@ export function LeadsWorkspace({
           action={{ href: "/leads?action=new", label: "Nuova richiesta" }}
         />
 
+        <SectionCard title="Azioni rapide" subtitle="Parti da una nuova richiesta o passa subito alla pianificazione.">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Button className="w-full" onClick={openDrawer}>
+              Nuova richiesta
+            </Button>
+            <Link
+              href="/calendar"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+            >
+              Apri calendario
+            </Link>
+            <Link
+              href="/whatsapp"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+            >
+              Apri WhatsApp
+            </Link>
+            <Link
+              href="/customers"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+            >
+              Apri clienti
+            </Link>
+          </div>
+        </SectionCard>
+
         <SectionCard
           title="Filtri"
           subtitle="Tutte, Nuove, Contattate, Programmate, Preventivo inviato, Lavoro acquisito, Non acquisito."
         >
-          <div className="flex flex-wrap gap-2">
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             {filterStatuses.map((status) => (
-              <div key={status} className="rounded-full bg-neutral-100 px-4 py-2 text-sm text-neutral-700">
+              <div key={status} className="whitespace-nowrap rounded-full bg-neutral-100 px-4 py-2 text-sm text-neutral-700">
                 {leadStatusMap[status].label} ({leads.filter((lead) => lead.status === status).length})
               </div>
             ))}
@@ -176,90 +202,112 @@ export function LeadsWorkspace({
           subtitle="Cliente, tipo di lavoro, data, stato, prossima azione e azioni."
         >
           {leads.length ? (
-            <DataTable
-              columns={[
-                {
-                  key: "customer",
-                  header: "Cliente",
-                  render: (lead) => {
-                    const customer = customers.find((item) => item.id === lead.customerId);
-                    return (
-                      <div>
-                        <p className="font-medium text-ink">{customer?.fullName}</p>
-                        <p className="text-xs text-neutral-500">{customer?.phone}</p>
+            <>
+              <div className="space-y-3 lg:hidden">
+                {leads.map((lead) => {
+                  const customer = customers.find((item) => item.id === lead.customerId);
+                  const action = getLeadAction(lead, jobLinksByLead);
+
+                  return (
+                    <div key={lead.id} className="rounded-2xl border border-neutral-200 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-base font-semibold text-ink">{customer?.fullName}</p>
+                          <p className="mt-1 text-sm text-neutral-600">{lead.serviceType}</p>
+                        </div>
+                        <StatusBadge status={lead.status} />
                       </div>
-                    );
-                  }
-                },
-                {
-                  key: "service",
-                  header: "Tipo di lavoro",
-                  render: (lead) => (
-                    <div>
-                      <p className="font-medium text-ink">{lead.serviceType}</p>
-                      <p className="text-xs text-neutral-500">{lead.description}</p>
+                      <p className="mt-3 text-sm text-neutral-600">{lead.description}</p>
+                      <div className="mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-neutral-50 p-3">
+                        <MobileMeta label="Data" value={formatCompactDate(lead.createdAt)} />
+                        <MobileMeta label="Telefono" value={customer?.phone ?? "-"} />
+                        <MobileMeta label="Prossimo passo" value={lead.nextAction} className="col-span-2" />
+                      </div>
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                        <Link
+                          href={action.href}
+                          className="inline-flex w-full items-center justify-center rounded-xl bg-primary-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-600"
+                        >
+                          {action.label}
+                        </Link>
+                        <Link
+                          href={`/customers/${lead.customerId}`}
+                          className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+                        >
+                          Apri cliente
+                        </Link>
+                      </div>
                     </div>
-                  )
-                },
-                {
-                  key: "date",
-                  header: "Data",
-                  render: (lead) => <span>{formatCompactDate(lead.createdAt)}</span>
-                },
-                {
-                  key: "status",
-                  header: "Stato",
-                  headerClassName: "md:flex md:items-center",
-                  cellClassName: "md:flex md:h-full md:items-center",
-                  render: (lead) => <StatusBadge status={lead.status} />
-                },
-                {
-                  key: "action",
-                  header: "Prossima azione",
-                  render: (lead) => <span>{lead.nextAction}</span>
-                },
-                {
-                  key: "cta",
-                  header: "Azioni",
-                  headerClassName: "md:flex md:items-center",
-                  cellClassName: "md:flex md:h-full md:items-center",
-                  render: (lead) => {
-                    const actionByStatus = {
-                      new: {
-                        href: `/calendar?action=schedule&leadId=${lead.id}&kind=estimate_visit`,
-                        label: "Pianifica sopralluogo"
-                      },
-                      contacted: {
-                        href: `/calendar?action=schedule&leadId=${lead.id}&kind=estimate_visit`,
-                        label: "Pianifica sopralluogo"
-                      },
-                      scheduled: {
-                        href: jobLinksByLead[lead.id] ?? `/calendar?action=schedule&leadId=${lead.id}&kind=estimate_visit`,
-                        label: "Apri appuntamento"
-                      },
-                      quoted: { href: "/estimates", label: "Apri preventivo" },
-                      won: {
-                        href: `/calendar?action=schedule&leadId=${lead.id}&kind=job`,
-                        label: "Pianifica lavoro"
-                      },
-                      lost: { href: `/customers/${lead.customerId}`, label: "Apri cliente" }
-                    } as const;
+                  );
+                })}
+              </div>
 
-                    const action = actionByStatus[lead.status];
+              <div className="hidden lg:block">
+                <DataTable
+                  columns={[
+                    {
+                      key: "customer",
+                      header: "Cliente",
+                      render: (lead) => {
+                        const customer = customers.find((item) => item.id === lead.customerId);
+                        return (
+                          <div>
+                            <p className="font-medium text-ink">{customer?.fullName}</p>
+                            <p className="text-xs text-neutral-500">{customer?.phone}</p>
+                          </div>
+                        );
+                      }
+                    },
+                    {
+                      key: "service",
+                      header: "Tipo di lavoro",
+                      render: (lead) => (
+                        <div>
+                          <p className="font-medium text-ink">{lead.serviceType}</p>
+                          <p className="text-xs text-neutral-500">{lead.description}</p>
+                        </div>
+                      )
+                    },
+                    {
+                      key: "date",
+                      header: "Data",
+                      render: (lead) => <span>{formatCompactDate(lead.createdAt)}</span>
+                    },
+                    {
+                      key: "status",
+                      header: "Stato",
+                      headerClassName: "md:flex md:items-center",
+                      cellClassName: "md:flex md:h-full md:items-center",
+                      render: (lead) => <StatusBadge status={lead.status} />
+                    },
+                    {
+                      key: "action",
+                      header: "Prossima azione",
+                      render: (lead) => <span>{lead.nextAction}</span>
+                    },
+                    {
+                      key: "cta",
+                      header: "Azioni",
+                      headerClassName: "md:flex md:items-center",
+                      cellClassName: "md:flex md:h-full md:items-center",
+                      render: (lead) => {
+                        const action = getLeadAction(lead, jobLinksByLead);
 
-                    return (
-                      <Link
-                        href={action.href}
-                        className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-left text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
-                      >
-                        {action.label}
-                      </Link>
-                    );
-                  }
-                }
-              ]}
-              data={leads}
-            />
+                        return (
+                          <Link
+                            href={action.href}
+                            className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-left text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+                          >
+                            {action.label}
+                          </Link>
+                        );
+                      }
+                    }
+                  ]}
+                  data={leads}
+                />
+              </div>
+            </>
           ) : (
             <EmptyState
               title="Nessuna richiesta"
@@ -382,6 +430,48 @@ export function LeadsWorkspace({
         </Drawer>
       ) : null}
     </>
+  );
+}
+
+function getLeadAction(lead: Lead, jobLinksByLead: Record<string, string>) {
+  const actionByStatus = {
+    new: {
+      href: `/calendar?action=schedule&leadId=${lead.id}&kind=estimate_visit`,
+      label: "Pianifica sopralluogo"
+    },
+    contacted: {
+      href: `/calendar?action=schedule&leadId=${lead.id}&kind=estimate_visit`,
+      label: "Pianifica sopralluogo"
+    },
+    scheduled: {
+      href: jobLinksByLead[lead.id] ?? `/calendar?action=schedule&leadId=${lead.id}&kind=estimate_visit`,
+      label: "Apri appuntamento"
+    },
+    quoted: { href: "/estimates", label: "Apri preventivo" },
+    won: {
+      href: `/calendar?action=schedule&leadId=${lead.id}&kind=job`,
+      label: "Pianifica lavoro"
+    },
+    lost: { href: `/customers/${lead.customerId}`, label: "Apri cliente" }
+  } as const;
+
+  return actionByStatus[lead.status];
+}
+
+function MobileMeta({
+  label,
+  value,
+  className
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">{label}</p>
+      <p className="mt-1 text-sm text-ink">{value}</p>
+    </div>
   );
 }
 
