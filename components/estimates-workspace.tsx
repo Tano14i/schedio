@@ -160,7 +160,7 @@ export function EstimatesWorkspace({
         description="Apri una bozza precompilata, rivedi i dettagli e inviala al cliente senza partire da una pagina vuota."
       />
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <MiniStat label="Totali" value={`${estimateStats.total}`} detail="in elenco" />
         <MiniStat label="In attesa" value={`${estimateStats.waiting}`} detail="da inviare o seguire" />
         <MiniStat label="Follow-up" value={`${estimateStats.followUp}`} detail="da non perdere" />
@@ -168,6 +168,7 @@ export function EstimatesWorkspace({
 
       <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
         <SectionCard
+          className="order-2 xl:order-1"
           title="Lista preventivi"
           subtitle="Apri una bozza, controlla lo stato e invia senza perdere contesto."
           aside={
@@ -257,10 +258,11 @@ export function EstimatesWorkspace({
                       ) : null}
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
                       <Button
                         size="md"
                         variant={estimate.status === "draft" ? "primary" : "secondary"}
+                        className="w-full sm:w-auto"
                         disabled={isPending}
                         onClick={(event) => {
                           event.stopPropagation();
@@ -273,6 +275,7 @@ export function EstimatesWorkspace({
                         <Button
                           size="md"
                           variant="secondary"
+                          className="w-full sm:w-auto"
                           disabled={isPending}
                           onClick={(event) => {
                             event.stopPropagation();
@@ -295,7 +298,7 @@ export function EstimatesWorkspace({
           )}
         </SectionCard>
 
-        <SectionCard title="Composer preventivo" subtitle="Precompilato dai dati del sopralluogo.">
+        <SectionCard className="order-1 xl:order-2" title="Composer preventivo" subtitle="Precompilato dai dati del sopralluogo.">
           {selectedEstimate ? (
             <div className="space-y-5">
               <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 md:grid-cols-[minmax(0,1fr)_220px]">
@@ -352,7 +355,7 @@ export function EstimatesWorkspace({
                   {selectedEstimate.items.map((item, index) => (
                     <div
                       key={item.id}
-                      className="grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_minmax(110px,0.7fr)_minmax(140px,0.7fr)]"
+                      className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(110px,0.7fr)_minmax(140px,0.7fr)]"
                     >
                       <input
                         className="min-w-0 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
@@ -388,7 +391,7 @@ export function EstimatesWorkspace({
                 </div>
               </div>
 
-              <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-4 md:grid-cols-3">
+              <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-4 sm:grid-cols-2 md:grid-cols-3">
                 <Meta label="Tipo lavoro" value={selectedLead?.serviceType ?? "n/d"} />
                 <Meta
                   label="Validita"

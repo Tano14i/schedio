@@ -170,7 +170,7 @@ export function InvoicesWorkspace({
         description="Crea fatture da preventivi accettati o lavori completati, segna il pagamento e lascia che Schedio faccia partire il reminder e la review request."
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Fatture aperte" value={`${metrics.openInvoices}`} detail="Da incassare" accent="sand" />
         <StatCard label="Fatture scadute" value={`${metrics.overdueInvoices}`} detail="Da sollecitare" />
         <StatCard label="Incassato mese" value={formatCurrency(metrics.cashCollectedMonth)} detail="Cassa registrata" />
@@ -179,6 +179,7 @@ export function InvoicesWorkspace({
 
       <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
         <SectionCard
+          className="order-2 xl:order-1"
           title="Lista fatture"
           subtitle="Apri una bozza, invia, incassa o sollecita senza perdere contesto."
           aside={
@@ -260,7 +261,7 @@ export function InvoicesWorkspace({
                       ) : null}
                     </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
                       {invoice.status === "draft" ? (
                         <Button
                           size="md"
@@ -301,7 +302,7 @@ export function InvoicesWorkspace({
           )}
         </SectionCard>
 
-        <SectionCard title="Composer fattura" subtitle="Rivedi i dettagli prima dell'invio al cliente.">
+        <SectionCard className="order-1 xl:order-2" title="Composer fattura" subtitle="Rivedi i dettagli prima dell'invio al cliente.">
           {selectedInvoice ? (
             <div className="space-y-5">
               <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 md:grid-cols-[minmax(0,1fr)_220px]">
@@ -363,7 +364,7 @@ export function InvoicesWorkspace({
                   {(selectedInvoice.items ?? []).map((item, index) => (
                     <div
                       key={item.id}
-                      className="grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_minmax(110px,0.7fr)_minmax(140px,0.7fr)]"
+                      className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(110px,0.7fr)_minmax(140px,0.7fr)]"
                     >
                       <input
                         className="min-w-0 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
@@ -399,7 +400,7 @@ export function InvoicesWorkspace({
                 </div>
               </div>
 
-              <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-4 md:grid-cols-3">
+              <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-4 sm:grid-cols-2 md:grid-cols-3">
                 <Meta label="Totale" value={formatCurrency(sumInvoice(selectedInvoice))} valueClassName="text-lg font-semibold text-ink" />
                 <Meta label="Scadenza" value={selectedInvoice.dueDate ? formatCompactDate(selectedInvoice.dueDate) : "Da definire"} />
                 <Meta label="Pagina cliente" value={selectedInvoice.sentAt ? "Pronta" : "Si attiva all'invio"} />

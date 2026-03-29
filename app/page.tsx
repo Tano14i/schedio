@@ -113,14 +113,14 @@ export default async function DashboardPage() {
 
         <PwaInstallCard />
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Lead ricevuti" value={`${funnel.leadsReceived}`} detail="Ingresso del funnel" accent="sand" />
           <StatCard label="Sopralluoghi confermati" value={`${funnel.visitsConfirmed}`} detail="Agenda che si riempie" />
           <StatCard label="Preventivi inviati" value={`${funnel.estimatesSent}`} detail="Preventivi aperti" />
           <StatCard label="Preventivi accettati" value={`${funnel.estimatesAccepted}`} detail="Lavori che si chiudono" />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Fatture aperte" value={`${invoiceMetrics.openInvoices}`} detail="Da incassare" accent="sand" />
           <StatCard label="Fatture scadute" value={`${invoiceMetrics.overdueInvoices}`} detail="Da sollecitare" />
           <StatCard label="Incassato mese" value={formatCurrency(invoiceMetrics.cashCollectedMonth)} detail="Cassa registrata" />
@@ -128,7 +128,7 @@ export default async function DashboardPage() {
         </div>
 
         <SectionCard title="Azioni rapide" subtitle="I passaggi che muovono il funnel oggi.">
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <ButtonLink href="/leads?action=new" className="w-full">
               Nuova richiesta
             </ButtonLink>
@@ -146,7 +146,7 @@ export default async function DashboardPage() {
 
         <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
           <SectionCard title="Funnel del mese" subtitle="Numeri assoluti e passaggio tra uno step e il successivo.">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {funnelSteps.map((step, index) => {
                 const previous = index === 0 ? null : funnelSteps[index - 1].value;
                 const ratio = previous && previous > 0 ? Math.round((step.value / previous) * 100) : null;
@@ -180,7 +180,7 @@ export default async function DashboardPage() {
               {worklist.length ? (
                 worklist.map((item) => (
                   <div key={item.estimateId} className="rounded-2xl border border-neutral-200 p-4">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-col gap-3">
                       <div>
                         <p className="font-medium text-ink">{item.customerName}</p>
                         <p className="mt-1 text-sm text-neutral-600">
@@ -203,7 +203,7 @@ export default async function DashboardPage() {
                           estimateId={item.estimateId}
                           recommendation={item.recommendation}
                         />
-                        <ButtonLink href="/estimates" variant="secondary" size="md">
+                        <ButtonLink href="/estimates" variant="secondary" size="md" className="w-full sm:w-auto">
                           Apri preventivi
                         </ButtonLink>
                       </div>
@@ -227,7 +227,7 @@ export default async function DashboardPage() {
               {invoiceWorklist.length ? (
                 invoiceWorklist.map((item) => (
                   <div key={item.invoiceId} className="rounded-2xl border border-neutral-200 p-4">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-col gap-3">
                       <div>
                         <p className="font-medium text-ink">{item.customerName}</p>
                         <p className="mt-1 text-sm text-neutral-600">
@@ -245,7 +245,7 @@ export default async function DashboardPage() {
                           invoiceId={item.invoiceId}
                           recommendation={item.recommendation as "send_invoice" | "send_reminder" | "mark_paid" | "send_review"}
                         />
-                        <ButtonLink href="/invoices" variant="secondary" size="md">
+                        <ButtonLink href="/invoices" variant="secondary" size="md" className="w-full sm:w-auto">
                           Apri fatture
                         </ButtonLink>
                       </div>

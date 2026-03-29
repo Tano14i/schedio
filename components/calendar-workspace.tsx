@@ -201,7 +201,7 @@ export function CalendarWorkspace({
           action={canSchedule ? { href: "/calendar?action=schedule", label: "Nuovo appuntamento" } : undefined}
         />
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <MiniStat label="Oggi" value={`${todayJobs.length}`} detail="appuntamenti" />
           <MiniStat label="Attivi" value={`${pendingJobs.length}`} detail="da gestire" />
           <MiniStat
@@ -213,6 +213,7 @@ export function CalendarWorkspace({
 
         <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <SectionCard
+            className="order-2 lg:order-1"
             title="Settimana"
             subtitle="Pianificazione rapida con stati sempre visibili."
             aside={
@@ -233,13 +234,14 @@ export function CalendarWorkspace({
 
                 return (
                   <div key={job.id} className={`rounded-2xl border p-4 ${tone}`}>
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-col gap-3">
                       <div>
                         <p className="text-sm text-neutral-500">{formatDateTime(job.startAt)}</p>
                         <p className="mt-1 text-base font-semibold text-ink">{job.title}</p>
                         <p className="text-sm text-neutral-600">
-                          {customer?.fullName} - {job.address}
+                          {customer?.fullName}
                         </p>
+                        <p className="mt-1 text-sm text-neutral-500">{job.address}</p>
                       </div>
                       <div className="flex flex-wrap items-center gap-3">
                         <span className="text-sm text-neutral-600">{job.assignedTo}</span>
@@ -259,12 +261,13 @@ export function CalendarWorkspace({
           </SectionCard>
 
           <SectionCard
+            className="order-1 lg:order-2"
             title="Vista giorno"
             subtitle="Pensata per il tecnico sul campo, con cards verticali e CTA grandi."
             aside={
               <Link
                 href={todayJobs[0] ? `/jobs/${todayJobs[0].id}` : "/jobs"}
-                className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+                className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50 sm:w-auto"
               >
                 Apri lavoro
               </Link>
@@ -278,11 +281,11 @@ export function CalendarWorkspace({
                     <p className="mt-1 font-medium text-ink">{job.title}</p>
                     <p className="text-sm text-neutral-600">{job.assignedTo}</p>
                     <p className="mt-1 text-sm text-neutral-500">{job.address}</p>
-                    <div className="mt-3 flex items-center justify-between gap-3">
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
                       <StatusBadge status={job.status} />
                       <Link
                         href={`/jobs/${job.id}`}
-                        className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+                        className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50 sm:w-auto"
                       >
                         Apri
                       </Link>

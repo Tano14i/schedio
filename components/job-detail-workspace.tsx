@@ -212,7 +212,11 @@ export function JobDetailWorkspace({
       />
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <SectionCard title="Dettagli lavoro" subtitle="Stato, cliente e riepilogo operativo.">
+        <SectionCard
+          className="order-2 xl:order-1"
+          title="Dettagli lavoro"
+          subtitle="Stato, cliente e riepilogo operativo."
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <Detail label="Cliente" value={customer?.fullName ?? "-"} />
             <Detail label="Stato" value={<StatusBadge status={job.status} />} />
@@ -242,6 +246,7 @@ export function JobDetailWorkspace({
         </SectionCard>
 
         <SectionCard
+          className="order-1 xl:order-2"
           title="Azioni"
           subtitle={
             isOwner
@@ -400,7 +405,7 @@ export function JobDetailWorkspace({
         </SectionCard>
         <SectionCard title="Foto lavoro" subtitle="Immagini raccolte nel thread o durante l'intake.">
           {initialPhotos.length ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               {initialPhotos.map((photo, index) => (
                 <div
                   key={`${photo}-${index}`}
@@ -410,7 +415,7 @@ export function JobDetailWorkspace({
                   <img
                     src={photo}
                     alt={`Foto lavoro ${index + 1}`}
-                    className="h-32 w-full object-cover"
+                    className="h-44 w-full object-cover sm:h-32"
                   />
                 </div>
               ))}
@@ -439,8 +444,8 @@ export function JobDetailWorkspace({
       </div>
 
       {job.completionStatus !== "completed" ? (
-        <div className="fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 rounded-2xl border border-neutral-200 bg-white/95 p-3 shadow-panel backdrop-blur xl:hidden">
-          <div className="grid grid-cols-3 gap-2">
+        <div className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 rounded-2xl border border-neutral-200 bg-white/95 p-3 shadow-panel backdrop-blur xl:hidden sm:inset-x-4">
+          <div className="grid gap-2 sm:grid-cols-3">
             <Button
               size="md"
               variant={job.status === "on_the_way" ? "primary" : "secondary"}

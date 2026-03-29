@@ -26,9 +26,11 @@ export function PageHeader({
             {eyebrow}
           </p>
         ) : null}
-        <div className="space-y-1">
-          <h1 className={`${typography.h2} text-ink`}>{title}</h1>
-          <p className="max-w-3xl text-sm text-neutral-600">{description}</p>
+        <div className="space-y-1.5">
+          <h1 className={`${typography.h2} text-ink text-[2rem] leading-tight sm:text-4xl md:text-5xl`}>
+            {title}
+          </h1>
+          <p className="max-w-3xl text-sm leading-6 text-neutral-600">{description}</p>
         </div>
       </div>
       {action ? (

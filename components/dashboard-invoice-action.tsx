@@ -28,7 +28,7 @@ export function DashboardInvoiceAction({
   }
 
   return (
-    <Button type="button" size="md" variant="secondary" onClick={run}>
+    <Button type="button" size="md" variant="secondary" className="w-full sm:w-auto" onClick={run}>
       {recommendation === "send_reminder" ? "Sollecita ora" : recommendation === "mark_paid" ? "Segna pagata" : "Invia review"}
     </Button>
   );

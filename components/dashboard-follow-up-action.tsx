@@ -29,7 +29,7 @@ export function DashboardFollowUpAction({
   }
 
   return (
-    <Button variant="secondary" size="md" disabled={isPending} onClick={handleClick}>
+    <Button variant="secondary" size="md" className="w-full sm:w-auto" disabled={isPending} onClick={handleClick}>
       {recommendation === "follow_up_now" ? "Invia follow-up ora" : "Posticipa follow-up"}
     </Button>
   );

@@ -64,7 +64,7 @@ export async function AppShell({
 
   return (
     <div className="min-h-screen bg-neutral-50 text-ink">
-      <div className="mx-auto flex max-w-[1440px] gap-6 px-4 py-4 lg:px-6">
+      <div className="mx-auto flex max-w-[1440px] gap-4 px-3 py-3 sm:px-4 sm:py-4 lg:gap-6 lg:px-6">
         <aside className="hidden w-72 shrink-0 rounded-[24px] bg-primary-900 p-6 text-white lg:flex lg:flex-col">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-200">
@@ -107,8 +107,8 @@ export async function AppShell({
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col">
-          <header className="mb-6 space-y-4">
-            <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-soft">
+          <header className="mb-5 space-y-3 sm:mb-6 sm:space-y-4">
+            <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-3 py-3 shadow-soft sm:px-4">
               <div className="hidden items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 md:flex">
                 <Search className="h-4 w-4 text-neutral-400" />
                 <span className="text-sm text-neutral-500">
@@ -123,7 +123,7 @@ export async function AppShell({
                 <p className="truncate text-sm font-semibold text-ink">{currentSection}</p>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <div className="hidden text-right md:block">
                   <p className="text-sm font-medium text-ink">{currentUser?.name ?? "Schedio User"}</p>
                   <p className="text-xs text-neutral-500">
@@ -147,26 +147,26 @@ export async function AppShell({
                     <LogOut className="h-4 w-4" />
                   </button>
                 </form>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-700 sm:h-10 sm:w-10 sm:text-sm">
                   {initials}
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[24px] bg-gradient-to-r from-primary-900 via-primary-700 to-primary-600 px-5 py-5 text-white shadow-panel">
+            <div className="rounded-[24px] bg-gradient-to-r from-primary-900 via-primary-700 to-primary-600 px-4 py-4 text-white shadow-panel sm:px-5 sm:py-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <p className="text-sm text-primary-100">
+                  <p className="text-xs text-primary-100 sm:text-sm">
                     {isWorker
                       ? "Il tuo calendario e i tuoi lavori, senza confusione."
                       : "Richieste, appuntamenti e preventivi in ordine."}
                   </p>
-                  <h1 className="mt-1 text-2xl font-semibold">
+                  <h1 className="mt-1 max-w-2xl text-xl font-semibold leading-tight sm:text-2xl">
                     {isWorker ? "Vedi solo quello che devi fare adesso." : "Meno caos. Piu lavori chiusi."}
                   </h1>
                 </div>
                 {isWorker ? null : (
-                  <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:flex">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:flex">
                     <QuickPill href="/leads?action=new">Nuova richiesta</QuickPill>
                     <QuickPill href="/calendar">Nuovo appuntamento</QuickPill>
                     <QuickPill href="/estimates">Nuovo preventivo</QuickPill>
@@ -222,7 +222,7 @@ function QuickPill({
       href={href}
       variant="secondary"
       size="md"
-      className="min-w-max rounded-xl border-white/15 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+      className="w-full justify-center rounded-xl border-white/15 bg-white/10 px-3 text-center text-sm text-white hover:bg-white/20 hover:text-white lg:min-w-max"
     >
       {children}
     </ButtonLink>
