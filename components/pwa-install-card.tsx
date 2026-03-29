@@ -40,7 +40,7 @@ export function PwaInstallCard() {
   }
 
   return (
-    <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4 shadow-soft">
+    <div className="rounded-2xl border border-primary-200 bg-primary-50 p-3 shadow-soft sm:p-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-sm font-semibold text-primary-900">Usa Schedio come app sul telefono</p>
@@ -48,10 +48,11 @@ export function PwaInstallCard() {
             Aggiungila alla schermata Home per aprirla più in fretta ogni mattina.
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="grid gap-2 sm:flex sm:flex-row">
           {installEvent ? (
             <Button
               size="md"
+              className="w-full sm:w-auto"
               onClick={async () => {
                 await installEvent.prompt();
                 const choice = await installEvent.userChoice;

@@ -67,7 +67,6 @@ export async function AppShell({
       ];
   const mobileShortcuts = getMobileShortcuts(pathname, isWorker);
   const showDesktopHero = pathname === "/" || !isWorker;
-  const showMobileFullHero = pathname === "/";
 
   return (
     <div className="min-h-screen bg-neutral-50 text-ink">
@@ -185,54 +184,29 @@ export async function AppShell({
                   </div>
                 </div>
 
-                {showMobileFullHero ? (
-                  <div className="rounded-[24px] bg-gradient-to-r from-primary-900 via-primary-700 to-primary-600 px-4 py-4 text-white shadow-panel sm:hidden">
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-xs text-primary-100">
-                          {isWorker
-                            ? "Il tuo calendario e i tuoi lavori, senza confusione."
-                            : "Richieste, appuntamenti e preventivi in ordine."}
-                        </p>
-                        <h1 className="mt-1 max-w-2xl text-lg font-semibold leading-tight">
-                          {isWorker ? "Vedi solo quello che devi fare adesso." : "Meno caos. Piu lavori chiusi."}
-                        </h1>
-                      </div>
-                      {isWorker ? null : (
-                        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-                          <QuickPill href="/leads?action=new">Nuova richiesta</QuickPill>
-                          <QuickPill href="/estimates">Nuovo preventivo</QuickPill>
-                          <QuickPill href="/calendar">Appuntamento</QuickPill>
-                          <QuickPill href="/invoices">Fattura</QuickPill>
-                        </div>
-                      )}
+                <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-soft sm:hidden">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-600">
+                        {pathname === "/" ? (isWorker ? "Home worker" : "Home owner") : currentSection}
+                      </p>
+                      <p className="mt-1 text-sm text-neutral-600">
+                        {mobileShortcuts.length
+                          ? "Scorciatoie rapide per questa sezione."
+                          : "Apri il menu in basso per le sezioni secondarie."}
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-soft sm:hidden">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-600">
-                          {currentSection}
-                        </p>
-                        <p className="mt-1 text-sm text-neutral-600">
-                          {mobileShortcuts.length
-                            ? "Scorciatoie rapide per questa sezione."
-                            : "Apri il menu in basso per le sezioni secondarie."}
-                        </p>
-                      </div>
+                  {mobileShortcuts.length ? (
+                    <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
+                      {mobileShortcuts.map((shortcut) => (
+                        <CompactShortcut key={shortcut.href} href={shortcut.href}>
+                          {shortcut.label}
+                        </CompactShortcut>
+                      ))}
                     </div>
-                    {mobileShortcuts.length ? (
-                      <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
-                        {mobileShortcuts.map((shortcut) => (
-                          <CompactShortcut key={shortcut.href} href={shortcut.href}>
-                            {shortcut.label}
-                          </CompactShortcut>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                )}
+                  ) : null}
+                </div>
               </>
             ) : null}
           </header>
