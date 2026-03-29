@@ -27,10 +27,10 @@ export function PageHeader({
           </p>
         ) : null}
         <div className="space-y-1.5">
-          <h1 className={`${typography.h2} text-ink text-[2rem] leading-tight sm:text-4xl md:text-5xl`}>
+          <h1 className={`${typography.h2} text-ink text-[1.75rem] leading-[1.05] sm:text-4xl md:text-5xl`}>
             {title}
           </h1>
-          <p className="max-w-3xl text-sm leading-6 text-neutral-600">{description}</p>
+          <p className="max-w-3xl text-sm leading-6 text-neutral-600 sm:text-sm">{description}</p>
         </div>
       </div>
       {action ? (

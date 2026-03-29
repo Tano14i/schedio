@@ -107,7 +107,7 @@ export async function AppShell({
         </aside>
 
         <div className="flex min-h-screen flex-1 flex-col">
-          <header className="mb-5 space-y-3 sm:mb-6 sm:space-y-4">
+          <header className="mb-4 space-y-3 sm:mb-6 sm:space-y-4">
             <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-3 py-3 shadow-soft sm:px-4">
               <div className="hidden items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 md:flex">
                 <Search className="h-4 w-4 text-neutral-400" />
@@ -161,27 +161,35 @@ export async function AppShell({
                       ? "Il tuo calendario e i tuoi lavori, senza confusione."
                       : "Richieste, appuntamenti e preventivi in ordine."}
                   </p>
-                  <h1 className="mt-1 max-w-2xl text-xl font-semibold leading-tight sm:text-2xl">
+                  <h1 className="mt-1 max-w-2xl text-lg font-semibold leading-tight sm:text-2xl">
                     {isWorker ? "Vedi solo quello che devi fare adesso." : "Meno caos. Piu lavori chiusi."}
                   </h1>
                 </div>
                 {isWorker ? null : (
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 lg:flex">
-                    <QuickPill href="/leads?action=new">Nuova richiesta</QuickPill>
-                    <QuickPill href="/calendar">Nuovo appuntamento</QuickPill>
-                    <QuickPill href="/estimates">Nuovo preventivo</QuickPill>
-                    <QuickPill href="/invoices">Nuova fattura</QuickPill>
-                  </div>
+                  <>
+                    <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:hidden">
+                      <QuickPill href="/leads?action=new">Nuova richiesta</QuickPill>
+                      <QuickPill href="/estimates">Nuovo preventivo</QuickPill>
+                      <QuickPill href="/calendar">Appuntamento</QuickPill>
+                      <QuickPill href="/invoices">Fattura</QuickPill>
+                    </div>
+                    <div className="hidden gap-2 sm:grid sm:grid-cols-2 lg:flex">
+                      <QuickPill href="/leads?action=new">Nuova richiesta</QuickPill>
+                      <QuickPill href="/calendar">Nuovo appuntamento</QuickPill>
+                      <QuickPill href="/estimates">Nuovo preventivo</QuickPill>
+                      <QuickPill href="/invoices">Nuova fattura</QuickPill>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
           </header>
 
-          <main className="pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-8">{children}</main>
+          <main className="pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-8">{children}</main>
 
           <nav
             className={cn(
-              "fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] grid gap-2 rounded-2xl border border-neutral-200 bg-white/95 p-2 shadow-panel backdrop-blur lg:hidden",
+              "fixed inset-x-0 bottom-0 z-30 grid gap-1 border-t border-neutral-200 bg-white/98 px-3 pb-[calc(0.55rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden",
               mobileNavItems.length === 2 ? "grid-cols-2" : "grid-cols-4"
             )}
           >
@@ -194,7 +202,7 @@ export async function AppShell({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium",
+                    "flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium",
                     active ? "bg-primary-50 text-primary-700" : "text-neutral-500"
                   )}
                 >
@@ -222,7 +230,7 @@ function QuickPill({
       href={href}
       variant="secondary"
       size="md"
-      className="w-full justify-center rounded-xl border-white/15 bg-white/10 px-3 text-center text-sm text-white hover:bg-white/20 hover:text-white lg:min-w-max"
+      className="min-w-[148px] justify-center rounded-xl border-white/15 bg-white/10 px-3 text-center text-sm text-white hover:bg-white/20 hover:text-white sm:min-w-0 sm:w-full lg:min-w-max"
     >
       {children}
     </ButtonLink>
