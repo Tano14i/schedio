@@ -104,47 +104,129 @@ export default async function DashboardPage() {
   return (
     <AppShell pathname="/">
       <div className="space-y-6">
-        <PageHeader
-          eyebrow="Dashboard ROI"
-          title="Vedi dove si blocca il funnel e cosa seguire oggi."
-          description="Schedio ti mostra quanti lead stanno diventando sopralluoghi, quanti sopralluoghi diventano preventivi e quali preventivi stanno fermando la cassa."
-          action={{ href: "/estimates", label: "Apri preventivi" }}
-        />
+        <div className="space-y-6 sm:hidden">
+          <section className="space-y-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-600">Home owner</p>
+              <h1 className="mt-1 text-[1.75rem] font-semibold leading-[1.05] text-ink">
+                Oggi conta questo.
+              </h1>
+              <p className="mt-2 text-sm leading-6 text-neutral-600">
+                Lead da lavorare, preventivi da seguire e incassi da sbloccare.
+              </p>
+            </div>
 
-        <PwaInstallCard />
+            <div className="grid grid-cols-2 gap-3">
+              <MobileHeroCard label="Da seguire" value={`${worklist.length}`} detail="preventivi aperti" tone="sand" />
+              <MobileHeroCard label="Da incassare" value={`${invoiceWorklist.length}`} detail="fatture attive" />
+              <MobileHeroCard label="Incassato" value={formatCurrency(invoiceMetrics.cashCollectedMonth)} detail="questo mese" />
+              <MobileHeroCard label="Lead nuovi" value={`${funnel.leadsReceived}`} detail="ingressi nel funnel" />
+            </div>
+          </section>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Lead ricevuti" value={`${funnel.leadsReceived}`} detail="Ingresso del funnel" accent="sand" />
-          <StatCard label="Sopralluoghi confermati" value={`${funnel.visitsConfirmed}`} detail="Agenda che si riempie" />
-          <StatCard label="Preventivi inviati" value={`${funnel.estimatesSent}`} detail="Preventivi aperti" />
-          <StatCard label="Preventivi accettati" value={`${funnel.estimatesAccepted}`} detail="Lavori che si chiudono" />
+          <PwaInstallCard />
+
+          <SectionCard title="Azioni rapide" subtitle="Le 4 azioni che usi piu spesso da telefono.">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ButtonLink href="/leads?action=new" className="w-full">Nuova richiesta</ButtonLink>
+              <ButtonLink href="/calendar" variant="secondary" className="w-full">Nuovo appuntamento</ButtonLink>
+              <ButtonLink href="/estimates" variant="secondary" className="w-full">Apri preventivi</ButtonLink>
+              <ButtonLink href="/invoices" variant="secondary" className="w-full">Apri fatture</ButtonLink>
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Da seguire adesso" subtitle="Prima i preventivi bloccati, poi il resto.">
+            <div className="space-y-3">
+              {worklist.length ? (
+                worklist.slice(0, 3).map((item) => (
+                  <div key={item.estimateId} className="rounded-2xl border border-neutral-200 p-4">
+                    <p className="font-medium text-ink">{item.customerName}</p>
+                    <p className="mt-1 text-sm text-neutral-600">{formatCurrency(item.total)} · inviato il {formatCompactDate(item.sentAt)}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
+                        {followUpLabel(item.followUpStatus)}
+                      </span>
+                      <DashboardFollowUpAction estimateId={item.estimateId} recommendation={item.recommendation} />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-neutral-600">Nessun preventivo da seguire oggi.</p>
+              )}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Da incassare" subtitle="Fatture che richiedono un'azione subito.">
+            <div className="space-y-3">
+              {invoiceWorklist.length ? (
+                invoiceWorklist.slice(0, 3).map((item) => (
+                  <div key={item.invoiceId} className="rounded-2xl border border-neutral-200 p-4">
+                    <p className="font-medium text-ink">{item.customerName}</p>
+                    <p className="mt-1 text-sm text-neutral-600">{item.number} · {formatCurrency(item.total)}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
+                        {invoiceReminderLabel(item.reminderStatus)}
+                      </span>
+                      <DashboardInvoiceAction
+                        invoiceId={item.invoiceId}
+                        recommendation={item.recommendation as "send_invoice" | "send_reminder" | "mark_paid" | "send_review"}
+                      />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-neutral-600">Nessuna fattura da seguire oggi.</p>
+              )}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Attivita recenti" subtitle="Gli ultimi eventi utili, senza rumore.">
+            <ActivityTimeline items={activityItems.slice(0, 5)} />
+          </SectionCard>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Fatture aperte" value={`${invoiceMetrics.openInvoices}`} detail="Da incassare" accent="sand" />
-          <StatCard label="Fatture scadute" value={`${invoiceMetrics.overdueInvoices}`} detail="Da sollecitare" />
-          <StatCard label="Incassato mese" value={formatCurrency(invoiceMetrics.cashCollectedMonth)} detail="Cassa registrata" />
-          <StatCard label="Review request inviate" value={`${invoiceMetrics.reviewRequestsSent}`} detail={`${invoiceMetrics.reviewRequestsClicked} cliccate`} />
-        </div>
+        <div className="hidden space-y-6 sm:block">
+          <PageHeader
+            eyebrow="Dashboard ROI"
+            title="Vedi dove si blocca il funnel e cosa seguire oggi."
+            description="Schedio ti mostra quanti lead stanno diventando sopralluoghi, quanti sopralluoghi diventano preventivi e quali preventivi stanno fermando la cassa."
+            action={{ href: "/estimates", label: "Apri preventivi" }}
+          />
 
-        <SectionCard title="Azioni rapide" subtitle="I passaggi che muovono il funnel oggi.">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <ButtonLink href="/leads?action=new" className="w-full">
-              Nuova richiesta
-            </ButtonLink>
-            <ButtonLink href="/calendar" variant="secondary" className="w-full">
-              Nuovo appuntamento
-            </ButtonLink>
-            <ButtonLink href="/estimates" variant="secondary" className="w-full">
-              Nuovo preventivo
-            </ButtonLink>
-            <ButtonLink href="/whatsapp" variant="secondary" className="w-full">
-              Apri WhatsApp
-            </ButtonLink>
+          <PwaInstallCard />
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Lead ricevuti" value={`${funnel.leadsReceived}`} detail="Ingresso del funnel" accent="sand" />
+            <StatCard label="Sopralluoghi confermati" value={`${funnel.visitsConfirmed}`} detail="Agenda che si riempie" />
+            <StatCard label="Preventivi inviati" value={`${funnel.estimatesSent}`} detail="Preventivi aperti" />
+            <StatCard label="Preventivi accettati" value={`${funnel.estimatesAccepted}`} detail="Lavori che si chiudono" />
           </div>
-        </SectionCard>
 
-        <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Fatture aperte" value={`${invoiceMetrics.openInvoices}`} detail="Da incassare" accent="sand" />
+            <StatCard label="Fatture scadute" value={`${invoiceMetrics.overdueInvoices}`} detail="Da sollecitare" />
+            <StatCard label="Incassato mese" value={formatCurrency(invoiceMetrics.cashCollectedMonth)} detail="Cassa registrata" />
+            <StatCard label="Review request inviate" value={`${invoiceMetrics.reviewRequestsSent}`} detail={`${invoiceMetrics.reviewRequestsClicked} cliccate`} />
+          </div>
+
+          <SectionCard title="Azioni rapide" subtitle="I passaggi che muovono il funnel oggi.">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <ButtonLink href="/leads?action=new" className="w-full">
+                Nuova richiesta
+              </ButtonLink>
+              <ButtonLink href="/calendar" variant="secondary" className="w-full">
+                Nuovo appuntamento
+              </ButtonLink>
+              <ButtonLink href="/estimates" variant="secondary" className="w-full">
+                Nuovo preventivo
+              </ButtonLink>
+              <ButtonLink href="/whatsapp" variant="secondary" className="w-full">
+                Apri WhatsApp
+              </ButtonLink>
+            </div>
+          </SectionCard>
+
+          <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
           <SectionCard title="Funnel del mese" subtitle="Numeri assoluti e passaggio tra uno step e il successivo.">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {funnelSteps.map((step, index) => {
@@ -174,93 +256,94 @@ export default async function DashboardPage() {
           </SectionCard>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-          <SectionCard title="Da seguire oggi" subtitle="Preventivi da richiamare, vedere o sbloccare adesso.">
-            <div className="space-y-3">
-              {worklist.length ? (
-                worklist.map((item) => (
-                  <div key={item.estimateId} className="rounded-2xl border border-neutral-200 p-4">
-                    <div className="flex flex-col gap-3">
-                      <div>
-                        <p className="font-medium text-ink">{item.customerName}</p>
-                        <p className="mt-1 text-sm text-neutral-600">
-                          Inviato il {formatCompactDate(item.sentAt)} - {formatCurrency(item.total)}
-                        </p>
-                        <p className="mt-1 text-sm text-neutral-500">
-                          {item.viewedAt
-                            ? `Preventivo visto il ${formatCompactDate(item.viewedAt)}`
-                            : "Preventivo non ancora visto"}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
-                          {followUpLabel(item.followUpStatus)}
-                        </span>
-                        <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">
-                          {recommendationLabel(item.recommendation)}
-                        </span>
-                        <DashboardFollowUpAction
-                          estimateId={item.estimateId}
-                          recommendation={item.recommendation}
-                        />
-                        <ButtonLink href="/estimates" variant="secondary" size="md" className="w-full sm:w-auto">
-                          Apri preventivi
-                        </ButtonLink>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-neutral-600">Nessun preventivo da seguire oggi.</p>
-              )}
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Attivita recenti" subtitle="Eventi che alimentano funnel e worklist.">
-            <ActivityTimeline items={activityItems} />
-          </SectionCard>
-        </div>
-
-        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <SectionCard title="Da incassare" subtitle="Fatture aperte, scadute o review da sbloccare.">
-            <div className="space-y-3">
-              {invoiceWorklist.length ? (
-                invoiceWorklist.map((item) => (
-                  <div key={item.invoiceId} className="rounded-2xl border border-neutral-200 p-4">
-                    <div className="flex flex-col gap-3">
-                      <div>
-                        <p className="font-medium text-ink">{item.customerName}</p>
-                        <p className="mt-1 text-sm text-neutral-600">
-                          {item.number} - {formatCurrency(item.total)}
-                        </p>
-                        <p className="mt-1 text-sm text-neutral-500">
-                          {item.dueDate ? `Scadenza ${formatCompactDate(item.dueDate)}` : "Scadenza da definire"}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
-                          {invoiceReminderLabel(item.reminderStatus)}
-                        </span>
-                        <DashboardInvoiceAction
-                          invoiceId={item.invoiceId}
-                          recommendation={item.recommendation as "send_invoice" | "send_reminder" | "mark_paid" | "send_review"}
-                        />
-                        <ButtonLink href="/invoices" variant="secondary" size="md" className="w-full sm:w-auto">
-                          Apri fatture
-                        </ButtonLink>
+          <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
+            <SectionCard title="Da seguire oggi" subtitle="Preventivi da richiamare, vedere o sbloccare adesso.">
+              <div className="space-y-3">
+                {worklist.length ? (
+                  worklist.map((item) => (
+                    <div key={item.estimateId} className="rounded-2xl border border-neutral-200 p-4">
+                      <div className="flex flex-col gap-3">
+                        <div>
+                          <p className="font-medium text-ink">{item.customerName}</p>
+                          <p className="mt-1 text-sm text-neutral-600">
+                            Inviato il {formatCompactDate(item.sentAt)} - {formatCurrency(item.total)}
+                          </p>
+                          <p className="mt-1 text-sm text-neutral-500">
+                            {item.viewedAt
+                              ? `Preventivo visto il ${formatCompactDate(item.viewedAt)}`
+                              : "Preventivo non ancora visto"}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
+                            {followUpLabel(item.followUpStatus)}
+                          </span>
+                          <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">
+                            {recommendationLabel(item.recommendation)}
+                          </span>
+                          <DashboardFollowUpAction
+                            estimateId={item.estimateId}
+                            recommendation={item.recommendation}
+                          />
+                          <ButtonLink href="/estimates" variant="secondary" size="md" className="w-full sm:w-auto">
+                            Apri preventivi
+                          </ButtonLink>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-neutral-600">Nessuna fattura da seguire oggi.</p>
-              )}
-            </div>
-          </SectionCard>
+                  ))
+                ) : (
+                  <p className="text-sm text-neutral-600">Nessun preventivo da seguire oggi.</p>
+                )}
+              </div>
+            </SectionCard>
 
-          <SectionCard title="Tempo fattura -> pagamento" subtitle="Quanto rapidamente il lavoro diventa incasso.">
-            <TimingRow label="Invio fattura -> pagamento" value={invoiceMetrics.avgInvoiceSentToPaidHours} />
-          </SectionCard>
+            <SectionCard title="Attivita recenti" subtitle="Eventi che alimentano funnel e worklist.">
+              <ActivityTimeline items={activityItems} />
+            </SectionCard>
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <SectionCard title="Da incassare" subtitle="Fatture aperte, scadute o review da sbloccare.">
+              <div className="space-y-3">
+                {invoiceWorklist.length ? (
+                  invoiceWorklist.map((item) => (
+                    <div key={item.invoiceId} className="rounded-2xl border border-neutral-200 p-4">
+                      <div className="flex flex-col gap-3">
+                        <div>
+                          <p className="font-medium text-ink">{item.customerName}</p>
+                          <p className="mt-1 text-sm text-neutral-600">
+                            {item.number} - {formatCurrency(item.total)}
+                          </p>
+                          <p className="mt-1 text-sm text-neutral-500">
+                            {item.dueDate ? `Scadenza ${formatCompactDate(item.dueDate)}` : "Scadenza da definire"}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
+                            {invoiceReminderLabel(item.reminderStatus)}
+                          </span>
+                          <DashboardInvoiceAction
+                            invoiceId={item.invoiceId}
+                            recommendation={item.recommendation as "send_invoice" | "send_reminder" | "mark_paid" | "send_review"}
+                          />
+                          <ButtonLink href="/invoices" variant="secondary" size="md" className="w-full sm:w-auto">
+                            Apri fatture
+                          </ButtonLink>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-neutral-600">Nessuna fattura da seguire oggi.</p>
+                )}
+              </div>
+            </SectionCard>
+
+            <SectionCard title="Tempo fattura -> pagamento" subtitle="Quanto rapidamente il lavoro diventa incasso.">
+              <TimingRow label="Invio fattura -> pagamento" value={invoiceMetrics.avgInvoiceSentToPaidHours} />
+            </SectionCard>
+          </div>
         </div>
       </div>
     </AppShell>
@@ -308,4 +391,28 @@ function invoiceReminderLabel(status: string) {
   };
 
   return labels[status] ?? status;
+}
+
+function MobileHeroCard({
+  label,
+  value,
+  detail,
+  tone = "default"
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  tone?: "default" | "sand";
+}) {
+  return (
+    <div
+      className={`rounded-2xl border p-4 ${
+        tone === "sand" ? "border-warning-200 bg-warning-50" : "border-neutral-200 bg-white"
+      }`}
+    >
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-ink">{value}</p>
+      <p className="text-sm text-neutral-600">{detail}</p>
+    </div>
+  );
 }
