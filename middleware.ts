@@ -3,7 +3,15 @@ import type { NextRequest } from "next/server";
 import { decodeSessionCookie, isWorker, SESSION_COOKIE_NAME } from "@/lib/auth-cookie";
 import { canAccessPath, getPostLoginPath } from "@/lib/authz";
 
-const PUBLIC_PATHS = ["/login", "/public", "/api/public", "/api/auth", "/_next", "/favicon.ico"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/public",
+  "/api/public",
+  "/api/auth",
+  "/api/whatsapp/webhook",
+  "/_next",
+  "/favicon.ico"
+];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
