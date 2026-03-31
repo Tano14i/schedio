@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { UserRole } from "@prisma/client";
 import { CheckCircle2, ChevronLeft, ChevronRight, MousePointerClick, Sparkles, X } from "lucide-react";
 import { Button, ButtonLink } from "@/components/button";
@@ -232,6 +232,7 @@ export function InAppTutorial({
   });
   const [hydrated, setHydrated] = useState(false);
   const [spotlight, setSpotlight] = useState<SpotlightRect | null>(null);
+  const lastAutoScrollKey = useRef("");
 
   useEffect(() => {
     try {
@@ -276,6 +277,37 @@ export function InAppTutorial({
   const isCurrentComplete = completedSet.has(currentStep.id);
   const allCompleted = completedCount === steps.length;
   const activeTarget = currentStep ? getActiveTarget(currentStep, pathname) : null;
+
+  useEffect(() => {
+    if (!hydrated || state.dismissed || allCompleted || !activeTarget) {
+      return;
+    }
+
+    const key = `${pathname}:${currentStep.id}:${activeTarget.selector}`;
+    if (lastAutoScrollKey.current === key) {
+      return;
+    }
+
+    const element = document.querySelector(activeTarget.selector) as HTMLElement | null;
+    if (!element) {
+      return;
+    }
+
+    const rect = element.getBoundingClientRect();
+    const topSafeZone = 120;
+    const bottomSafeZone = typeof window !== "undefined" ? window.innerHeight - 180 : 0;
+    const outsideViewport = rect.top < topSafeZone || rect.bottom > bottomSafeZone;
+
+    if (outsideViewport) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest"
+      });
+    }
+
+    lastAutoScrollKey.current = key;
+  }, [activeTarget, allCompleted, currentStep.id, hydrated, pathname, state.dismissed]);
 
   useEffect(() => {
     if (!hydrated || state.dismissed || allCompleted || !activeTarget) {
