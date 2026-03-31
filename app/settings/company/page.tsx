@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { ButtonLink } from "@/components/button";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
 import { getCurrentSession } from "@/lib/auth";
@@ -26,6 +27,17 @@ export default async function CompanySetupPage() {
               <Field label="Email" value={company.email ?? undefined} />
               <Field label="Telefono" value={company.phone ?? undefined} />
               <Field label="Indirizzo" value={company.address ?? undefined} />
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Team e costi orari" subtitle="Imposta il costo orario dei tecnici per calcolare davvero la marginalita dei lavori.">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-neutral-600">
+                Da qui passi alla schermata team, dove aggiorni il costo orario di owner e worker.
+              </p>
+              <ButtonLink href="/settings/team" className="w-full sm:w-auto">
+                Apri team
+              </ButtonLink>
             </div>
           </SectionCard>
         </div>

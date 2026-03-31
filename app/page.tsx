@@ -91,7 +91,7 @@ export default async function DashboardPage() {
       .then((items) =>
         items.slice(0, 12).map((item) => ({
           id: item.id,
-          entityType: item.entityType as "lead" | "job" | "estimate" | "invoice" | "customer" | "whatsapp",
+          entityType: item.entityType as "lead" | "job" | "estimate" | "invoice" | "customer" | "whatsapp" | "user",
           entityId: item.entityId,
           eventType: item.eventType,
           message: getActivityMessage(item),

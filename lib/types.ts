@@ -335,7 +335,7 @@ export type Automation = {
 
 export type ActivityLog = {
   id: string;
-  entityType: "lead" | "job" | "estimate" | "invoice" | "customer" | "whatsapp";
+  entityType: "lead" | "job" | "estimate" | "invoice" | "customer" | "whatsapp" | "user";
   entityId: string;
   eventType: string;
   message: string;

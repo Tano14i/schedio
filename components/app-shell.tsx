@@ -29,7 +29,8 @@ const navItems = [
   { href: "/estimates", label: "Preventivi", icon: FileText },
   { href: "/invoices", label: "Fatture", icon: Receipt },
   { href: "/automations", label: "Automazioni", icon: Settings },
-  { href: "/settings/company", label: "Impostazioni", icon: Settings }
+  { href: "/settings/company", label: "Impostazioni", icon: Settings },
+  { href: "/settings/team", label: "Team", icon: Users }
 ];
 
 export async function AppShell({
@@ -297,6 +298,7 @@ function getSectionLabel(pathname: string) {
     ["/automations", "Automazioni"],
     ["/activity", "Attivita"],
     ["/settings/company", "Impostazioni"],
+    ["/settings/team", "Team"],
     ["/more", "Altro"]
   ];
 
@@ -377,7 +379,7 @@ function getMobileShortcuts(pathname: string, isWorker: boolean) {
 
 function isMobileNavActive(pathname: string, href: string) {
   if (href === "/more") {
-    return ["/whatsapp", "/customers", "/estimates", "/invoices", "/automations", "/activity", "/settings/company", "/more"].some(
+    return ["/whatsapp", "/customers", "/estimates", "/invoices", "/automations", "/activity", "/settings/company", "/settings/team", "/more"].some(
       (path) => pathname === path || pathname.startsWith(`${path}/`)
     );
   }

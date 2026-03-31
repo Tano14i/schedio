@@ -10,6 +10,7 @@ const ownerSections = [
   { href: "/invoices", label: "Fatture", description: "Incassi, reminder e review." },
   { href: "/automations", label: "Automazioni", description: "Runner, code e ultime esecuzioni." },
   { href: "/activity", label: "Attivita", description: "Timeline unificata degli eventi." },
+  { href: "/settings/team", label: "Team", description: "Costo orario di owner e worker." },
   { href: "/settings/company", label: "Impostazioni", description: "Dati azienda e configurazione." }
 ];
 

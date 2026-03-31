@@ -35,7 +35,8 @@ export function getVisibleNavHrefs(role: SessionRole) {
         "/estimates",
         "/invoices",
         "/automations",
-        "/settings/company"
+        "/settings/company",
+        "/settings/team"
       ];
 }
 

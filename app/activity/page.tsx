@@ -13,7 +13,7 @@ export default async function ActivityPage() {
         <ActivityWorkspace
           initialItems={items.map((item) => ({
             id: item.id,
-            entityType: item.entityType as "lead" | "job" | "estimate" | "invoice" | "customer" | "whatsapp",
+            entityType: item.entityType as "lead" | "job" | "estimate" | "invoice" | "customer" | "whatsapp" | "user",
             entityId: item.entityId,
             eventType: item.eventType,
             message: getActivityMessage(item),
