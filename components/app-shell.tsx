@@ -15,6 +15,7 @@ import {
   Users
 } from "lucide-react";
 import { ButtonLink } from "@/components/button";
+import { InAppTutorial } from "@/components/in-app-tutorial";
 import { getCurrentSession } from "@/lib/auth";
 import { getVisibleNavHrefs } from "@/lib/authz";
 import { cn } from "@/lib/utils";
@@ -55,6 +56,7 @@ export async function AppShell({
     .toUpperCase() ?? "SC";
   const currentSection =
     getSectionLabel(pathname) ?? "Schedio";
+  const firstName = currentUser?.name?.split(" ")[0] ?? "qui";
   const mobileNavItems = isWorker
     ? [
         { href: "/jobs", label: "Lavori", icon: CalendarDays },
@@ -211,6 +213,14 @@ export async function AppShell({
               </>
             ) : null}
           </header>
+
+          {currentUser ? (
+            <InAppTutorial
+              pathname={pathname}
+              role={currentUser.role}
+              firstName={firstName}
+            />
+          ) : null}
 
           <main className="pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-8">{children}</main>
 
