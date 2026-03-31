@@ -8,6 +8,7 @@ import { Drawer } from "@/components/drawer";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
+import type { WhatsAppConnectionStatus } from "@/lib/whatsapp-config";
 import { formatDateTime } from "@/lib/utils";
 
 export type WhatsAppAdminItem = {
@@ -42,15 +43,6 @@ export type WhatsAppAdminItem = {
     slotLabel?: string;
     candidateCount: number;
   } | null;
-};
-
-export type WhatsAppConnectionStatus = {
-  webhookUrl: string;
-  graphVersion: string;
-  verifyTokenConfigured: boolean;
-  accessTokenConfigured: boolean;
-  phoneNumberIdConfigured: boolean;
-  cloudApiReady: boolean;
 };
 
 type IntakeFormState = {
@@ -164,57 +156,6 @@ export function WhatsAppAdminPanel({
     router.push(selectedId ? `/whatsapp?thread=${selectedId}` : "/whatsapp", { scroll: false });
   }
 
-  async function createWhatsAppIntake() {
-    if (
-      !intakeForm.customerName.trim() ||
-      !intakeForm.phone.trim() ||
-      !intakeForm.serviceType.trim() ||
-      !intakeForm.description.trim()
-    ) {
-      setFeedback("Inserisci nome cliente, telefono, tipo di lavoro e descrizione.");
-      return;
-    }
-
-    setIsCreatingIntake(true);
-    setFeedback("");
-
-    try {
-      const response = await fetch("/api/whatsapp/intake", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerName: intakeForm.customerName,
-          phone: intakeForm.phone,
-          serviceType: intakeForm.serviceType,
-          description: intakeForm.description,
-          address: intakeForm.address || undefined,
-          measurements: intakeForm.measurements || undefined,
-          preferredWindow: intakeForm.preferredWindow || undefined,
-          photos: intakeForm.photos
-            .split("\n")
-            .map((item) => item.trim())
-            .filter(Boolean)
-        })
-      });
-      const result = await response.json().catch(() => null);
-
-      if (!response.ok || !result?.item?.thread?.id) {
-        setFeedback(result?.message ?? "Qualcosa non ha funzionato, riprova.");
-        return;
-      }
-
-      const nextThreadId = result.item.thread.id as string;
-      setSelectedId(nextThreadId);
-      setIntakeForm(emptyIntakeForm);
-      setIsIntakeOpen(false);
-      setFeedback("Richiesta WhatsApp salvata nel database.");
-      router.push(`/whatsapp?thread=${nextThreadId}`, { scroll: false });
-      router.refresh();
-    } finally {
-      setIsCreatingIntake(false);
-    }
-  }
-
   async function sendTestWhatsAppMessage() {
     if (!testPhone.trim() || !testMessage.trim()) {
       setFeedback("Inserisci numero WhatsApp e testo del messaggio di prova.");
@@ -278,6 +219,57 @@ export function WhatsAppAdminPanel({
           : result?.message ?? "Payload template generato."
       );
     });
+  }
+
+  async function createWhatsAppIntake() {
+    if (
+      !intakeForm.customerName.trim() ||
+      !intakeForm.phone.trim() ||
+      !intakeForm.serviceType.trim() ||
+      !intakeForm.description.trim()
+    ) {
+      setFeedback("Inserisci nome cliente, telefono, tipo di lavoro e descrizione.");
+      return;
+    }
+
+    setIsCreatingIntake(true);
+    setFeedback("");
+
+    try {
+      const response = await fetch("/api/whatsapp/intake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerName: intakeForm.customerName,
+          phone: intakeForm.phone,
+          serviceType: intakeForm.serviceType,
+          description: intakeForm.description,
+          address: intakeForm.address || undefined,
+          measurements: intakeForm.measurements || undefined,
+          preferredWindow: intakeForm.preferredWindow || undefined,
+          photos: intakeForm.photos
+            .split("\n")
+            .map((item) => item.trim())
+            .filter(Boolean)
+        })
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok || !result?.item?.thread?.id) {
+        setFeedback(result?.message ?? "Qualcosa non ha funzionato, riprova.");
+        return;
+      }
+
+      const nextThreadId = result.item.thread.id as string;
+      setSelectedId(nextThreadId);
+      setIntakeForm(emptyIntakeForm);
+      setIsIntakeOpen(false);
+      setFeedback("Richiesta WhatsApp salvata nel database.");
+      router.push(`/whatsapp?thread=${nextThreadId}`, { scroll: false });
+      router.refresh();
+    } finally {
+      setIsCreatingIntake(false);
+    }
   }
 
   function renderPrimaryAction() {
@@ -459,6 +451,44 @@ export function WhatsAppAdminPanel({
         </SectionCard>
 
         <SectionCard
+          title="Stato integrazione WhatsApp"
+          subtitle="Nella inbox operativa basta sapere se il canale e attivo e dove completare il setup."
+        >
+          <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <StatusPill
+                label="Canale"
+                value={connection.cloudApiReady ? "Attivo" : "Da collegare"}
+                tone={connection.cloudApiReady ? "ok" : "warning"}
+              />
+              <StatusPill
+                label="Webhook"
+                value={connection.verifyTokenConfigured ? "Verificato" : "Da configurare"}
+                tone={connection.verifyTokenConfigured ? "ok" : "warning"}
+              />
+              <StatusPill
+                label="Invio messaggi"
+                value={connection.cloudApiReady ? "Disponibile" : "Non attivo"}
+                tone={connection.cloudApiReady ? "ok" : "warning"}
+              />
+            </div>
+
+            <div className="flex flex-col gap-3 lg:w-[260px]">
+              <Link
+                href="/settings/company#whatsapp"
+                className="inline-flex items-center justify-center rounded-xl bg-primary-500 px-4 py-3 text-sm font-medium text-white transition hover:bg-primary-600"
+              >
+                Apri configurazione WhatsApp
+              </Link>
+              <p className="text-sm text-neutral-600">
+                Token, webhook e invio test stanno in Impostazioni azienda.
+              </p>
+            </div>
+          </div>
+        </SectionCard>
+
+        {false ? (
+        <SectionCard
           title="Collega WhatsApp Cloud API"
           subtitle="Configura webhook, token e fai un invio test senza uscire da Schedio."
         >
@@ -560,6 +590,7 @@ export function WhatsAppAdminPanel({
             </div>
           </div>
         </SectionCard>
+        ) : null}
 
         {notice ? (
           <div className="rounded-2xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">

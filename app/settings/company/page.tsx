@@ -2,8 +2,10 @@ import { AppShell } from "@/components/app-shell";
 import { ButtonLink } from "@/components/button";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
+import { WhatsAppSetupCard } from "@/components/whatsapp-setup-card";
 import { getCurrentSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getWhatsAppConnectionStatus } from "@/lib/whatsapp-config";
 
 export default async function CompanySetupPage() {
   try {
@@ -11,6 +13,7 @@ export default async function CompanySetupPage() {
     const company = session?.user.company ?? await prisma.company.findFirstOrThrow({
       orderBy: { createdAt: "asc" }
     });
+    const connection = getWhatsAppConnectionStatus();
 
     return (
       <AppShell pathname="/settings/company">
@@ -41,6 +44,8 @@ export default async function CompanySetupPage() {
             </div>
           </SectionCard>
 
+          <WhatsAppSetupCard connection={connection} />
+
           <SectionCard title="Setup iniziale consigliato" subtitle="Le 3 mosse che rendono Schedio subito piu utile.">
             <div className="grid gap-3 md:grid-cols-3">
               <SetupStep
@@ -51,9 +56,9 @@ export default async function CompanySetupPage() {
               />
               <SetupStep
                 title="2. WhatsApp"
-                description="Collega il numero o usa il pannello thread."
-                href="/whatsapp"
-                cta="Apri WhatsApp"
+                description="Completa webhook, token e invio test una volta sola."
+                href="/settings/company#whatsapp"
+                cta="Configura WhatsApp"
               />
               <SetupStep
                 title="3. Demo"
