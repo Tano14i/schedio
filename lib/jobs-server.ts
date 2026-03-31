@@ -287,6 +287,7 @@ export async function getJobMarginOverview() {
   const trackedJobs = enriched.filter((job) => job.workedHours > 0 || job.costItems.length > 0);
   const atRiskJobs = trackedJobs.filter((job) => job.financials.expectedRevenue > 0 && job.financials.margin < 0);
   const healthyJobs = trackedJobs.filter((job) => job.financials.expectedRevenue > 0 && job.financials.margin >= 0);
+  const jobsWithMarginRate = trackedJobs.filter((job) => job.financials.marginRate !== null);
 
   return {
     jobs: enriched,
@@ -295,7 +296,19 @@ export async function getJobMarginOverview() {
       healthyJobs: healthyJobs.length,
       atRiskJobs: atRiskJobs.length,
       totalWorkedHours: Number(trackedJobs.reduce((sum, job) => sum + job.workedHours, 0).toFixed(2)),
-      totalLaborCost: Number(trackedJobs.reduce((sum, job) => sum + job.laborCost, 0).toFixed(2))
+      totalLaborCost: Number(trackedJobs.reduce((sum, job) => sum + job.laborCost, 0).toFixed(2)),
+      averageMarginValue: Number(
+        (trackedJobs.reduce((sum, job) => sum + job.financials.margin, 0) / (trackedJobs.length || 1)).toFixed(2)
+      ),
+      averageMarginRate:
+        jobsWithMarginRate.length > 0
+          ? Number(
+              (
+                jobsWithMarginRate.reduce((sum, job) => sum + (job.financials.marginRate ?? 0), 0) /
+                jobsWithMarginRate.length
+              ).toFixed(1)
+            )
+          : null
     }
   };
 }

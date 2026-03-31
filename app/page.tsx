@@ -3,6 +3,8 @@ import { ActivityTimeline } from "@/components/activity-timeline";
 import { ButtonLink } from "@/components/button";
 import { DashboardFollowUpAction } from "@/components/dashboard-follow-up-action";
 import { DashboardInvoiceAction } from "@/components/dashboard-invoice-action";
+import { DemoPlaybookCard } from "@/components/demo-playbook-card";
+import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { PageHeader } from "@/components/page-header";
 import { PwaInstallCard } from "@/components/pwa-install-card";
 import { SectionCard } from "@/components/section-card";
@@ -84,7 +86,9 @@ export default async function DashboardPage() {
         healthyJobs: 0,
         atRiskJobs: 0,
         totalWorkedHours: 0,
-        totalLaborCost: 0
+        totalLaborCost: 0,
+        averageMarginValue: 0,
+        averageMarginRate: null
       }
     })),
     getActivityFeed()
@@ -146,13 +150,21 @@ export default async function DashboardPage() {
             </div>
           </SectionCard>
 
+          <SectionCard title="Da dove partire" subtitle="Primi passi chiari per capire il valore di Schedio.">
+            <OnboardingChecklist />
+          </SectionCard>
+
+          <DemoPlaybookCard />
+
           <SectionCard title="Da seguire adesso" subtitle="Prima i preventivi bloccati, poi il resto.">
             <div className="space-y-3">
               {worklist.length ? (
                 worklist.slice(0, 3).map((item) => (
                   <div key={item.estimateId} className="rounded-2xl border border-neutral-200 p-4">
                     <p className="font-medium text-ink">{item.customerName}</p>
-                    <p className="mt-1 text-sm text-neutral-600">{formatCurrency(item.total)} · inviato il {formatCompactDate(item.sentAt)}</p>
+                    <p className="mt-1 text-sm text-neutral-600">
+                      {formatCurrency(item.total)} - inviato il {formatCompactDate(item.sentAt)}
+                    </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span className="rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
                         {followUpLabel(item.followUpStatus)}
@@ -173,7 +185,9 @@ export default async function DashboardPage() {
                 invoiceWorklist.slice(0, 3).map((item) => (
                   <div key={item.invoiceId} className="rounded-2xl border border-neutral-200 p-4">
                     <p className="font-medium text-ink">{item.customerName}</p>
-                    <p className="mt-1 text-sm text-neutral-600">{item.number} · {formatCurrency(item.total)}</p>
+                    <p className="mt-1 text-sm text-neutral-600">
+                      {item.number} - {formatCurrency(item.total)}
+                    </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <span className="rounded-full bg-warning-50 px-3 py-1 text-xs font-medium text-warning-700">
                         {invoiceReminderLabel(item.reminderStatus)}
@@ -257,6 +271,23 @@ export default async function DashboardPage() {
             <StatCard label="Lavori sani" value={`${marginOverview.metrics.healthyJobs}`} detail="Margine positivo" />
             <StatCard label="Lavori a rischio" value={`${marginOverview.metrics.atRiskJobs}`} detail="Margine sotto zero" />
             <StatCard label="Costo manodopera" value={formatCurrency(marginOverview.metrics.totalLaborCost)} detail={`${marginOverview.metrics.totalWorkedHours} ore registrate`} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Margine medio" value={formatCurrency(marginOverview.metrics.averageMarginValue)} detail="Media lavori tracciati" accent="sand" />
+            <StatCard label="Margine medio %" value={marginOverview.metrics.averageMarginRate !== null ? `${marginOverview.metrics.averageMarginRate}%` : "n/d"} detail="Quanto resta sul lavoro" />
+            <StatCard label="Ore registrate" value={`${marginOverview.metrics.totalWorkedHours}h`} detail="Tempo caricato dai tecnici" />
+            <StatCard label="Lavori da proteggere" value={`${marginOverview.metrics.atRiskJobs}`} detail="Dove intervenire subito" />
+          </div>
+
+          <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+            <SectionCard title="Onboarding rapido" subtitle="Le 4 cose da fare per sentire subito il valore del prodotto.">
+              <OnboardingChecklist />
+            </SectionCard>
+
+            <SectionCard title="Playbook demo" subtitle="Il percorso piu semplice da mostrare a un handyman in 10 minuti.">
+              <DemoPlaybookCard />
+            </SectionCard>
           </div>
 
           <SectionCard title="Azioni rapide" subtitle="I passaggi che muovono il funnel oggi.">

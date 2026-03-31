@@ -45,7 +45,7 @@ export function PwaInstallCard() {
         <div>
           <p className="text-sm font-semibold text-primary-900">Usa Schedio come app sul telefono</p>
           <p className="mt-1 text-sm text-primary-800">
-            Aggiungila alla schermata Home per aprirla più in fretta ogni mattina.
+            Aggiungila alla schermata Home per aprirla piu in fretta ogni mattina.
           </p>
         </div>
         <div className="grid gap-2 sm:flex sm:flex-row">

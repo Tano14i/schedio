@@ -40,6 +40,29 @@ export default async function CompanySetupPage() {
               </ButtonLink>
             </div>
           </SectionCard>
+
+          <SectionCard title="Setup iniziale consigliato" subtitle="Le 3 mosse che rendono Schedio subito piu utile.">
+            <div className="grid gap-3 md:grid-cols-3">
+              <SetupStep
+                title="1. Team"
+                description="Imposta il costo orario dei tecnici."
+                href="/settings/team"
+                cta="Vai al team"
+              />
+              <SetupStep
+                title="2. WhatsApp"
+                description="Collega il numero o usa il pannello thread."
+                href="/whatsapp"
+                cta="Apri WhatsApp"
+              />
+              <SetupStep
+                title="3. Demo"
+                description="Chiudi un lavoro, invia un preventivo e controlla il margine."
+                href="/"
+                cta="Apri dashboard"
+              />
+            </div>
+          </SectionCard>
         </div>
       </AppShell>
     );
@@ -69,6 +92,28 @@ function Field({ label, value }: { label: string; value?: string }) {
     <div className="rounded-3xl bg-slate-50 p-4">
       <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
       <p className="mt-2 text-sm font-medium text-ink">{value ?? "-"}</p>
+    </div>
+  );
+}
+
+function SetupStep({
+  title,
+  description,
+  href,
+  cta
+}: {
+  title: string;
+  description: string;
+  href: string;
+  cta: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+      <p className="text-sm font-semibold text-ink">{title}</p>
+      <p className="mt-2 text-sm text-neutral-600">{description}</p>
+      <ButtonLink href={href} variant="secondary" className="mt-4 w-full">
+        {cta}
+      </ButtonLink>
     </div>
   );
 }
