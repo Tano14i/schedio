@@ -267,6 +267,24 @@ export function InAppTutorial({
     window.localStorage.setItem(storageKey, JSON.stringify(state));
   }, [hydrated, state, storageKey]);
 
+  useEffect(() => {
+    if (!hydrated || state.dismissed) {
+      return;
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setState((current) => ({
+          ...current,
+          dismissed: true
+        }));
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [hydrated, state.dismissed]);
+
   const completedSet = new Set(state.completedIds);
   const currentStep =
     steps[state.currentIndex] ??
