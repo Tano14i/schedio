@@ -58,6 +58,38 @@ const painPoints = [
   "Follow-up, fatture e pagamenti che restano indietro"
 ];
 
+const appointmentDays = [
+  { label: "Lun", date: "31", active: false },
+  { label: "Mar", date: "01", active: true },
+  { label: "Mer", date: "02", active: false },
+  { label: "Gio", date: "03", active: false },
+  { label: "Ven", date: "04", active: false }
+];
+
+const appointments = [
+  {
+    time: "08:30",
+    title: "Sopralluogo perdita bagno",
+    customer: "Mario Rossi",
+    status: "Confermato",
+    tone: "primary"
+  },
+  {
+    time: "11:00",
+    title: "Preventivo infissi",
+    customer: "Laura Bianchi",
+    status: "Da inviare oggi",
+    tone: "warning"
+  },
+  {
+    time: "15:30",
+    title: "Controllo caldaia",
+    customer: "Stefano Verdi",
+    status: "Tecnico assegnato",
+    tone: "neutral"
+  }
+];
+
 export function MarketingLanding() {
   return (
     <div className="min-h-screen bg-neutral-50 text-ink">
@@ -204,6 +236,86 @@ export function MarketingLanding() {
                   </div>
                 );
               })}
+            </div>
+          </section>
+
+          <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-600">Calendario appuntamenti</p>
+              <h3 className="mt-3 text-3xl font-semibold text-ink">
+                Vedi subito chi devi vedere oggi e cosa rischia di restare fermo.
+              </h3>
+              <p className="mt-3 text-base leading-7 text-neutral-600">
+                Quando una richiesta diventa sopralluogo, l'appuntamento entra in agenda con cliente, orario e stato.
+                Il tecnico apre il lavoro giusto, il titolare vede cosa si muove e cosa no.
+              </p>
+              <div className="mt-5 grid gap-3">
+                {[
+                  "Sopralluoghi e lavori nello stesso calendario operativo",
+                  "Cliente, orario e stato visibili in pochi secondi",
+                  "Passaggio diretto da appuntamento a preventivo"
+                ].map((item) => (
+                  <div key={item} className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700 shadow-soft">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-[32px] border border-neutral-200 bg-white p-5 shadow-panel sm:p-6">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary-600">Martedi 1 Aprile</p>
+                  <p className="mt-1 text-lg font-semibold text-ink">Appuntamenti di oggi</p>
+                </div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-50 text-primary-700">
+                  <CalendarDays className="h-5 w-5" />
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-5 gap-2">
+                {appointmentDays.map((day) => (
+                  <div
+                    key={day.label}
+                    className={`rounded-2xl border px-3 py-3 text-center ${
+                      day.active
+                        ? "border-primary-300 bg-primary-50"
+                        : "border-neutral-200 bg-neutral-50"
+                    }`}
+                  >
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                      {day.label}
+                    </p>
+                    <p className="mt-2 text-lg font-semibold text-ink">{day.date}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 space-y-3">
+                {appointments.map((appointment) => (
+                  <div key={`${appointment.time}-${appointment.title}`} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-ink">{appointment.title}</p>
+                        <p className="mt-1 text-sm text-neutral-600">
+                          {appointment.customer} - ore {appointment.time}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          appointment.tone === "primary"
+                            ? "bg-primary-100 text-primary-700"
+                            : appointment.tone === "warning"
+                              ? "bg-warning-50 text-warning-700"
+                              : "bg-white text-neutral-700"
+                        }`}
+                      >
+                        {appointment.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
