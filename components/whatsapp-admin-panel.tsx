@@ -604,156 +604,107 @@ export function WhatsAppAdminPanel({
           </div>
         ) : null}
 
-        <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
+        <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_320px]">
+          <SectionCard
+            title="Thread attivi"
+            subtitle="Scegli il cliente e lavora sul prossimo passo."
+            aside={
+              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600">
+                {items.length} thread
+              </span>
+            }
+            className="xl:h-fit"
+          >
+            {items.length ? (
+              <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 xl:mx-0 xl:block xl:space-y-3 xl:overflow-visible xl:px-0">
+                {items.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSelectedId(item.id)}
+                    className={`w-[280px] shrink-0 rounded-2xl border p-4 text-left transition xl:w-full ${
+                      selected?.id === item.id
+                        ? "border-primary-300 bg-primary-50 shadow-soft"
+                        : "border-neutral-200 bg-white hover:border-primary-200"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-ink">{item.customerName}</p>
+                        <p className="text-sm text-neutral-500">{item.phone}</p>
+                      </div>
+                      <span className="rounded-full bg-neutral-100 px-2 py-1 text-[11px] font-medium text-neutral-600">
+                        {item.photoCount} foto
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm font-medium text-ink">
+                      {item.serviceType ?? "Servizio da definire"}
+                    </p>
+                    <p className="mt-2 text-xs font-medium text-neutral-700">
+                      {friendlyThreadStatus(item.status)}
+                    </p>
+                    <p className="mt-1 text-xs text-neutral-500">{formatDateTime(item.lastMessageAt)}</p>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="Nessun thread WhatsApp"
+                description="Crea una richiesta WhatsApp dal pannello oppure collega il webhook Meta per vedere i thread qui."
+                action={
+                  <button
+                    type="button"
+                    onClick={openIntakeDrawer}
+                    className="inline-flex rounded-xl bg-primary-500 px-5 py-3 text-sm font-medium text-white"
+                  >
+                    Nuova richiesta WhatsApp
+                  </button>
+                }
+              />
+            )}
+          </SectionCard>
+
           {selected ? (
-            <div className="order-1 space-y-6 xl:order-2">
-              <SectionCard
-                title={selected.customerName}
-                subtitle={`${selected.phone} - ${selected.serviceType ?? "Richiesta WhatsApp"}`}
-              >
-                <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr]">
-                  <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                      Dettagli raccolti
-                    </p>
-                    <p className="mt-3 text-sm text-neutral-700">
-                      {selected.description ?? "Nessuna descrizione disponibile."}
-                    </p>
-                    <p className="mt-3 text-sm text-neutral-600">
-                      {selected.address ?? "Indirizzo da confermare"}
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <InfoChip label={threadStatusLabel(selected.status)} />
-                      <InfoChip label={`${selected.photoCount} foto`} />
-                      <InfoChip label={selected.leadId ? "Lead collegata" : "Lead non creata"} />
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                      Azione principale
-                    </p>
-                    <p className="mt-3 text-base font-semibold text-ink">{primaryLabel(selected)}</p>
-                    <p className="mt-2 text-sm text-neutral-600">
-                      Lead: {selected.leadId ? "collegata" : "non ancora creata"}.
-                    </p>
-
-                    {selected.leadId ? (
-                      <div className="mt-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                          Qualifica
-                        </p>
-                        <p className="mt-2 text-sm font-medium text-ink">
-                          {qualificationLabel(selected.qualificationStatus)}
-                        </p>
-                        <p className="mt-1 text-sm text-neutral-600">
-                          Next best action: {actionLabel(selected.nextBestAction)}
-                        </p>
-                        <p className="mt-1 text-sm text-neutral-600">
-                          Reason code: {selected.qualificationReason ?? "non ancora assegnato"}
-                        </p>
-                        <p className="mt-1 text-sm text-neutral-600">
-                          Confidenza: {selected.qualificationConfidence?.toLowerCase() ?? "n/d"}
-                        </p>
-                      </div>
-                    ) : null}
-
-                    <div className="mt-4 flex flex-col gap-3">
-                      {renderPrimaryAction()}
-
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {selected.leadId ? (
-                          <Link
-                            href="/leads"
-                            className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
-                          >
-                            Apri richieste
-                          </Link>
-                        ) : null}
-                        {selected.customerId ? (
-                          <Link
-                            href={`/customers/${selected.customerId}`}
-                            className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
-                          >
-                            Apri cliente
-                          </Link>
-                        ) : null}
-                        {selected.jobId ? (
-                          <Link
-                            href={`/jobs/${selected.jobId}`}
-                            className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50 sm:col-span-2"
-                          >
-                            Apri appuntamento
-                          </Link>
-                        ) : null}
-                      </div>
-
-                      {selected.leadId ? (
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <Button
-                            variant="secondary"
-                            disabled={isPending}
-                            onClick={() =>
-                              runAction({
-                                url: `/api/leads/${selected.leadId}/qualify`,
-                                success: "Lead qualificata."
-                              })
-                            }
-                          >
-                            Rivaluta lead
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            disabled={isPending}
-                            onClick={() =>
-                              runAction({
-                                url: `/api/leads/${selected.leadId}/mark-out-of-area`,
-                                success: "Lead segnata fuori area."
-                              })
-                            }
-                          >
-                            Segna fuori area
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            disabled={isPending}
-                            onClick={() =>
-                              runAction({
-                                url: `/api/leads/${selected.leadId}/mark-low-priority`,
-                                success: "Lead segnata a bassa priorita."
-                              })
-                            }
-                          >
-                            Segna bassa priorita
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            disabled={isPending}
-                            onClick={() =>
-                              runAction({
-                                url: `/api/leads/${selected.leadId}/override-qualification`,
-                                body: {
-                                  qualificationStatus: "QUALIFIED",
-                                  nextBestAction: "PROPOSE_VISIT",
-                                  qualificationReason: "manual_override"
-                                },
-                                success: "Override manuale applicato."
-                              })
-                            }
-                          >
-                            Forza qualificato
-                          </Button>
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              </SectionCard>
-
-              <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+            <>
+              <div className="space-y-6">
                 <SectionCard
-                  title="Messaggi e media"
-                  subtitle="Testo, immagini e messaggi inviati nello stesso thread."
+                  title={selected.customerName}
+                  subtitle={`${selected.phone} · ${selected.serviceType ?? "Richiesta WhatsApp"}`}
+                >
+                  <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+                    <div>
+                      <div className="flex flex-wrap gap-2">
+                        <InfoChip label={friendlyThreadStatus(selected.status)} />
+                        <InfoChip label={`${selected.photoCount} foto`} />
+                        <InfoChip label={selected.leadId ? "Lead gia creata" : "Da trasformare in lead"} />
+                      </div>
+                      <p className="mt-4 text-sm leading-6 text-neutral-700">
+                        {selected.description ?? "Nessuna descrizione disponibile."}
+                      </p>
+                      <p className="mt-3 text-sm text-neutral-600">
+                        {selected.address ?? "Indirizzo da confermare"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                        Riepilogo veloce
+                      </p>
+                      <div className="mt-3 space-y-3 text-sm">
+                        <SummaryRow label="Stato lead" value={friendlyQualification(selected.qualificationStatus)} />
+                        <SummaryRow label="Prossimo passo" value={friendlyNextStep(selected)} />
+                        <SummaryRow
+                          label="Perche"
+                          value={friendlyReason(selected.qualificationReason)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  title="Conversazione WhatsApp"
+                  subtitle="Qui leggi il contesto vero prima di decidere cosa fare."
                 >
                   <div className="space-y-3">
                     {selected.messages.map((message) => (
@@ -779,96 +730,164 @@ export function WhatsAppAdminPanel({
                     ))}
                   </div>
                 </SectionCard>
+              </div>
+
+              <div className="space-y-6 xl:sticky xl:top-24 xl:h-fit">
+                <SectionCard
+                  title="Cosa fare adesso"
+                  subtitle="Una decisione chiara, poi eventuali azioni secondarie."
+                >
+                  <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4">
+                    <p className="text-sm font-semibold text-ink">{primaryLabel(selected)}</p>
+                    <p className="mt-2 text-sm text-neutral-700">
+                      {primaryDescription(selected)}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 flex flex-col gap-3">
+                    {renderPrimaryAction()}
+
+                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                      {selected.customerId ? (
+                        <Link
+                          href={`/customers/${selected.customerId}`}
+                          className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+                        >
+                          Apri cliente
+                        </Link>
+                      ) : null}
+                      {selected.leadId ? (
+                        <Link
+                          href="/leads"
+                          className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
+                        >
+                          Apri richiesta
+                        </Link>
+                      ) : null}
+                      {selected.jobId ? (
+                        <Link
+                          href={`/jobs/${selected.jobId}`}
+                          className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50 sm:col-span-2 xl:col-span-1"
+                        >
+                          Apri appuntamento
+                        </Link>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {selected.leadId ? (
+                    <div className="mt-5 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                        Stato lead
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-ink">
+                        {friendlyQualification(selected.qualificationStatus)}
+                      </p>
+                      <p className="mt-2 text-sm text-neutral-600">
+                        Prossimo passo: {friendlyNextStep(selected)}
+                      </p>
+                      <p className="mt-1 text-sm text-neutral-600">
+                        Perche: {friendlyReason(selected.qualificationReason)}
+                      </p>
+                      <p className="mt-1 text-sm text-neutral-600">
+                        Sicurezza: {friendlyConfidence(selected.qualificationConfidence)}
+                      </p>
+                    </div>
+                  ) : null}
+                </SectionCard>
 
                 <SectionCard
-                  title="Scheduling proposal"
-                  subtitle="Slot candidati, approvazione e conferma cliente."
+                  title="Altre azioni"
+                  subtitle="Usale solo se devi cambiare manualmente la direzione del lead."
                 >
-                  {selected.proposal ? (
-                    <div className="space-y-4">
-                      <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                        <p className="text-sm font-medium text-ink">
-                          {proposalStatusLabel(selected.proposal.status)}
-                        </p>
-                        <p className="mt-2 text-sm text-neutral-600">
-                          Slot candidati: {selected.proposal.candidateCount}
-                        </p>
-                        <p className="mt-1 text-sm text-neutral-600">
-                          {selected.proposal.slotLabel ?? "Nessuno slot selezionato"}
-                        </p>
-                      </div>
+                  {selected.leadId ? (
+                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                      <Button
+                        variant="secondary"
+                        disabled={isPending}
+                        onClick={() =>
+                          runAction({
+                            url: `/api/leads/${selected.leadId}/qualify`,
+                            success: "Lead qualificata."
+                          })
+                        }
+                      >
+                        Rivaluta lead
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        disabled={isPending}
+                        onClick={() =>
+                          runAction({
+                            url: `/api/leads/${selected.leadId}/mark-out-of-area`,
+                            success: "Lead segnata fuori area."
+                          })
+                        }
+                      >
+                        Segna fuori area
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        disabled={isPending}
+                        onClick={() =>
+                          runAction({
+                            url: `/api/leads/${selected.leadId}/mark-low-priority`,
+                            success: "Lead segnata a bassa priorita."
+                          })
+                        }
+                      >
+                        Segna bassa priorita
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        disabled={isPending}
+                        onClick={() =>
+                          runAction({
+                            url: `/api/leads/${selected.leadId}/override-qualification`,
+                            body: {
+                              qualificationStatus: "QUALIFIED",
+                              nextBestAction: "PROPOSE_VISIT",
+                              qualificationReason: "manual_override"
+                            },
+                            success: "Override manuale applicato."
+                          })
+                        }
+                      >
+                        Forza qualificato
+                      </Button>
                     </div>
                   ) : (
-                    <EmptyState
-                      title="Nessuna proposta ancora"
-                      description="Genera 1-3 slot e approvali dal pannello in pochi secondi."
-                    />
+                    <p className="text-sm text-neutral-600">
+                      Prima crea il lead dal thread, poi qui compariranno le azioni manuali.
+                    </p>
+                  )}
+                </SectionCard>
+
+                <SectionCard
+                  title="Proposta sopralluogo"
+                  subtitle="Stato slot, approvazione e conferma cliente."
+                >
+                  {selected.proposal ? (
+                    <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                      <p className="text-sm font-medium text-ink">
+                        {proposalStatusLabel(selected.proposal.status)}
+                      </p>
+                      <p className="mt-2 text-sm text-neutral-600">
+                        Slot candidati: {selected.proposal.candidateCount}
+                      </p>
+                      <p className="mt-1 text-sm text-neutral-600">
+                        {selected.proposal.slotLabel ?? "Nessuno slot selezionato"}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-neutral-600">
+                      Nessuna proposta ancora. Quando il lead e pronto, genera 1-3 slot e mandali al cliente.
+                    </p>
                   )}
                 </SectionCard>
               </div>
-            </div>
+            </>
           ) : null}
-
-          <SectionCard
-            title="Thread attivi"
-            subtitle="Ogni inbound crea o aggiorna sempre un thread."
-            aside={
-              <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600">
-                {items.length} thread
-              </span>
-            }
-            className="order-2 xl:order-1"
-          >
-            {items.length ? (
-              <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 xl:mx-0 xl:block xl:space-y-3 xl:overflow-visible xl:px-0">
-                {items.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setSelectedId(item.id)}
-                    className={`w-[280px] shrink-0 rounded-2xl border p-4 text-left transition xl:w-full ${
-                      selected?.id === item.id
-                        ? "border-primary-300 bg-primary-50"
-                        : "border-neutral-200 bg-white hover:border-primary-200"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-ink">{item.customerName}</p>
-                        <p className="text-sm text-neutral-500">{item.phone}</p>
-                      </div>
-                      <span className="rounded-full bg-neutral-100 px-2 py-1 text-[11px] font-medium text-neutral-600">
-                        {item.photoCount} foto
-                      </span>
-                    </div>
-                    <p className="mt-3 text-sm font-medium text-ink">
-                      {item.serviceType ?? "Servizio da definire"}
-                    </p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.12em] text-neutral-500">
-                      {threadStatusLabel(item.status)}
-                    </p>
-                    <p className="mt-2 text-xs text-neutral-500">
-                      {formatDateTime(item.lastMessageAt)}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="Nessun thread WhatsApp"
-                description="Crea una richiesta WhatsApp dal pannello oppure collega il webhook Meta per vedere i thread qui."
-                action={
-                  <button
-                    type="button"
-                    onClick={openIntakeDrawer}
-                    className="inline-flex rounded-xl bg-primary-500 px-5 py-3 text-sm font-medium text-white"
-                  >
-                    Nuova richiesta WhatsApp
-                  </button>
-                }
-              />
-            )}
-          </SectionCard>
         </div>
       </div>
 
@@ -1018,17 +1037,6 @@ function qualificationLabel(status?: string | null) {
   return status ? labels[status] ?? status : "Da valutare";
 }
 
-function actionLabel(action?: string | null) {
-  const labels: Record<string, string> = {
-    PROPOSE_VISIT: "Proponi sopralluogo",
-    ASK_CLARIFICATION: "Chiedi chiarimento",
-    REJECT: "Scarta",
-    DEFER: "Rimanda"
-  };
-
-  return action ? labels[action] ?? action : "Da decidere";
-}
-
 function threadStatusLabel(status: string) {
   const labels: Record<string, string> = {
     OPEN: "Aperto",
@@ -1039,6 +1047,120 @@ function threadStatusLabel(status: string) {
   };
 
   return labels[status] ?? status;
+}
+
+function friendlyThreadStatus(status: string) {
+  const labels: Record<string, string> = {
+    OPEN: "Nuovo messaggio da gestire",
+    WAITING_PHOTOS: "In attesa di foto dal cliente",
+    WAITING_INTERNAL_APPROVAL: "Serve una tua conferma interna",
+    WAITING_CUSTOMER_CONFIRMATION: "In attesa della risposta cliente",
+    CLOSED: "Conversazione chiusa"
+  };
+
+  return labels[status] ?? threadStatusLabel(status);
+}
+
+function friendlyQualification(status?: string | null) {
+  if (!status || status === "UNQUALIFIED") {
+    return "Da valutare";
+  }
+
+  return qualificationLabel(status);
+}
+
+function friendlyReason(reason?: string | null) {
+  const labels: Record<string, string> = {
+    missing_photos: "Mancano foto utili del problema",
+    out_of_area: "Il cliente e fuori area",
+    low_priority: "Richiesta poco urgente o poco adatta",
+    manual_override: "Hai scelto di forzare la qualificazione",
+    unclear_scope: "Il lavoro non e ancora chiaro"
+  };
+
+  if (!reason) {
+    return "Non ancora indicato";
+  }
+
+  return labels[reason] ?? reason.replaceAll("_", " ");
+}
+
+function friendlyConfidence(confidence?: string | null) {
+  const labels: Record<string, string> = {
+    HIGH: "Alta",
+    MEDIUM: "Media",
+    LOW: "Bassa"
+  };
+
+  return confidence ? labels[confidence] ?? confidence.toLowerCase() : "Non disponibile";
+}
+
+function friendlyNextStep(item: WhatsAppAdminItem) {
+  if (!item.leadId) {
+    return "Trasforma il thread in lead";
+  }
+  if (!item.proposal) {
+    if (item.qualificationStatus === "NEEDS_CLARIFICATION") {
+      return "Chiedi chiarimento al cliente";
+    }
+    if (item.qualificationStatus === "OUT_OF_AREA") {
+      return "Chiudi la richiesta come fuori area";
+    }
+    if (item.qualificationStatus === "LOW_PRIORITY") {
+      return "Valuta se rimandare o scartare";
+    }
+    return "Genera slot per il sopralluogo";
+  }
+  if (item.proposal.status === "PENDING_HANDYMAN_APPROVAL") {
+    return "Approva uno slot";
+  }
+  if (item.proposal.status === "APPROVED") {
+    return "Invia la proposta al cliente";
+  }
+  if (item.proposal.status === "SENT_TO_CUSTOMER") {
+    return "Aspetta o registra la conferma cliente";
+  }
+  if (item.proposal.status === "CUSTOMER_CONFIRMED") {
+    return "Apri l'appuntamento confermato";
+  }
+  return "Controlla il thread";
+}
+
+function primaryDescription(item: WhatsAppAdminItem) {
+  if (!item.leadId) {
+    return "Parti da qui per trasformare la chat in una richiesta vera, senza perdere contesto.";
+  }
+  if (item.qualificationStatus === "NEEDS_CLARIFICATION") {
+    return "Prima di proporre il sopralluogo conviene raccogliere un dettaglio o una foto in piu.";
+  }
+  if (item.qualificationStatus === "OUT_OF_AREA") {
+    return "Questa richiesta non rientra nella tua zona: meglio chiuderla subito con chiarezza.";
+  }
+  if (item.qualificationStatus === "LOW_PRIORITY") {
+    return "Puoi tenerla in coda oppure segnalarla come meno urgente.";
+  }
+  if (!item.proposal) {
+    return "Il lead sembra adatto: ora conviene proporre 1-3 slot per non rallentare.";
+  }
+  if (item.proposal.status === "PENDING_HANDYMAN_APPROVAL") {
+    return "Hai gia gli slot pronti: ti basta confermarne uno dal pannello.";
+  }
+  if (item.proposal.status === "APPROVED") {
+    return "Lo slot e pronto: mandalo al cliente e aspetta la risposta.";
+  }
+  if (item.proposal.status === "SENT_TO_CUSTOMER") {
+    return "Il cliente ha gia ricevuto la proposta. Qui puoi registrare la conferma appena arriva.";
+  }
+  return "Il sopralluogo e confermato: da qui puoi aprire il job e andare avanti.";
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <p className="min-w-0 text-neutral-500">{label}</p>
+      <p className="text-right font-medium text-ink">{value}</p>
+    </div>
+  );
 }
 
 function proposalStatusLabel(status: string) {
