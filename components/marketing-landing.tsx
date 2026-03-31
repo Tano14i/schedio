@@ -66,7 +66,7 @@ export function MarketingLanding() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-600">Schedio</p>
             <h1 className="mt-2 text-lg font-semibold text-ink sm:text-xl">
-              Meno richieste perse. Preventivi piu veloci. Piu controllo sui lavori giusti.
+              Meno richieste perse. Preventivi piu veloci. Sai prima se il lavoro ti lascia margine.
             </h1>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -74,7 +74,7 @@ export function MarketingLanding() {
               Accedi
             </ButtonLink>
             <ButtonLink href="/login" size="md" className="w-full sm:w-auto">
-              Prova demo gratuita
+              Guarda la demo in 3 minuti
             </ButtonLink>
           </div>
         </header>
@@ -84,7 +84,7 @@ export function MarketingLanding() {
             <div className="space-y-5">
               <div className="inline-flex items-center gap-2 rounded-full bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700">
                 <CheckCircle2 className="h-4 w-4" />
-                Per handyman e piccole squadre che lavorano gia troppo di testa
+                Per idraulici, elettricisti, serramentisti e piccole squadre che lavorano gia troppo di testa
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-600">
@@ -107,10 +107,10 @@ export function MarketingLanding() {
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <ButtonLink href="/login" className="w-full sm:w-auto">
-                  Prova la demo gratuita
+                  Guarda come una richiesta WhatsApp diventa preventivo
                 </ButtonLink>
                 <ButtonLink href="/login" variant="secondary" className="w-full sm:w-auto">
-                  Guarda il flusso in 3 minuti
+                  Vedi il flusso completo in 3 minuti
                 </ButtonLink>
               </div>
             </div>
@@ -212,7 +212,7 @@ export function MarketingLanding() {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-600">Offerta</p>
                 <h3 className="mt-3 text-3xl font-semibold text-ink">
-                  Prova la demo e vedi in pochi minuti come passare da richiesta a preventivo con margine visibile.
+                  Guarda il flusso completo: richiesta, preventivo, fattura e margine in pochi minuti.
                 </h3>
                 <p className="mt-3 text-base leading-7 text-neutral-600">
                   Se ti occupi di richieste, sopralluoghi, preventivi e clienti senza una persona dedicata all'ufficio, questa e la parte che senti subito.
@@ -233,7 +233,7 @@ export function MarketingLanding() {
                   ))}
                 </div>
                 <ButtonLink href="/login" className="mt-5 w-full">
-                  Entra nella demo
+                  Vedi la demo guidata
                 </ButtonLink>
               </div>
             </div>
