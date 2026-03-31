@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { JobsWorkspace } from "@/components/jobs-workspace";
-import { getCurrentSession } from "@/lib/auth";
+import { getCurrentSession, isOwner } from "@/lib/auth";
 import { getJobsPageData } from "@/lib/jobs-server";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,7 @@ export default async function JobsPage() {
     return (
       <AppShell pathname="/jobs">
         <JobsWorkspace
+          isOwner={isOwner(session?.user.role ?? "OWNER")}
           jobs={items.map((job) => ({
             id: job.id,
             leadId: job.leadId ?? undefined,
@@ -37,7 +38,10 @@ export default async function JobsPage() {
             completedAt: job.completedAt?.toISOString(),
             completionNotes: job.completionNotes ?? undefined,
             internalSummary: job.internalSummary ?? undefined,
-            estimateDraftedAt: job.estimateDraftedAt?.toISOString()
+            estimateDraftedAt: job.estimateDraftedAt?.toISOString(),
+            workedHours: job.workedHours,
+            laborCost: job.laborCost,
+            financials: job.financials
           }))}
         />
       </AppShell>
@@ -45,7 +49,7 @@ export default async function JobsPage() {
   } catch {
     return (
       <AppShell pathname="/jobs">
-        <JobsWorkspace jobs={[]} />
+        <JobsWorkspace jobs={[]} isOwner={isOwner(session?.user.role ?? "OWNER")} />
       </AppShell>
     );
   }

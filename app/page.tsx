@@ -8,6 +8,7 @@ import { PwaInstallCard } from "@/components/pwa-install-card";
 import { SectionCard } from "@/components/section-card";
 import { StatCard } from "@/components/stat-card";
 import { getActivityFeed, getActivityMessage } from "@/lib/crm-server";
+import { getJobMarginOverview } from "@/lib/jobs-server";
 import {
   computeFunnelMetrics,
   computeOperationalMetrics,
@@ -17,7 +18,7 @@ import { getInvoiceMetrics, getInvoiceWorklist } from "@/lib/invoices-server";
 import { formatCompactDate, formatCurrency } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const [funnel, operations, worklist, invoiceMetrics, invoiceWorklist, activityItems] = await Promise.all([
+  const [funnel, operations, worklist, invoiceMetrics, invoiceWorklist, marginOverview, activityItems] = await Promise.all([
     computeFunnelMetrics().catch(() => ({
       leadsReceived: 40,
       leadsQualified: 28,
@@ -76,6 +77,16 @@ export default async function DashboardPage() {
         recommendation: "send_reminder" as const
       }
     ]),
+    getJobMarginOverview().catch(() => ({
+      jobs: [],
+      metrics: {
+        trackedJobs: 0,
+        healthyJobs: 0,
+        atRiskJobs: 0,
+        totalWorkedHours: 0,
+        totalLaborCost: 0
+      }
+    })),
     getActivityFeed()
       .then((items) =>
         items.slice(0, 12).map((item) => ({
@@ -180,6 +191,38 @@ export default async function DashboardPage() {
             </div>
           </SectionCard>
 
+          <SectionCard title="Margine lavori" subtitle="Ore, costo manodopera e lavori da guardare.">
+            <div className="grid grid-cols-2 gap-3">
+              <MobileHeroCard label="Ore registrate" value={`${marginOverview.metrics.totalWorkedHours}h`} detail="tempo sul campo" />
+              <MobileHeroCard label="Costo manodopera" value={formatCurrency(marginOverview.metrics.totalLaborCost)} detail="costo registrato" />
+            </div>
+            <div className="mt-4 space-y-3">
+              {marginOverview.jobs.slice(0, 3).map((job) => (
+                <div key={job.id} className="rounded-2xl border border-neutral-200 p-4">
+                  <p className="font-medium text-ink">{job.title}</p>
+                  <p className="mt-1 text-sm text-neutral-600">{job.customer.fullName}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">
+                      {job.workedHours}h
+                    </span>
+                    <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">
+                      {formatCurrency(job.laborCost)}
+                    </span>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        job.financials.margin >= 0
+                          ? "bg-success-50 text-success-700"
+                          : "bg-danger-50 text-danger-700"
+                      }`}
+                    >
+                      Margine {formatCurrency(job.financials.margin)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
           <SectionCard title="Attivita recenti" subtitle="Gli ultimi eventi utili, senza rumore.">
             <ActivityTimeline items={activityItems.slice(0, 5)} />
           </SectionCard>
@@ -207,6 +250,13 @@ export default async function DashboardPage() {
             <StatCard label="Fatture scadute" value={`${invoiceMetrics.overdueInvoices}`} detail="Da sollecitare" />
             <StatCard label="Incassato mese" value={formatCurrency(invoiceMetrics.cashCollectedMonth)} detail="Cassa registrata" />
             <StatCard label="Review request inviate" value={`${invoiceMetrics.reviewRequestsSent}`} detail={`${invoiceMetrics.reviewRequestsClicked} cliccate`} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Lavori tracciati" value={`${marginOverview.metrics.trackedJobs}`} detail="Con costi o ore registrate" accent="sand" />
+            <StatCard label="Lavori sani" value={`${marginOverview.metrics.healthyJobs}`} detail="Margine positivo" />
+            <StatCard label="Lavori a rischio" value={`${marginOverview.metrics.atRiskJobs}`} detail="Margine sotto zero" />
+            <StatCard label="Costo manodopera" value={formatCurrency(marginOverview.metrics.totalLaborCost)} detail={`${marginOverview.metrics.totalWorkedHours} ore registrate`} />
           </div>
 
           <SectionCard title="Azioni rapide" subtitle="I passaggi che muovono il funnel oggi.">
@@ -344,6 +394,33 @@ export default async function DashboardPage() {
               <TimingRow label="Invio fattura -> pagamento" value={invoiceMetrics.avgInvoiceSentToPaidHours} />
             </SectionCard>
           </div>
+
+          <SectionCard title="Margine lavori" subtitle="I lavori recenti dove vedere subito se il conto sta tornando.">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {marginOverview.jobs.length ? (
+                marginOverview.jobs.slice(0, 6).map((job) => (
+                  <div key={job.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
+                    <p className="font-medium text-ink">{job.title}</p>
+                    <p className="mt-1 text-sm text-neutral-600">{job.customer.fullName}</p>
+                    <div className="mt-3 space-y-1 text-sm text-neutral-600">
+                      <p>Ore: {job.workedHours}h</p>
+                      <p>Manodopera: {formatCurrency(job.laborCost)}</p>
+                      <p>Ricavo atteso: {formatCurrency(job.financials.expectedRevenue)}</p>
+                    </div>
+                    <p
+                      className={`mt-3 text-sm font-semibold ${
+                        job.financials.margin >= 0 ? "text-success-700" : "text-danger-700"
+                      }`}
+                    >
+                      Margine {formatCurrency(job.financials.margin)}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-neutral-600">Appena inizi a registrare ore e costi, il margine dei lavori comparira qui.</p>
+              )}
+            </div>
+          </SectionCard>
         </div>
       </div>
     </AppShell>

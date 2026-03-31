@@ -7,13 +7,13 @@ import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
 import { StatusBadge } from "@/components/status-badge";
 import type { Job } from "@/lib/types";
-import { formatDateTime } from "@/lib/utils";
+import { formatCurrency, formatDateTime } from "@/lib/utils";
 
 type JobListItem = Job & {
   customerName?: string;
 };
 
-export function JobsWorkspace({ jobs }: { jobs: JobListItem[] }) {
+export function JobsWorkspace({ jobs, isOwner }: { jobs: JobListItem[]; isOwner: boolean }) {
   const activeJobs = jobs.filter((job) => job.status !== "completed" && job.status !== "canceled");
   const todayJobs = jobs.filter((job) => {
     const date = new Date(job.startAt);
@@ -52,6 +52,11 @@ export function JobsWorkspace({ jobs }: { jobs: JobListItem[] }) {
               <p className="mt-1 text-sm text-neutral-500">{formatDateTime(nextJob.startAt)}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <StatusBadge status={nextJob.status} />
+                {nextJob.workedHours ? (
+                  <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700">
+                    {nextJob.workedHours}h registrate
+                  </span>
+                ) : null}
               </div>
               <Link
                 href={`/jobs/${nextJob.id}`}
@@ -92,6 +97,26 @@ export function JobsWorkspace({ jobs }: { jobs: JobListItem[] }) {
                     <p>{job.address}</p>
                     <p>{job.assignedTo ? `Assegnato a ${job.assignedTo}` : "Non assegnato"}</p>
                   </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-xl bg-neutral-50 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-neutral-500">Ore</p>
+                      <p className="mt-1 font-semibold text-ink">{job.workedHours ? `${job.workedHours}h` : "0h"}</p>
+                    </div>
+                    <div className="rounded-xl bg-neutral-50 px-3 py-2">
+                      <p className="text-[11px] uppercase tracking-[0.16em] text-neutral-500">
+                        {isOwner ? "Margine" : "Manodopera"}
+                      </p>
+                      <p className="mt-1 font-semibold text-ink">
+                        {isOwner
+                          ? job.financials?.margin !== undefined
+                            ? formatCurrency(job.financials.margin)
+                            : "n/d"
+                          : job.laborCost !== undefined
+                            ? formatCurrency(job.laborCost)
+                            : "n/d"}
+                      </p>
+                    </div>
+                  </div>
                   <Link
                     href={`/jobs/${job.id}`}
                     className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
@@ -124,6 +149,23 @@ export function JobsWorkspace({ jobs }: { jobs: JobListItem[] }) {
                     key: "status",
                     header: "Stato",
                     render: (job) => <StatusBadge status={job.status} />
+                  },
+                  {
+                    key: "hours",
+                    header: "Ore",
+                    render: (job) => `${job.workedHours ?? 0}h`
+                  },
+                  {
+                    key: "economics",
+                    header: isOwner ? "Margine" : "Manodopera",
+                    render: (job) =>
+                      isOwner
+                        ? job.financials?.margin !== undefined
+                          ? formatCurrency(job.financials.margin)
+                          : "n/d"
+                        : job.laborCost !== undefined
+                          ? formatCurrency(job.laborCost)
+                          : "n/d"
                   },
                   {
                     key: "actions",

@@ -99,6 +99,8 @@ export type Job = {
   costItems?: JobCostItem[];
   workLogs?: JobWorkLog[];
   financials?: JobFinancialSummary;
+  workedHours?: number;
+  laborCost?: number;
 };
 
 export type JobCostItem = {

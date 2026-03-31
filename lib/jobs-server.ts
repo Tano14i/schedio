@@ -8,6 +8,30 @@ type JobsAccessUser = {
   role: UserRole;
 };
 
+function buildJobFinancials(job: {
+  costItems: Array<{ qty: number; unitCost: number }>;
+  workLogs: Array<{ hours: number; hourlyCostSnapshot: number }>;
+  estimates?: Array<{ total: number }>;
+  invoices?: Array<{ total: number }>;
+}) {
+  return calculateJobFinancialSummary({
+    costs: [
+      ...job.costItems.map((item) => ({
+        qty: item.qty,
+        unitCost: item.unitCost
+      })),
+      ...job.workLogs.map((item) => ({
+        qty: item.hours,
+        unitCost: item.hourlyCostSnapshot
+      }))
+    ],
+    revenue: {
+      estimateTotal: job.estimates?.[0]?.total,
+      invoiceTotal: job.invoices?.[0]?.total
+    }
+  });
+}
+
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
@@ -56,17 +80,36 @@ export async function getJobsPageData(currentUser?: JobsAccessUser) {
   const company = currentUser
     ? { id: currentUser.companyId }
     : await getDefaultCompany();
-  return prisma.job.findMany({
+  const jobs = await prisma.job.findMany({
     where: {
       companyId: company.id,
       ...(currentUser?.role === UserRole.WORKER ? { assignedUserId: currentUser.id } : {})
     },
     include: {
       customer: true,
-      assignedUser: true
+      assignedUser: true,
+      costItems: true,
+      workLogs: true,
+      estimates: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      },
+      invoices: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      }
     },
     orderBy: { startAt: "asc" }
   });
+
+  return jobs.map((job) => ({
+    ...job,
+    financials: buildJobFinancials(job),
+    workedHours: Number(job.workLogs.reduce((sum, item) => sum + item.hours, 0).toFixed(2)),
+    laborCost: Number(
+      job.workLogs.reduce((sum, item) => sum + item.hours * item.hourlyCostSnapshot, 0).toFixed(2)
+    )
+  }));
 }
 
 export async function getCalendarData(currentUser?: JobsAccessUser) {
@@ -202,6 +245,61 @@ export async function getJobById(id: string) {
   });
 }
 
+export async function getJobMarginOverview() {
+  const company = await getDefaultCompany();
+  const jobs = await prisma.job.findMany({
+    where: {
+      companyId: company.id
+    },
+    include: {
+      customer: true,
+      assignedUser: true,
+      costItems: true,
+      workLogs: true,
+      estimates: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      },
+      invoices: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      }
+    },
+    orderBy: { startAt: "desc" },
+    take: 12
+  });
+
+  const enriched = jobs.map((job) => {
+    const financials = buildJobFinancials(job);
+    const workedHours = Number(job.workLogs.reduce((sum, item) => sum + item.hours, 0).toFixed(2));
+    const laborCost = Number(
+      job.workLogs.reduce((sum, item) => sum + item.hours * item.hourlyCostSnapshot, 0).toFixed(2)
+    );
+
+    return {
+      ...job,
+      financials,
+      workedHours,
+      laborCost
+    };
+  });
+
+  const trackedJobs = enriched.filter((job) => job.workedHours > 0 || job.costItems.length > 0);
+  const atRiskJobs = trackedJobs.filter((job) => job.financials.expectedRevenue > 0 && job.financials.margin < 0);
+  const healthyJobs = trackedJobs.filter((job) => job.financials.expectedRevenue > 0 && job.financials.margin >= 0);
+
+  return {
+    jobs: enriched,
+    metrics: {
+      trackedJobs: trackedJobs.length,
+      healthyJobs: healthyJobs.length,
+      atRiskJobs: atRiskJobs.length,
+      totalWorkedHours: Number(trackedJobs.reduce((sum, job) => sum + job.workedHours, 0).toFixed(2)),
+      totalLaborCost: Number(trackedJobs.reduce((sum, job) => sum + job.laborCost, 0).toFixed(2))
+    }
+  };
+}
+
 export async function getJobByIdForUser(id: string, currentUser?: JobsAccessUser) {
   const job = await getJobById(id);
 
@@ -322,15 +420,11 @@ export async function addJobCostItem(
 
   return {
     item,
-    financials: calculateJobFinancialSummary({
-      costs: allItems.map((costItem) => ({
-        qty: costItem.qty,
-        unitCost: costItem.unitCost
-      })),
-      revenue: {
-        estimateTotal: job.estimates[0]?.total,
-        invoiceTotal: job.invoices[0]?.total
-      }
+    financials: buildJobFinancials({
+      costItems: allItems,
+      workLogs: [],
+      estimates: job.estimates,
+      invoices: job.invoices
     })
   };
 }
@@ -401,21 +495,11 @@ export async function addJobWorkLog(
 
   return {
     item,
-    financials: calculateJobFinancialSummary({
-      costs: [
-        ...allCostItems.map((costItem) => ({
-          qty: costItem.qty,
-          unitCost: costItem.unitCost
-        })),
-        ...allWorkLogs.map((workLog) => ({
-          qty: workLog.hours,
-          unitCost: workLog.hourlyCostSnapshot
-        }))
-      ],
-      revenue: {
-        estimateTotal: job.estimates[0]?.total,
-        invoiceTotal: job.invoices[0]?.total
-      }
+    financials: buildJobFinancials({
+      costItems: allCostItems,
+      workLogs: allWorkLogs,
+      estimates: job.estimates,
+      invoices: job.invoices
     })
   };
 }
@@ -462,15 +546,11 @@ export async function deleteJobCostItem(jobId: string, costItemId: string) {
   });
 
   return {
-    financials: calculateJobFinancialSummary({
-      costs: allItems.map((costItem) => ({
-        qty: costItem.qty,
-        unitCost: costItem.unitCost
-      })),
-      revenue: {
-        estimateTotal: job.estimates[0]?.total,
-        invoiceTotal: job.invoices[0]?.total
-      }
+    financials: buildJobFinancials({
+      costItems: allItems,
+      workLogs: [],
+      estimates: job.estimates,
+      invoices: job.invoices
     })
   };
 }
@@ -524,21 +604,11 @@ export async function deleteJobWorkLog(jobId: string, workLogId: string) {
   ]);
 
   return {
-    financials: calculateJobFinancialSummary({
-      costs: [
-        ...allCostItems.map((costItem) => ({
-          qty: costItem.qty,
-          unitCost: costItem.unitCost
-        })),
-        ...allWorkLogs.map((workLog) => ({
-          qty: workLog.hours,
-          unitCost: workLog.hourlyCostSnapshot
-        }))
-      ],
-      revenue: {
-        estimateTotal: job.estimates[0]?.total,
-        invoiceTotal: job.invoices[0]?.total
-      }
+    financials: buildJobFinancials({
+      costItems: allCostItems,
+      workLogs: allWorkLogs,
+      estimates: job.estimates,
+      invoices: job.invoices
     })
   };
 }
