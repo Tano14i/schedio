@@ -16,6 +16,20 @@ const PUBLIC_PATHS = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  if (pathname === "/") {
+    const session = decodeSessionCookie(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+
+    if (!session) {
+      return NextResponse.next();
+    }
+
+    if (isWorker(session.role)) {
+      return NextResponse.redirect(new URL(getPostLoginPath(session.role, pathname), request.url));
+    }
+
+    return NextResponse.next();
+  }
+
   if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
   }

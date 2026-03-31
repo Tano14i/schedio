@@ -4,11 +4,13 @@ import { ButtonLink } from "@/components/button";
 import { DashboardFollowUpAction } from "@/components/dashboard-follow-up-action";
 import { DashboardInvoiceAction } from "@/components/dashboard-invoice-action";
 import { DemoPlaybookCard } from "@/components/demo-playbook-card";
+import { MarketingLanding } from "@/components/marketing-landing";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
 import { PageHeader } from "@/components/page-header";
 import { PwaInstallCard } from "@/components/pwa-install-card";
 import { SectionCard } from "@/components/section-card";
 import { StatCard } from "@/components/stat-card";
+import { getCurrentSession } from "@/lib/auth";
 import { getActivityFeed, getActivityMessage } from "@/lib/crm-server";
 import { getJobMarginOverview } from "@/lib/jobs-server";
 import {
@@ -20,6 +22,12 @@ import { getInvoiceMetrics, getInvoiceWorklist } from "@/lib/invoices-server";
 import { formatCompactDate, formatCurrency } from "@/lib/utils";
 
 export default async function DashboardPage() {
+  const session = await getCurrentSession();
+
+  if (!session) {
+    return <MarketingLanding />;
+  }
+
   const [funnel, operations, worklist, invoiceMetrics, invoiceWorklist, marginOverview, activityItems] = await Promise.all([
     computeFunnelMetrics().catch(() => ({
       leadsReceived: 40,

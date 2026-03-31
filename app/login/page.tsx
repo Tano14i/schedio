@@ -35,23 +35,28 @@ export default async function LoginPage({
             Schedio
           </p>
           <h1 className="mt-4 max-w-xl text-4xl font-semibold leading-tight">
-            Meno richieste perse. Preventivi piu veloci. Margine piu chiaro.
+            Accedi al tuo spazio di lavoro.
           </h1>
           <p className="mt-4 max-w-xl text-base text-slate-200">
-            Schedio ti aiuta a prendere una richiesta, fissare il sopralluogo, inviare il preventivo,
-            seguire il cliente e capire se il lavoro sta davvero lasciando margine.
+            Qui dentro trovi richieste, lavori, preventivi, fatture e margine del team in un solo posto.
           </p>
           <div className="mt-8 grid gap-3">
             {[
-              "Richiesta -> sopralluogo senza confusione",
-              "Preventivo pronto in pochi minuti, non in giorni",
-              "Ore, manodopera e margine visibili lavoro per lavoro"
+              "Owner: guida il flusso completo e vede margine e incassi",
+              "Worker: apre solo lavori e calendario che deve usare sul campo",
+              "Google login o account demo pronti per entrare subito"
             ].map((line) => (
               <div key={line} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm">
                 {line}
               </div>
             ))}
           </div>
+          <Link
+            href="/"
+            className="mt-8 inline-flex items-center text-sm font-medium text-brand-100 underline-offset-4 hover:underline"
+          >
+            Torna alla pagina demo
+          </Link>
         </div>
 
         <div className="p-8 lg:p-10">
