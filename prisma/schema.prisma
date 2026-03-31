@@ -89,6 +89,12 @@ enum JobCompletionStatus {
   COMPLETED
 }
 
+enum JobCostCategory {
+  LABOR
+  MATERIAL
+  OTHER
+}
+
 enum EstimateStatus {
   DRAFT
   SENT
@@ -219,6 +225,7 @@ model Company {
   customers      Customer[]
   leads          Lead[]
   jobs           Job[]
+  jobCostItems   JobCostItem[]
   estimates      Estimate[]
   estimateFollowUps EstimateFollowUp[]
   estimateTemplates EstimateTemplate[]
@@ -328,6 +335,24 @@ model Job {
   estimates      Estimate[]
   invoices       Invoice[]
   reviewRequests ReviewRequest[]
+  costItems      JobCostItem[]
+}
+
+model JobCostItem {
+  id          String          @id @default(cuid())
+  companyId   String
+  company     Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  jobId       String
+  job         Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  label       String
+  category    JobCostCategory
+  qty         Float
+  unitCost    Float
+  note        String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([companyId, jobId, createdAt])
 }
 
 model Estimate {

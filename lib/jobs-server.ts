@@ -1,4 +1,5 @@
-import { JobStatus, JobType, LeadStatus, Prisma, UserRole } from "@prisma/client";
+import { JobCostCategory, JobStatus, JobType, LeadStatus, Prisma, UserRole } from "@prisma/client";
+import { calculateJobFinancialSummary } from "@/lib/job-financials";
 import { prisma } from "@/lib/prisma";
 
 type JobsAccessUser = {
@@ -179,7 +180,18 @@ export async function getJobById(id: string) {
     where: { id },
     include: {
       customer: true,
-      assignedUser: true
+      assignedUser: true,
+      estimates: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      },
+      invoices: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      },
+      costItems: {
+        orderBy: { createdAt: "desc" }
+      }
     }
   });
 }
@@ -249,4 +261,125 @@ export async function updateJob(
   });
 
   return job;
+}
+
+export async function addJobCostItem(
+  jobId: string,
+  input: {
+    label: string;
+    category: "labor" | "material" | "other";
+    qty: number;
+    unitCost: number;
+    note?: string | null;
+  }
+) {
+  const job = await prisma.job.findUniqueOrThrow({
+    where: { id: jobId },
+    include: {
+      estimates: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      },
+      invoices: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      }
+    }
+  });
+
+  const item = await prisma.jobCostItem.create({
+    data: {
+      companyId: job.companyId,
+      jobId: job.id,
+      label: input.label.trim(),
+      category: input.category.toUpperCase() as JobCostCategory,
+      qty: Number(input.qty),
+      unitCost: Number(input.unitCost),
+      note: input.note?.trim() || undefined
+    }
+  });
+
+  await logActivity({
+    companyId: job.companyId,
+    entityType: "job",
+    entityId: job.id,
+    eventType: "job_cost_added",
+    metadata: {
+      message: `Costo aggiunto: ${item.label}.`,
+      category: item.category
+    }
+  });
+
+  const allItems = await prisma.jobCostItem.findMany({
+    where: { jobId: job.id }
+  });
+
+  return {
+    item,
+    financials: calculateJobFinancialSummary({
+      costs: allItems.map((costItem) => ({
+        qty: costItem.qty,
+        unitCost: costItem.unitCost
+      })),
+      revenue: {
+        estimateTotal: job.estimates[0]?.total,
+        invoiceTotal: job.invoices[0]?.total
+      }
+    })
+  };
+}
+
+export async function deleteJobCostItem(jobId: string, costItemId: string) {
+  const job = await prisma.job.findUniqueOrThrow({
+    where: { id: jobId },
+    include: {
+      estimates: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      },
+      invoices: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      }
+    }
+  });
+
+  const item = await prisma.jobCostItem.findFirstOrThrow({
+    where: {
+      id: costItemId,
+      jobId
+    }
+  });
+
+  await prisma.jobCostItem.delete({
+    where: { id: item.id }
+  });
+
+  await logActivity({
+    companyId: job.companyId,
+    entityType: "job",
+    entityId: job.id,
+    eventType: "job_cost_deleted",
+    metadata: {
+      message: `Costo rimosso: ${item.label}.`,
+      category: item.category
+    }
+  });
+
+  const allItems = await prisma.jobCostItem.findMany({
+    where: { jobId: job.id }
+  });
+
+  return {
+    financials: calculateJobFinancialSummary({
+      costs: allItems.map((costItem) => ({
+        qty: costItem.qty,
+        unitCost: costItem.unitCost
+      })),
+      revenue: {
+        estimateTotal: job.estimates[0]?.total,
+        invoiceTotal: job.invoices[0]?.total
+      }
+    })
+  };
 }

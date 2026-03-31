@@ -30,6 +30,7 @@ export type JobStatus =
   | "canceled";
 
 export type JobCompletionStatus = "pending" | "completed";
+export type JobCostCategory = "labor" | "material" | "other";
 
 export type EstimateStatus =
   | "draft"
@@ -94,6 +95,28 @@ export type Job = {
   completionNotes?: string;
   internalSummary?: string;
   estimateDraftedAt?: string;
+  costItems?: JobCostItem[];
+  financials?: JobFinancialSummary;
+};
+
+export type JobCostItem = {
+  id: string;
+  jobId: string;
+  label: string;
+  category: JobCostCategory;
+  qty: number;
+  unitCost: number;
+  note?: string;
+  createdAt: string;
+};
+
+export type JobFinancialSummary = {
+  estimatedRevenue: number;
+  invoicedRevenue: number;
+  expectedRevenue: number;
+  totalCost: number;
+  margin: number;
+  marginRate: number | null;
 };
 
 export type EstimateLineItem = {

@@ -9,6 +9,7 @@ import {
   WhatsAppMessageType
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { calculateJobFinancialSummary } from "@/lib/job-financials";
 import { getAppUrl } from "@/lib/app-url";
 import {
   markAutomationFailed,
@@ -1031,7 +1032,7 @@ export async function getEstimatePageData() {
 }
 
 export async function getJobDetailData(jobId: string) {
-  return prisma.job.findUnique({
+  const job = await prisma.job.findUnique({
     where: { id: jobId },
     include: {
       customer: true,
@@ -1057,9 +1058,37 @@ export async function getJobDetailData(jobId: string) {
       estimates: {
         include: { items: { orderBy: { sortOrder: "asc" } } },
         orderBy: { createdAt: "desc" }
+      },
+      invoices: {
+        include: { items: { orderBy: { sortOrder: "asc" } } },
+        orderBy: { createdAt: "desc" }
+      },
+      costItems: {
+        orderBy: { createdAt: "desc" }
       }
     }
   });
+
+  if (!job) {
+    return null;
+  }
+
+  const latestEstimate = job.estimates[0];
+  const latestInvoice = job.invoices[0];
+
+  return {
+    ...job,
+    financials: calculateJobFinancialSummary({
+      costs: job.costItems.map((item) => ({
+        qty: item.qty,
+        unitCost: item.unitCost
+      })),
+      revenue: {
+        estimateTotal: latestEstimate?.total,
+        invoiceTotal: latestInvoice?.total
+      }
+    })
+  };
 }
 
 export async function getPublicEstimateData(publicToken: string) {

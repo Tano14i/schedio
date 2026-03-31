@@ -3,6 +3,7 @@ import "./lead-qualification.test";
 import "./beta-core-flows.test";
 import "./authz-role.test";
 import "./google-oauth.test";
+import "./job-financials.test";
 import "./estimate-lifecycle.test";
 import "./estimate-followup-p3.test";
 import "./invoice-lifecycle-p4.test";

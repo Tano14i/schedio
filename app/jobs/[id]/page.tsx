@@ -48,6 +48,17 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             completionNotes: job.completionNotes ?? undefined,
             internalSummary: job.internalSummary ?? undefined,
             estimateDraftedAt: job.estimateDraftedAt?.toISOString(),
+            costItems: job.costItems.map((item) => ({
+              id: item.id,
+              jobId: item.jobId,
+              label: item.label,
+              category: item.category.toLowerCase() as "labor" | "material" | "other",
+              qty: item.qty,
+              unitCost: item.unitCost,
+              note: item.note ?? undefined,
+              createdAt: item.createdAt.toISOString()
+            })),
+            financials: job.financials,
             estimates: job.estimates.map((estimate) => ({
               id: estimate.id,
               customerId: estimate.customerId,

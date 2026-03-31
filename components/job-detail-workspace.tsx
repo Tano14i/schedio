@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
 import { StatusBadge } from "@/components/status-badge";
 import type { ActivityLog, Customer, Estimate, Job } from "@/lib/types";
-import { formatDateTime } from "@/lib/utils";
+import { formatCurrency, formatDateTime } from "@/lib/utils";
 
 type JobRecord = Job & {
   estimates?: Array<Estimate>;
@@ -40,6 +40,15 @@ export function JobDetailWorkspace({
     initialJobs[0]?.completionNotes ?? initialJobs[0]?.notes ?? ""
   );
   const [internalSummary, setInternalSummary] = useState(initialJobs[0]?.internalSummary ?? "");
+  const [costItems, setCostItems] = useState(initialJobs[0]?.costItems ?? []);
+  const [financials, setFinancials] = useState(initialJobs[0]?.financials ?? null);
+  const [costForm, setCostForm] = useState({
+    label: "",
+    category: "material" as "labor" | "material" | "other",
+    qty: "1",
+    unitCost: "",
+    note: ""
+  });
   const [feedback, setFeedback] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -106,6 +115,100 @@ export function JobDetailWorkspace({
         setNotes(result.item.notes);
       }
       setFeedback(input.successMessage);
+      router.refresh();
+    });
+  }
+
+  function syncJobFinancials(nextFinancials: NonNullable<Job["financials"]> | null) {
+    setFinancials(nextFinancials);
+    setJobs((current) =>
+      current.map((item) =>
+        item.id === jobId
+          ? {
+              ...item,
+              financials: nextFinancials ?? undefined
+            }
+          : item
+      )
+    );
+  }
+
+  function addCostItem() {
+    if (!job) {
+      return;
+    }
+
+    if (!costForm.label.trim() || !costForm.unitCost.trim()) {
+      setFeedback("Inserisci voce costo e costo unitario.");
+      return;
+    }
+
+    setFeedback("");
+    startTransition(async () => {
+      const response = await fetch(`/api/jobs/${job.id}/cost-items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          label: costForm.label,
+          category: costForm.category,
+          qty: Number(costForm.qty || 0),
+          unitCost: Number(costForm.unitCost || 0),
+          note: costForm.note || null
+        })
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setFeedback(result?.message ?? "Impossibile aggiungere il costo.");
+        return;
+      }
+
+      setCostItems((current) => [
+        {
+          id: result.item.id,
+          jobId: result.item.jobId,
+          label: result.item.label,
+          category: result.item.category.toLowerCase(),
+          qty: result.item.qty,
+          unitCost: result.item.unitCost,
+          note: result.item.note ?? undefined,
+          createdAt: result.item.createdAt
+        },
+        ...current
+      ]);
+      syncJobFinancials(result.financials);
+      setCostForm({
+        label: "",
+        category: "material",
+        qty: "1",
+        unitCost: "",
+        note: ""
+      });
+      setFeedback("Costo lavoro aggiunto.");
+      router.refresh();
+    });
+  }
+
+  function removeCostItem(costItemId: string) {
+    if (!job) {
+      return;
+    }
+
+    setFeedback("");
+    startTransition(async () => {
+      const response = await fetch(`/api/jobs/${job.id}/cost-items/${costItemId}`, {
+        method: "DELETE"
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setFeedback(result?.message ?? "Impossibile rimuovere il costo.");
+        return;
+      }
+
+      setCostItems((current) => current.filter((item) => item.id !== costItemId));
+      syncJobFinancials(result.financials);
+      setFeedback("Costo lavoro rimosso.");
       router.refresh();
     });
   }
@@ -386,6 +489,168 @@ export function JobDetailWorkspace({
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
+        <SectionCard
+          title="Margine lavoro"
+          subtitle="Controllo rapido di costi, ricavo e margine atteso."
+        >
+          {financials ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <FinancialCard label="Ricavo atteso" value={formatCurrency(financials.expectedRevenue)} />
+                <FinancialCard label="Costi registrati" value={formatCurrency(financials.totalCost)} />
+                <FinancialCard
+                  label="Margine"
+                  value={formatCurrency(financials.margin)}
+                  tone={financials.margin >= 0 ? "positive" : "negative"}
+                />
+                <FinancialCard
+                  label="Margine %"
+                  value={financials.marginRate !== null ? `${financials.marginRate}%` : "n/d"}
+                  tone={
+                    financials.marginRate === null
+                      ? "neutral"
+                      : financials.marginRate >= 0
+                        ? "positive"
+                        : "negative"
+                  }
+                />
+              </div>
+              <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">
+                <p>Preventivo: {formatCurrency(financials.estimatedRevenue)}</p>
+                <p className="mt-1">Fattura: {formatCurrency(financials.invoicedRevenue)}</p>
+              </div>
+            </div>
+          ) : (
+            <EmptyState
+              title="Nessun riepilogo economico"
+              description="Aggiungi costi al lavoro per capire subito se il margine regge."
+            />
+          )}
+        </SectionCard>
+
+        <SectionCard title="Costi lavoro" subtitle="Materiali, manodopera e spese registrate.">
+          <div className="space-y-4">
+            {isOwner ? (
+              <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="block sm:col-span-2">
+                    <span className="text-sm font-medium text-ink">Voce costo</span>
+                    <input
+                      type="text"
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                      value={costForm.label}
+                      onChange={(event) =>
+                        setCostForm((current) => ({ ...current, label: event.target.value }))
+                      }
+                      placeholder="Es. Ferramenta, 2 ore assistente"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium text-ink">Categoria</span>
+                    <select
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                      value={costForm.category}
+                      onChange={(event) =>
+                        setCostForm((current) => ({
+                          ...current,
+                          category: event.target.value as "labor" | "material" | "other"
+                        }))
+                      }
+                    >
+                      <option value="material">Materiale</option>
+                      <option value="labor">Manodopera</option>
+                      <option value="other">Altro</option>
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium text-ink">Quantita</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                      value={costForm.qty}
+                      onChange={(event) =>
+                        setCostForm((current) => ({ ...current, qty: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="text-sm font-medium text-ink">Costo unitario</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                      value={costForm.unitCost}
+                      onChange={(event) =>
+                        setCostForm((current) => ({ ...current, unitCost: event.target.value }))
+                      }
+                    />
+                  </label>
+                  <label className="block sm:col-span-2">
+                    <span className="text-sm font-medium text-ink">Nota</span>
+                    <input
+                      type="text"
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                      value={costForm.note}
+                      onChange={(event) =>
+                        setCostForm((current) => ({ ...current, note: event.target.value }))
+                      }
+                      placeholder="Es. Acquisto in ferramenta vicino al cliente"
+                    />
+                  </label>
+                </div>
+                <Button disabled={isPending} className="mt-4 w-full" onClick={addCostItem}>
+                  Aggiungi costo
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+                Il titolare puo registrare costi e vedere la marginalita del lavoro.
+              </div>
+            )}
+
+            {costItems.length ? (
+              <div className="space-y-3">
+                {costItems.map((item) => (
+                  <div key={item.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-ink">{item.label}</p>
+                        <p className="mt-1 text-xs uppercase tracking-[0.14em] text-neutral-500">
+                          {costCategoryLabel(item.category)}
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold text-ink">
+                        {formatCurrency(item.qty * item.unitCost)}
+                      </p>
+                    </div>
+                    <p className="mt-2 text-sm text-neutral-600">
+                      {item.qty} x {formatCurrency(item.unitCost)}
+                    </p>
+                    {item.note ? <p className="mt-1 text-sm text-neutral-500">{item.note}</p> : null}
+                    {isOwner ? (
+                      <button
+                        type="button"
+                        onClick={() => removeCostItem(item.id)}
+                        className="mt-3 text-sm font-medium text-danger-600 transition hover:text-danger-700"
+                      >
+                        Rimuovi costo
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="Nessun costo registrato"
+                description="Aggiungi materiali o manodopera per iniziare a misurare la marginalita."
+              />
+            )}
+          </div>
+        </SectionCard>
+
         <SectionCard title="Note operative" subtitle="Dettagli utili raccolti sul posto.">
           <p className="text-sm text-neutral-600">{job.notes ?? "Nessuna nota ancora."}</p>
         </SectionCard>
@@ -491,4 +756,39 @@ function Detail({ label, value }: { label: string; value: ReactNode }) {
       <div className="mt-2 text-sm font-medium text-ink">{value}</div>
     </div>
   );
+}
+
+function FinancialCard({
+  label,
+  value,
+  tone = "neutral"
+}: {
+  label: string;
+  value: string;
+  tone?: "neutral" | "positive" | "negative";
+}) {
+  return (
+    <div
+      className={`rounded-2xl border p-4 ${
+        tone === "positive"
+          ? "border-success-200 bg-success-50"
+          : tone === "negative"
+            ? "border-danger-200 bg-danger-50"
+            : "border-neutral-200 bg-white"
+      }`}
+    >
+      <p className="text-xs uppercase tracking-wide text-neutral-400">{label}</p>
+      <p className="mt-2 text-lg font-semibold text-ink">{value}</p>
+    </div>
+  );
+}
+
+function costCategoryLabel(category: "labor" | "material" | "other") {
+  if (category === "labor") {
+    return "Manodopera";
+  }
+  if (category === "material") {
+    return "Materiale";
+  }
+  return "Altro";
 }
