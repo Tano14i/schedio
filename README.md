@@ -71,13 +71,28 @@ Schedio e pronto per una beta privata online. Per il primo deploy:
    - `WHATSAPP_VERIFY_TOKEN`
    - `WHATSAPP_ACCESS_TOKEN`
    - `WHATSAPP_PHONE_NUMBER_ID`
-   - `WHATSAPP_GRAPH_VERSION`
+    - `WHATSAPP_GRAPH_VERSION`
    - `GOOGLE_CLIENT_ID`
    - `GOOGLE_CLIENT_SECRET`
 3. esegui migrate e seed sul database online
 4. pubblica l'app Next.js su Vercel
 
 Nota: i link pubblici per preventivi e fatture usano `NEXT_PUBLIC_APP_URL`. Se non la imposti, in locale il fallback resta `http://localhost:3000`.
+
+## Collegare WhatsApp Cloud API
+
+Per iniziare a collegare WhatsApp reale:
+
+1. apri Meta Developers e configura il prodotto WhatsApp
+2. imposta in Vercel:
+   - `WHATSAPP_VERIFY_TOKEN`
+   - `WHATSAPP_ACCESS_TOKEN`
+   - `WHATSAPP_PHONE_NUMBER_ID`
+   - `WHATSAPP_GRAPH_VERSION`
+3. usa come webhook:
+   - `https://TUO-DOMINIO/api/whatsapp/webhook`
+4. in Schedio apri `WhatsApp` e usa il blocco `Collega WhatsApp Cloud API`
+5. invia un messaggio test dal pannello
 
 ## Flussi principali da provare
 

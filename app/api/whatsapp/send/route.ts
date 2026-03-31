@@ -1,30 +1,56 @@
 import { jsonCreated } from "@/lib/api";
-import { buildWhatsAppTextPayload, sendWhatsAppTextMessage } from "@/lib/whatsapp";
+import {
+  buildWhatsAppTemplatePayload,
+  buildWhatsAppTextPayload,
+  sendWhatsAppTemplate,
+  sendWhatsAppTextMessage
+} from "@/lib/whatsapp";
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as { to?: string; message?: string };
+  const body = (await request.json()) as {
+    to?: string;
+    message?: string;
+    templateName?: string;
+    languageCode?: string;
+  };
 
-  if (!body.to || !body.message) {
+  if (!body.to || (!body.message && !body.templateName)) {
     return Response.json(
-      { message: "Inserisci numero destinatario e testo messaggio." },
+      { message: "Inserisci numero destinatario e testo o template messaggio." },
       { status: 400 }
     );
   }
 
-  const payload = buildWhatsAppTextPayload(body.to, body.message);
+  const payload = body.templateName
+    ? buildWhatsAppTemplatePayload({
+        to: body.to,
+        templateName: body.templateName,
+        languageCode: body.languageCode
+      })
+    : buildWhatsAppTextPayload(body.to, body.message!);
 
   if (process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID) {
-    const response = await sendWhatsAppTextMessage({
-      accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
-      phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
-      to: body.to,
-      body: body.message
-    });
+    const response = body.templateName
+      ? await sendWhatsAppTemplate({
+          accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
+          phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+          to: body.to,
+          templateName: body.templateName,
+          languageCode: body.languageCode
+        })
+      : await sendWhatsAppTextMessage({
+          accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
+          phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+          to: body.to,
+          body: body.message!
+        });
     const result = await response.json();
 
     return jsonCreated({
       message: response.ok
-        ? "Messaggio WhatsApp inviato tramite Cloud API."
+        ? body.templateName
+          ? "Template WhatsApp inviato tramite Cloud API."
+          : "Messaggio WhatsApp inviato tramite Cloud API."
         : "Invio WhatsApp fallito.",
       ok: response.ok,
       result
@@ -32,7 +58,9 @@ export async function POST(request: Request) {
   }
 
   return jsonCreated({
-    message: "Payload WhatsApp pronto. Mancano credenziali Cloud API per invio reale.",
+    message: body.templateName
+      ? "Payload template WhatsApp pronto. Mancano credenziali Cloud API per invio reale."
+      : "Payload WhatsApp pronto. Mancano credenziali Cloud API per invio reale.",
     endpoint: process.env.WHATSAPP_PHONE_NUMBER_ID
       ? `https://graph.facebook.com/${process.env.WHATSAPP_GRAPH_VERSION ?? "v22.0"}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`
       : "Configura WHATSAPP_PHONE_NUMBER_ID per endpoint completo.",

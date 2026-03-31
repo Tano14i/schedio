@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { WhatsAppAdminPanel, type WhatsAppAdminItem } from "@/components/whatsapp-admin-panel";
 import { getWhatsAppAdminItems } from "@/lib/whatsapp-admin";
+import { getWhatsAppConnectionStatus } from "@/lib/whatsapp-config";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default async function WhatsAppPage({
 
   let items: WhatsAppAdminItem[] = [];
   let notice: string | undefined;
+  const connection = getWhatsAppConnectionStatus();
 
   try {
     items = await getWhatsAppAdminItems();
@@ -27,6 +29,7 @@ export default async function WhatsAppPage({
         initialOpen={resolvedSearchParams.action === "intake"}
         initialSelectedId={resolvedSearchParams.thread}
         notice={notice}
+        connection={connection}
       />
     </AppShell>
   );
