@@ -226,6 +226,7 @@ model Company {
   leads          Lead[]
   jobs           Job[]
   jobCostItems   JobCostItem[]
+  jobWorkLogs    JobWorkLog[]
   estimates      Estimate[]
   estimateFollowUps EstimateFollowUp[]
   estimateTemplates EstimateTemplate[]
@@ -253,8 +254,10 @@ model User {
   email        String   @unique
   googleId     String?  @unique
   passwordHash String?
+  hourlyCost   Float?
   createdAt    DateTime @default(now())
   jobs         Job[]    @relation("AssignedJobs")
+  workLogs     JobWorkLog[]
   availabilitySlots AvailabilitySlot[]
   schedulingProposals SchedulingProposal[] @relation("SchedulingProposalHandyman")
 }
@@ -336,6 +339,7 @@ model Job {
   invoices       Invoice[]
   reviewRequests ReviewRequest[]
   costItems      JobCostItem[]
+  workLogs       JobWorkLog[]
 }
 
 model JobCostItem {
@@ -353,6 +357,25 @@ model JobCostItem {
   updatedAt   DateTime        @updatedAt
 
   @@index([companyId, jobId, createdAt])
+}
+
+model JobWorkLog {
+  id                     String   @id @default(cuid())
+  companyId              String
+  company                Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  jobId                  String
+  job                    Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hours                  Float
+  hourlyCostSnapshot     Float
+  note                   String?
+  workedAt               DateTime @default(now())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([companyId, jobId, workedAt])
+  @@index([userId, workedAt])
 }
 
 model Estimate {

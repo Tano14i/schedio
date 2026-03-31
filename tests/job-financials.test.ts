@@ -14,7 +14,8 @@ import { calculateJobCosts, calculateJobFinancialSummary } from "@/lib/job-finan
   const summary = calculateJobFinancialSummary({
     costs: [
       { qty: 2, unitCost: 35 },
-      { qty: 1, unitCost: 50 }
+      { qty: 1, unitCost: 50 },
+      { qty: 1.5, unitCost: 28 }
     ],
     revenue: {
       estimateTotal: 280,
@@ -23,9 +24,9 @@ import { calculateJobCosts, calculateJobFinancialSummary } from "@/lib/job-finan
   });
 
   assert.equal(summary.expectedRevenue, 280);
-  assert.equal(summary.totalCost, 120);
-  assert.equal(summary.margin, 160);
-  assert.equal(summary.marginRate, 57.1);
+  assert.equal(summary.totalCost, 162);
+  assert.equal(summary.margin, 118);
+  assert.equal(summary.marginRate, 42.1);
 }
 
 {

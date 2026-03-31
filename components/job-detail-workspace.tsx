@@ -41,6 +41,7 @@ export function JobDetailWorkspace({
   );
   const [internalSummary, setInternalSummary] = useState(initialJobs[0]?.internalSummary ?? "");
   const [costItems, setCostItems] = useState(initialJobs[0]?.costItems ?? []);
+  const [workLogs, setWorkLogs] = useState(initialJobs[0]?.workLogs ?? []);
   const [financials, setFinancials] = useState(initialJobs[0]?.financials ?? null);
   const [costForm, setCostForm] = useState({
     label: "",
@@ -48,6 +49,12 @@ export function JobDetailWorkspace({
     qty: "1",
     unitCost: "",
     note: ""
+  });
+  const [workLogForm, setWorkLogForm] = useState({
+    hours: "1",
+    note: "",
+    workedAt: toDateInputValue(new Date()),
+    hourlyCost: initialJobs[0]?.assignedHourlyCost ? String(initialJobs[0].assignedHourlyCost) : ""
   });
   const [feedback, setFeedback] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -209,6 +216,84 @@ export function JobDetailWorkspace({
       setCostItems((current) => current.filter((item) => item.id !== costItemId));
       syncJobFinancials(result.financials);
       setFeedback("Costo lavoro rimosso.");
+      router.refresh();
+    });
+  }
+
+  function addWorkLog() {
+    if (!job) {
+      return;
+    }
+
+    if (!workLogForm.hours.trim()) {
+      setFeedback("Inserisci le ore lavorate.");
+      return;
+    }
+
+    setFeedback("");
+    startTransition(async () => {
+      const response = await fetch(`/api/jobs/${job.id}/work-logs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hours: Number(workLogForm.hours || 0),
+          note: workLogForm.note || null,
+          workedAt: workLogForm.workedAt ? new Date(workLogForm.workedAt).toISOString() : null,
+          hourlyCost: isOwner && workLogForm.hourlyCost ? Number(workLogForm.hourlyCost) : undefined
+        })
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setFeedback(result?.message ?? "Impossibile registrare le ore.");
+        return;
+      }
+
+      setWorkLogs((current) => [
+        {
+          id: result.item.id,
+          jobId: result.item.jobId,
+          userId: result.item.userId,
+          userName: result.item.user.name,
+          hours: result.item.hours,
+          hourlyCostSnapshot: result.item.hourlyCostSnapshot,
+          note: result.item.note ?? undefined,
+          workedAt: result.item.workedAt,
+          createdAt: result.item.createdAt
+        },
+        ...current
+      ]);
+      syncJobFinancials(result.financials);
+      setWorkLogForm((current) => ({
+        ...current,
+        hours: "1",
+        note: ""
+      }));
+      setFeedback("Ore lavorate registrate.");
+      router.refresh();
+    });
+  }
+
+  function removeWorkLog(workLogId: string) {
+    if (!job) {
+      return;
+    }
+
+    setFeedback("");
+    startTransition(async () => {
+      const response = await fetch(`/api/jobs/${job.id}/work-logs/${workLogId}`, {
+        method: "DELETE"
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setFeedback(result?.message ?? "Impossibile rimuovere le ore.");
+        return;
+      }
+
+      setWorkLogs((current) => current.filter((item) => item.id !== workLogId));
+      syncJobFinancials(result.financials);
+      setFeedback("Ore lavorate rimosse.");
       router.refresh();
     });
   }
@@ -651,6 +736,126 @@ export function JobDetailWorkspace({
           </div>
         </SectionCard>
 
+        <SectionCard title="Ore lavorate" subtitle="Tempo registrato sul lavoro dal tecnico o dal titolare.">
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-sm font-medium text-ink">Ore</span>
+                  <input
+                    type="number"
+                    min="0.5"
+                    step="0.25"
+                    className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                    value={workLogForm.hours}
+                    onChange={(event) =>
+                      setWorkLogForm((current) => ({ ...current, hours: event.target.value }))
+                    }
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-ink">Data lavoro</span>
+                  <input
+                    type="date"
+                    className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                    value={workLogForm.workedAt}
+                    onChange={(event) =>
+                      setWorkLogForm((current) => ({ ...current, workedAt: event.target.value }))
+                    }
+                  />
+                </label>
+                {isOwner ? (
+                  <label className="block">
+                    <span className="text-sm font-medium text-ink">Costo orario</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                      value={workLogForm.hourlyCost}
+                      onChange={(event) =>
+                        setWorkLogForm((current) => ({
+                          ...current,
+                          hourlyCost: event.target.value
+                        }))
+                      }
+                      placeholder={
+                        job.assignedHourlyCost
+                          ? `Default ${formatCurrency(job.assignedHourlyCost)}`
+                          : "Es. 28"
+                      }
+                    />
+                  </label>
+                ) : null}
+                <label className={`block ${isOwner ? "sm:col-span-2" : "sm:col-span-2"}`}>
+                  <span className="text-sm font-medium text-ink">Nota</span>
+                  <input
+                    type="text"
+                    className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-ink"
+                    value={workLogForm.note}
+                    onChange={(event) =>
+                      setWorkLogForm((current) => ({ ...current, note: event.target.value }))
+                    }
+                    placeholder="Es. uscita, montaggio, finitura"
+                  />
+                </label>
+              </div>
+              {!isOwner && !job.assignedHourlyCost ? (
+                <p className="mt-3 text-sm text-amber-700">
+                  Le ore verranno registrate, ma il margine sara preciso solo quando il titolare
+                  imposta un costo orario.
+                </p>
+              ) : null}
+              <Button disabled={isPending} className="mt-4 w-full" onClick={addWorkLog}>
+                Registra ore
+              </Button>
+            </div>
+
+            {workLogs.length ? (
+              <div className="space-y-3">
+                {workLogs.map((item) => (
+                  <div key={item.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-ink">{item.userName}</p>
+                        <p className="mt-1 text-xs uppercase tracking-[0.14em] text-neutral-500">
+                          {formatDateTime(item.workedAt)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-ink">{item.hours}h</p>
+                        {isOwner ? (
+                          <p className="mt-1 text-xs text-neutral-500">
+                            {formatCurrency(item.hours * item.hourlyCostSnapshot)}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                    {isOwner ? (
+                      <p className="mt-2 text-sm text-neutral-600">
+                        {formatCurrency(item.hourlyCostSnapshot)}/h
+                      </p>
+                    ) : null}
+                    {item.note ? <p className="mt-1 text-sm text-neutral-500">{item.note}</p> : null}
+                    <button
+                      type="button"
+                      onClick={() => removeWorkLog(item.id)}
+                      className="mt-3 text-sm font-medium text-danger-600 transition hover:text-danger-700"
+                    >
+                      Rimuovi ore
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="Nessuna ora registrata"
+                description="Il tecnico puo segnare il tempo speso e farlo entrare nel margine del lavoro."
+              />
+            )}
+          </div>
+        </SectionCard>
+
         <SectionCard title="Note operative" subtitle="Dettagli utili raccolti sul posto.">
           <p className="text-sm text-neutral-600">{job.notes ?? "Nessuna nota ancora."}</p>
         </SectionCard>
@@ -791,4 +996,11 @@ function costCategoryLabel(category: "labor" | "material" | "other") {
     return "Materiale";
   }
   return "Altro";
+}
+
+function toDateInputValue(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }

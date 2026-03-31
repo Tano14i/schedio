@@ -191,6 +191,12 @@ export async function getJobById(id: string) {
       },
       costItems: {
         orderBy: { createdAt: "desc" }
+      },
+      workLogs: {
+        include: {
+          user: true
+        },
+        orderBy: [{ workedAt: "desc" }, { createdAt: "desc" }]
       }
     }
   });
@@ -329,6 +335,91 @@ export async function addJobCostItem(
   };
 }
 
+export async function addJobWorkLog(
+  jobId: string,
+  input: {
+    actorUserId: string;
+    hours: number;
+    hourlyCost?: number;
+    note?: string | null;
+    workedAt?: string | null;
+  }
+) {
+  const job = await prisma.job.findUniqueOrThrow({
+    where: { id: jobId },
+    include: {
+      estimates: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      },
+      invoices: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      }
+    }
+  });
+  const actor = await prisma.user.findUniqueOrThrow({
+    where: { id: input.actorUserId }
+  });
+
+  const hourlyCostSnapshot = Number(input.hourlyCost ?? actor.hourlyCost ?? 0);
+
+  const item = await prisma.jobWorkLog.create({
+    data: {
+      companyId: job.companyId,
+      jobId: job.id,
+      userId: actor.id,
+      hours: Number(input.hours),
+      hourlyCostSnapshot,
+      note: input.note?.trim() || undefined,
+      workedAt: input.workedAt ? new Date(input.workedAt) : undefined
+    },
+    include: {
+      user: true
+    }
+  });
+
+  await logActivity({
+    companyId: job.companyId,
+    entityType: "job",
+    entityId: job.id,
+    eventType: "job_work_logged",
+    metadata: {
+      message: `${item.user.name} ha registrato ${item.hours} ore.`,
+      hours: item.hours
+    }
+  });
+
+  const [allCostItems, allWorkLogs] = await Promise.all([
+    prisma.jobCostItem.findMany({
+      where: { jobId: job.id }
+    }),
+    prisma.jobWorkLog.findMany({
+      where: { jobId: job.id }
+    })
+  ]);
+
+  return {
+    item,
+    financials: calculateJobFinancialSummary({
+      costs: [
+        ...allCostItems.map((costItem) => ({
+          qty: costItem.qty,
+          unitCost: costItem.unitCost
+        })),
+        ...allWorkLogs.map((workLog) => ({
+          qty: workLog.hours,
+          unitCost: workLog.hourlyCostSnapshot
+        }))
+      ],
+      revenue: {
+        estimateTotal: job.estimates[0]?.total,
+        invoiceTotal: job.invoices[0]?.total
+      }
+    })
+  };
+}
+
 export async function deleteJobCostItem(jobId: string, costItemId: string) {
   const job = await prisma.job.findUniqueOrThrow({
     where: { id: jobId },
@@ -376,6 +467,74 @@ export async function deleteJobCostItem(jobId: string, costItemId: string) {
         qty: costItem.qty,
         unitCost: costItem.unitCost
       })),
+      revenue: {
+        estimateTotal: job.estimates[0]?.total,
+        invoiceTotal: job.invoices[0]?.total
+      }
+    })
+  };
+}
+
+export async function deleteJobWorkLog(jobId: string, workLogId: string) {
+  const job = await prisma.job.findUniqueOrThrow({
+    where: { id: jobId },
+    include: {
+      estimates: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      },
+      invoices: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      }
+    }
+  });
+
+  const item = await prisma.jobWorkLog.findFirstOrThrow({
+    where: {
+      id: workLogId,
+      jobId
+    },
+    include: {
+      user: true
+    }
+  });
+
+  await prisma.jobWorkLog.delete({
+    where: { id: item.id }
+  });
+
+  await logActivity({
+    companyId: job.companyId,
+    entityType: "job",
+    entityId: job.id,
+    eventType: "job_work_log_deleted",
+    metadata: {
+      message: `Ore rimosse: ${item.user.name}, ${item.hours}h.`
+    }
+  });
+
+  const [allCostItems, allWorkLogs] = await Promise.all([
+    prisma.jobCostItem.findMany({
+      where: { jobId: job.id }
+    }),
+    prisma.jobWorkLog.findMany({
+      where: { jobId: job.id }
+    })
+  ]);
+
+  return {
+    financials: calculateJobFinancialSummary({
+      costs: [
+        ...allCostItems.map((costItem) => ({
+          qty: costItem.qty,
+          unitCost: costItem.unitCost
+        })),
+        ...allWorkLogs.map((workLog) => ({
+          qty: workLog.hours,
+          unitCost: workLog.hourlyCostSnapshot
+        }))
+      ],
       revenue: {
         estimateTotal: job.estimates[0]?.total,
         invoiceTotal: job.invoices[0]?.total

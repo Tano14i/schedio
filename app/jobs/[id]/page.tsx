@@ -38,6 +38,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             title: job.title,
             type: job.type.toLowerCase() as "estimate_visit" | "job",
             assignedTo: job.assignedUser?.name ?? undefined,
+            assignedHourlyCost: job.assignedUser?.hourlyCost ?? undefined,
             startAt: job.startAt.toISOString(),
             endAt: job.endAt?.toISOString(),
             status: job.status.toLowerCase() as "scheduled" | "on_the_way" | "in_progress" | "completed" | "canceled",
@@ -56,6 +57,17 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               qty: item.qty,
               unitCost: item.unitCost,
               note: item.note ?? undefined,
+              createdAt: item.createdAt.toISOString()
+            })),
+            workLogs: job.workLogs.map((item) => ({
+              id: item.id,
+              jobId: item.jobId,
+              userId: item.userId,
+              userName: item.user.name,
+              hours: item.hours,
+              hourlyCostSnapshot: item.hourlyCostSnapshot,
+              note: item.note ?? undefined,
+              workedAt: item.workedAt.toISOString(),
               createdAt: item.createdAt.toISOString()
             })),
             financials: job.financials,

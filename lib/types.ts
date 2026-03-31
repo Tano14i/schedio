@@ -85,6 +85,7 @@ export type Job = {
   title: string;
   type: "estimate_visit" | "job";
   assignedTo?: string;
+  assignedHourlyCost?: number;
   startAt: string;
   endAt?: string;
   status: JobStatus;
@@ -96,6 +97,7 @@ export type Job = {
   internalSummary?: string;
   estimateDraftedAt?: string;
   costItems?: JobCostItem[];
+  workLogs?: JobWorkLog[];
   financials?: JobFinancialSummary;
 };
 
@@ -107,6 +109,18 @@ export type JobCostItem = {
   qty: number;
   unitCost: number;
   note?: string;
+  createdAt: string;
+};
+
+export type JobWorkLog = {
+  id: string;
+  jobId: string;
+  userId: string;
+  userName: string;
+  hours: number;
+  hourlyCostSnapshot: number;
+  note?: string;
+  workedAt: string;
   createdAt: string;
 };
 

@@ -54,6 +54,7 @@ async function main() {
   await prisma.invoice.deleteMany();
   await prisma.estimateItem.deleteMany();
   await prisma.estimate.deleteMany();
+  await prisma.jobWorkLog.deleteMany();
   await prisma.job.deleteMany();
   await prisma.lead.deleteMany();
   await prisma.customer.deleteMany();
@@ -76,7 +77,8 @@ async function main() {
         role: UserRole.OWNER,
         name: "Luca Ferri",
         email: "luca@schedio.it",
-        passwordHash: "demo_hash"
+        passwordHash: "demo_hash",
+        hourlyCost: 42
       }
     }),
     prisma.user.create({
@@ -85,7 +87,8 @@ async function main() {
         role: UserRole.WORKER,
         name: "Sara Colombo",
         email: "sara@schedio.it",
-        passwordHash: "demo_hash"
+        passwordHash: "demo_hash",
+        hourlyCost: 28
       }
     }),
     prisma.user.create({
@@ -94,7 +97,8 @@ async function main() {
         role: UserRole.WORKER,
         name: "Matteo Riva",
         email: "matteo@schedio.it",
-        passwordHash: "demo_hash"
+        passwordHash: "demo_hash",
+        hourlyCost: 30
       }
     })
   ]);
@@ -399,6 +403,29 @@ async function main() {
         create: [{ label: "Montaggio mensole saldo", qty: 1, unitPrice: 220, sortOrder: 1 }]
       }
     }
+  });
+
+  await prisma.jobWorkLog.createMany({
+    data: [
+      {
+        companyId: company.id,
+        jobId: jobEstimate.id,
+        userId: workerA.id,
+        hours: 1.5,
+        hourlyCostSnapshot: workerA.hourlyCost ?? 0,
+        note: "Sopralluogo e verifica cerniere.",
+        workedAt: new Date("2026-03-27T09:45:00.000Z")
+      },
+      {
+        companyId: company.id,
+        jobId: jobWork.id,
+        userId: workerB.id,
+        hours: 2,
+        hourlyCostSnapshot: workerB.hourlyCost ?? 0,
+        note: "Montaggio mensole e test tenuta.",
+        workedAt: new Date("2026-03-30T15:00:00.000Z")
+      }
+    ]
   });
 
   await prisma.reviewRequest.create({

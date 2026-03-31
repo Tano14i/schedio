@@ -1065,6 +1065,12 @@ export async function getJobDetailData(jobId: string) {
       },
       costItems: {
         orderBy: { createdAt: "desc" }
+      },
+      workLogs: {
+        include: {
+          user: true
+        },
+        orderBy: [{ workedAt: "desc" }, { createdAt: "desc" }]
       }
     }
   });
@@ -1079,10 +1085,16 @@ export async function getJobDetailData(jobId: string) {
   return {
     ...job,
     financials: calculateJobFinancialSummary({
-      costs: job.costItems.map((item) => ({
-        qty: item.qty,
-        unitCost: item.unitCost
-      })),
+      costs: [
+        ...job.costItems.map((item) => ({
+          qty: item.qty,
+          unitCost: item.unitCost
+        })),
+        ...job.workLogs.map((item) => ({
+          qty: item.hours,
+          unitCost: item.hourlyCostSnapshot
+        }))
+      ],
       revenue: {
         estimateTotal: latestEstimate?.total,
         invoiceTotal: latestInvoice?.total
