@@ -63,6 +63,14 @@ export function JobDetailWorkspace({
   const customer = initialCustomers.find((item) => item.id === job?.customerId);
   const latestEstimate = estimates[0] ?? job?.estimates?.[0] ?? null;
   const jobActivity = initialActivity.filter((item) => item.entityId === jobId);
+  const totalWorkedHours = useMemo(
+    () => Number(workLogs.reduce((sum, item) => sum + item.hours, 0).toFixed(2)),
+    [workLogs]
+  );
+  const totalLaborCost = useMemo(
+    () => Number(workLogs.reduce((sum, item) => sum + item.hours * item.hourlyCostSnapshot, 0).toFixed(2)),
+    [workLogs]
+  );
 
   if (!job) {
     return (
@@ -220,12 +228,18 @@ export function JobDetailWorkspace({
     });
   }
 
-  function addWorkLog() {
+  function submitWorkLog(input?: {
+    hours?: number;
+    note?: string | null;
+    workedAt?: string | null;
+    hourlyCost?: number;
+  }) {
     if (!job) {
       return;
     }
 
-    if (!workLogForm.hours.trim()) {
+    const hoursValue = input?.hours ?? Number(workLogForm.hours || 0);
+    if (!Number.isFinite(hoursValue) || hoursValue <= 0) {
       setFeedback("Inserisci le ore lavorate.");
       return;
     }
@@ -236,10 +250,17 @@ export function JobDetailWorkspace({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          hours: Number(workLogForm.hours || 0),
-          note: workLogForm.note || null,
-          workedAt: workLogForm.workedAt ? new Date(workLogForm.workedAt).toISOString() : null,
-          hourlyCost: isOwner && workLogForm.hourlyCost ? Number(workLogForm.hourlyCost) : undefined
+          hours: hoursValue,
+          note: input?.note ?? workLogForm.note ?? null,
+          workedAt: input?.workedAt
+            ? new Date(input.workedAt).toISOString()
+            : workLogForm.workedAt
+              ? new Date(workLogForm.workedAt).toISOString()
+              : null,
+          hourlyCost:
+            isOwner && (input?.hourlyCost ?? workLogForm.hourlyCost)
+              ? Number(input?.hourlyCost ?? workLogForm.hourlyCost)
+              : undefined
         })
       });
       const result = await response.json().catch(() => null);
@@ -272,6 +293,10 @@ export function JobDetailWorkspace({
       setFeedback("Ore lavorate registrate.");
       router.refresh();
     });
+  }
+
+  function addWorkLog() {
+    submitWorkLog();
   }
 
   function removeWorkLog(workLogId: string) {
@@ -738,6 +763,46 @@ export function JobDetailWorkspace({
 
         <SectionCard title="Ore lavorate" subtitle="Tempo registrato sul lavoro dal tecnico o dal titolare.">
           <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FinancialCard label="Ore totali" value={`${totalWorkedHours}h`} />
+              <FinancialCard
+                label="Costo manodopera"
+                value={isOwner ? formatCurrency(totalLaborCost) : `${workLogs.length} registrazioni`}
+              />
+            </div>
+
+            <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-700">
+                Registrazione rapida
+              </p>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {[
+                  { label: "30 min", hours: 0.5 },
+                  { label: "1 ora", hours: 1 },
+                  { label: "2 ore", hours: 2 }
+                ].map((preset) => (
+                  <Button
+                    key={preset.label}
+                    variant="secondary"
+                    disabled={isPending}
+                    className="w-full"
+                    onClick={() =>
+                      submitWorkLog({
+                        hours: preset.hours,
+                        note: `Registrazione rapida ${preset.label.toLowerCase()}`,
+                        workedAt: workLogForm.workedAt || toDateInputValue(new Date())
+                      })
+                    }
+                  >
+                    +{preset.label}
+                  </Button>
+                ))}
+              </div>
+              <p className="mt-3 text-sm text-primary-700">
+                Tocca un pulsante e le ore entrano subito nel margine del lavoro.
+              </p>
+            </div>
+
             <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
@@ -948,6 +1013,38 @@ export function JobDetailWorkspace({
               Chiudi
             </Button>
           </div>
+          {job.status === "on_the_way" || job.status === "in_progress" ? (
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <Button
+                variant="secondary"
+                disabled={isPending}
+                className="w-full"
+                onClick={() =>
+                  submitWorkLog({
+                    hours: 0.5,
+                    note: "Registrazione rapida 30 min",
+                    workedAt: workLogForm.workedAt || toDateInputValue(new Date())
+                  })
+                }
+              >
+                +30 min
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={isPending}
+                className="w-full"
+                onClick={() =>
+                  submitWorkLog({
+                    hours: 1,
+                    note: "Registrazione rapida 1 ora",
+                    workedAt: workLogForm.workedAt || toDateInputValue(new Date())
+                  })
+                }
+              >
+                +1 ora
+              </Button>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>
