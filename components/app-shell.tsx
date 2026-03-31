@@ -94,6 +94,7 @@ export async function AppShell({
                 <Link
                   key={item.href}
                   href={item.href}
+                  data-tour={tourIdForHref(item.href)}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition",
                     active
@@ -238,6 +239,7 @@ export async function AppShell({
                 <Link
                   key={item.href}
                   href={item.href}
+                  data-tour={tourIdForHref(item.href)}
                   className={cn(
                     "flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium",
                     isMobileNavActive(pathname, item.href)
@@ -267,6 +269,7 @@ function QuickPill({
   return (
     <ButtonLink
       href={href}
+      data-tour={tourIdForHref(href)}
       variant="secondary"
       size="md"
       className="min-w-[148px] justify-center rounded-xl border-white/15 bg-white/10 px-3 text-center text-sm text-white hover:bg-white/20 hover:text-white sm:min-w-0 sm:w-full lg:min-w-max"
@@ -286,6 +289,7 @@ function CompactShortcut({
   return (
     <ButtonLink
       href={href}
+      data-tour={tourIdForHref(href)}
       variant="secondary"
       size="md"
       className="min-w-[132px] border-neutral-200 bg-neutral-50 px-3 text-sm text-neutral-800"
@@ -395,4 +399,23 @@ function isMobileNavActive(pathname: string, href: string) {
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function tourIdForHref(href: string) {
+  const map: Record<string, string> = {
+    "/": "nav-dashboard",
+    "/leads": "nav-leads",
+    "/calendar": "nav-calendar",
+    "/whatsapp": "nav-whatsapp",
+    "/jobs": "nav-jobs",
+    "/customers": "nav-customers",
+    "/estimates": "nav-estimates",
+    "/invoices": "nav-invoices",
+    "/automations": "nav-automations",
+    "/settings/company": "nav-settings-company",
+    "/settings/team": "nav-team",
+    "/more": "nav-more"
+  };
+
+  return map[href];
 }

@@ -198,7 +198,11 @@ export function CalendarWorkspace({
           eyebrow="Calendario"
           title="Organizza sopralluoghi e lavori senza confusione."
           description="Vista giorno e settimana per capire subito chi vedere, dove andare e cosa fare adesso."
-          action={canSchedule ? { href: "/calendar?action=schedule", label: "Nuovo appuntamento" } : undefined}
+          action={
+            canSchedule
+              ? { href: "/calendar?action=schedule", label: "Nuovo appuntamento", dataTour: "calendar-new-appointment" }
+              : undefined
+          }
         />
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

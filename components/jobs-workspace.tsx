@@ -81,7 +81,7 @@ export function JobsWorkspace({ jobs, isOwner }: { jobs: JobListItem[]; isOwner:
         {jobs.length ? (
           <>
             <div className="space-y-3 lg:hidden">
-              {jobs.map((job) => (
+              {jobs.map((job, index) => (
                 <div key={job.id} className="rounded-2xl border border-neutral-200 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -119,6 +119,7 @@ export function JobsWorkspace({ jobs, isOwner }: { jobs: JobListItem[]; isOwner:
                   </div>
                   <Link
                     href={`/jobs/${job.id}`}
+                    data-tour={index === 0 ? "jobs-open-first" : undefined}
                     className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
                   >
                     Apri lavoro
@@ -173,6 +174,7 @@ export function JobsWorkspace({ jobs, isOwner }: { jobs: JobListItem[]; isOwner:
                     render: (job) => (
                       <Link
                         href={`/jobs/${job.id}`}
+                        data-tour={job === jobs[0] ? "jobs-open-first" : undefined}
                         className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-800 transition hover:bg-neutral-50"
                       >
                         Apri lavoro

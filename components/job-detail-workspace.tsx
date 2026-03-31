@@ -504,6 +504,7 @@ export function JobDetailWorkspace({
                   Inizia lavoro
                 </Button>
                 <Button
+                  data-tour="job-mark-complete"
                   variant="secondary"
                   disabled={isPending}
                   className="w-full"
@@ -783,6 +784,7 @@ export function JobDetailWorkspace({
                 ].map((preset) => (
                   <Button
                     key={preset.label}
+                    data-tour={preset.hours === 0.5 ? "job-log-hours" : undefined}
                     variant="secondary"
                     disabled={isPending}
                     className="w-full"
@@ -871,7 +873,7 @@ export function JobDetailWorkspace({
                   imposta un costo orario.
                 </p>
               ) : null}
-              <Button disabled={isPending} className="mt-4 w-full" onClick={addWorkLog}>
+              <Button data-tour="job-log-hours" disabled={isPending} className="mt-4 w-full" onClick={addWorkLog}>
                 Registra ore
               </Button>
             </div>

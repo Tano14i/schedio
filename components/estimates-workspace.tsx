@@ -180,6 +180,7 @@ export function EstimatesWorkspace({
             </div>
             <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
               <Button
+                data-tour="estimates-send-client"
                 className="w-full sm:w-auto"
                 disabled={isPending}
                 onClick={() => sendEstimate(selectedEstimate.id)}
@@ -466,6 +467,7 @@ export function EstimatesWorkspace({
                   Salva bozza
                 </Button>
                 <Button
+                  data-tour="estimates-send-client"
                   className="w-full sm:w-auto"
                   disabled={isPending}
                   onClick={() => sendEstimate(selectedEstimate.id)}

@@ -427,14 +427,14 @@ export function WhatsAppAdminPanel({
             description="Thread, media, lead qualificati e proposta sopralluogo nello stesso flusso operativo."
             action={{ href: "/whatsapp", label: "Aggiorna inbox" }}
           />
-          <Button onClick={openIntakeDrawer} className="w-full xl:w-auto">
+          <Button data-tour="whatsapp-new-request" onClick={openIntakeDrawer} className="w-full xl:w-auto">
             Nuova richiesta WhatsApp
           </Button>
         </div>
 
         <SectionCard title="Azioni rapide" subtitle="Da thread a sopralluogo senza perdere tempo.">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Button className="w-full" onClick={openIntakeDrawer}>
+            <Button data-tour="whatsapp-new-request" className="w-full" onClick={openIntakeDrawer}>
               Nuova richiesta WhatsApp
             </Button>
             <Link

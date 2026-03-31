@@ -5,6 +5,7 @@ import { typography } from "@/lib/design-tokens";
 type Action = {
   label: string;
   href: string;
+  dataTour?: string;
 };
 
 export function PageHeader({
@@ -36,6 +37,7 @@ export function PageHeader({
       {action ? (
         <Link
           href={action.href}
+          data-tour={action.dataTour}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-primary-600 sm:w-auto"
         >
           {action.label}

@@ -64,7 +64,7 @@ export function TeamSettingsWorkspace({ initialMembers }: { initialMembers: Team
 
       <SectionCard title="Costo orario team" subtitle="Un valore semplice, ma fondamentale per capire se i lavori stanno in piedi.">
         <div className="space-y-3">
-          {members.map((member) => (
+          {members.map((member, index) => (
             <div key={member.id} className="rounded-2xl border border-neutral-200 bg-white p-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
@@ -93,7 +93,12 @@ export function TeamSettingsWorkspace({ initialMembers }: { initialMembers: Team
                       placeholder="Es. 28"
                     />
                   </label>
-                  <Button disabled={isPending} className="w-full sm:w-auto" onClick={() => saveHourlyCost(member.id)}>
+                  <Button
+                    data-tour={index === 0 ? "team-save-hourly-cost" : undefined}
+                    disabled={isPending}
+                    className="w-full sm:w-auto"
+                    onClick={() => saveHourlyCost(member.id)}
+                  >
                     Salva
                   </Button>
                 </div>
