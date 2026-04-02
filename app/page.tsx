@@ -251,6 +251,32 @@ export default async function DashboardPage() {
         </div>
 
         <div className="hidden space-y-6 sm:block">
+          <section className="rounded-[32px] border border-slate-200/90 bg-white px-6 py-6 shadow-[0_14px_36px_rgba(19,42,56,0.06)]">
+            <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr] xl:items-center">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary-600">
+                  Pannello operativo
+                </p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-ink">
+                  Oggi guarda solo cosa si muove, cosa si blocca e cosa ti lascia margine.
+                </h2>
+                <p className="mt-3 max-w-3xl text-[15px] leading-7 text-neutral-600">
+                  Funnel, incassi e lavori a rischio nello stesso posto. Meno dashboard da interpretare,
+                  più decisioni da prendere.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <CompactDeskMetric label="Da seguire" value={`${worklist.length}`} detail="preventivi aperti" />
+                <CompactDeskMetric label="Da incassare" value={`${invoiceWorklist.length}`} detail="fatture da toccare" />
+                <CompactDeskMetric
+                  label="Lavori a rischio"
+                  value={`${marginOverview.metrics.atRiskJobs}`}
+                  detail="margine sotto zero"
+                />
+              </div>
+            </div>
+          </section>
+
           <PageHeader
             eyebrow="Dashboard ROI"
             title="Vedi dove si blocca il funnel e cosa seguire oggi."
@@ -529,6 +555,24 @@ function MobileHeroCard({
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-ink">{value}</p>
       <p className="text-sm text-neutral-600">{detail}</p>
+    </div>
+  );
+}
+
+function CompactDeskMetric({
+  label,
+  value,
+  detail
+}: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">{label}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-ink">{value}</p>
+      <p className="mt-1 text-sm text-neutral-600">{detail}</p>
     </div>
   );
 }

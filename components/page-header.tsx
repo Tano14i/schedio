@@ -21,24 +21,24 @@ export function PageHeader({
 }) {
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-600">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-600">
             {eyebrow}
           </p>
         ) : null}
-        <div className="space-y-1.5">
-          <h1 className={`${typography.h2} text-ink text-[1.75rem] leading-[1.05] sm:text-4xl md:text-5xl`}>
+        <div className="space-y-2">
+          <h1 className={`${typography.h2} text-ink text-[1.9rem] leading-[0.98] sm:text-[2.55rem] md:text-[3.1rem]`}>
             {title}
           </h1>
-          <p className="max-w-3xl text-sm leading-6 text-neutral-600 sm:text-sm">{description}</p>
+          <p className="max-w-3xl text-sm leading-6 text-neutral-600 sm:text-[15px]">{description}</p>
         </div>
       </div>
       {action ? (
         <Link
           href={action.href}
           data-tour={action.dataTour}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-primary-600 sm:w-auto"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary-500 px-5 py-3 text-sm font-medium text-white transition hover:bg-primary-600 sm:w-auto"
         >
           {action.label}
           <ArrowRight className="h-4 w-4" />
