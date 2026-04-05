@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
 import type { WhatsAppConnectionStatus } from "@/lib/whatsapp-config";
+import type { AiIntakeSuggestion } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
 
 export type WhatsAppAdminItem = {
@@ -48,6 +49,7 @@ export type WhatsAppAdminItem = {
 type IntakeFormState = {
   customerName: string;
   phone: string;
+  rawIntake: string;
   serviceType: string;
   description: string;
   address: string;
@@ -59,6 +61,7 @@ type IntakeFormState = {
 const emptyIntakeForm: IntakeFormState = {
   customerName: "",
   phone: "",
+  rawIntake: "",
   serviceType: "",
   description: "",
   address: "",
@@ -85,7 +88,11 @@ export function WhatsAppAdminPanel({
   const [selectedId, setSelectedId] = useState(initialSelectedId ?? items[0]?.id ?? "");
   const [isIntakeOpen, setIsIntakeOpen] = useState(initialOpen ?? false);
   const [isCreatingIntake, setIsCreatingIntake] = useState(false);
+  const [isAnalyzingIntake, setIsAnalyzingIntake] = useState(false);
   const [intakeForm, setIntakeForm] = useState<IntakeFormState>(emptyIntakeForm);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<AiIntakeSuggestion | null>(null);
+  const [isSuggestionLoading, setIsSuggestionLoading] = useState(false);
+  const [intakeSuggestion, setIntakeSuggestion] = useState<AiIntakeSuggestion | null>(null);
   const [testPhone, setTestPhone] = useState("");
   const [testMessage, setTestMessage] = useState(
     "Ciao, questo e un messaggio di prova inviato da Schedio."
@@ -118,6 +125,42 @@ export function WhatsAppAdminPanel({
     }
   }, [items, selectedId]);
 
+  useEffect(() => {
+    if (!selected?.id) {
+      setSelectedSuggestion(null);
+      return;
+    }
+
+    let canceled = false;
+    setIsSuggestionLoading(true);
+
+    fetch(`/api/whatsapp/threads/${selected.id}/ai-intake`, { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(result?.message ?? "Analisi non disponibile.");
+        }
+
+        if (!canceled) {
+          setSelectedSuggestion((result?.item as AiIntakeSuggestion) ?? null);
+        }
+      })
+      .catch(() => {
+        if (!canceled) {
+          setSelectedSuggestion(null);
+        }
+      })
+      .finally(() => {
+        if (!canceled) {
+          setIsSuggestionLoading(false);
+        }
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [selected?.id]);
+
   async function runAction(input: {
     url: string;
     method?: "POST";
@@ -145,6 +188,7 @@ export function WhatsAppAdminPanel({
 
   function openIntakeDrawer() {
     setFeedback("");
+    setIntakeSuggestion(null);
     setIsIntakeOpen(true);
     router.push("/whatsapp?action=intake", { scroll: false });
   }
@@ -152,8 +196,53 @@ export function WhatsAppAdminPanel({
   function closeIntakeDrawer() {
     setIsIntakeOpen(false);
     setIntakeForm(emptyIntakeForm);
+    setIntakeSuggestion(null);
     setFeedback("");
     router.push(selectedId ? `/whatsapp?thread=${selectedId}` : "/whatsapp", { scroll: false });
+  }
+
+  async function analyzeDraftIntake() {
+    if (!intakeForm.rawIntake.trim()) {
+      setFeedback("Incolla prima il messaggio WhatsApp o la trascrizione vocale.");
+      return;
+    }
+
+    setIsAnalyzingIntake(true);
+    setFeedback("");
+
+    try {
+      const response = await fetch("/api/ai/intake/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: intakeForm.rawIntake,
+          customerName: intakeForm.customerName || undefined,
+          phone: intakeForm.phone || undefined
+        })
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok || !result?.item) {
+        setFeedback(result?.message ?? "Analisi non riuscita, riprova.");
+        return;
+      }
+
+      const suggestion = result.item as AiIntakeSuggestion;
+      setIntakeSuggestion(suggestion);
+      setIntakeForm((current) => ({
+        ...current,
+        customerName: current.customerName || suggestion.customerName || "",
+        serviceType: suggestion.serviceType || current.serviceType,
+        description: current.description || suggestion.summary,
+        address: current.address || suggestion.address || "",
+        preferredWindow: current.preferredWindow || suggestion.preferredWindow || "",
+        measurements: current.measurements || suggestion.measurements || ""
+      }));
+      setFeedback("Testo analizzato. Controlla i campi proposti e crea il thread.");
+    } finally {
+      setIsAnalyzingIntake(false);
+    }
   }
 
   async function sendTestWhatsAppMessage() {
@@ -242,6 +331,7 @@ export function WhatsAppAdminPanel({
         body: JSON.stringify({
           customerName: intakeForm.customerName,
           phone: intakeForm.phone,
+          rawIntake: intakeForm.rawIntake || undefined,
           serviceType: intakeForm.serviceType,
           description: intakeForm.description,
           address: intakeForm.address || undefined,
@@ -263,6 +353,7 @@ export function WhatsAppAdminPanel({
       const nextThreadId = result.item.thread.id as string;
       setSelectedId(nextThreadId);
       setIntakeForm(emptyIntakeForm);
+      setIntakeSuggestion(null);
       setIsIntakeOpen(false);
       setFeedback("Richiesta WhatsApp salvata nel database.");
       router.push(`/whatsapp?thread=${nextThreadId}`, { scroll: false });
@@ -669,7 +760,7 @@ export function WhatsAppAdminPanel({
               <div className="space-y-6">
                 <SectionCard
                   title={selected.customerName}
-                  subtitle={`${selected.phone} · ${selected.serviceType ?? "Richiesta WhatsApp"}`}
+                  subtitle={`${selected.phone} - ${selected.serviceType ?? "Richiesta WhatsApp"}`}
                 >
                   <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
                     <div>
@@ -733,6 +824,69 @@ export function WhatsAppAdminPanel({
               </div>
 
               <div className="space-y-6 xl:sticky xl:top-24 xl:h-fit">
+                <SectionCard
+                  title="Scheda lavoro suggerita"
+                  subtitle="Cliente, urgenza e prossimo passo estratti dal thread."
+                >
+                  {isSuggestionLoading ? (
+                    <p className="text-sm text-neutral-600">Analisi in corso del thread WhatsApp...</p>
+                  ) : selectedSuggestion ? (
+                    <div className="space-y-4">
+                      <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4">
+                        <p className="text-sm font-semibold text-ink">{selectedSuggestion.serviceType}</p>
+                        <p className="mt-2 text-sm text-neutral-700">{selectedSuggestion.summary}</p>
+                      </div>
+
+                      <div className="space-y-3 text-sm">
+                        <SummaryRow label="Urgenza" value={friendlyUrgency(selectedSuggestion.urgency)} />
+                        <SummaryRow
+                          label="Sopralluogo"
+                          value={selectedSuggestion.visitNeeded ? "Consigliato" : "Intervento diretto possibile"}
+                        />
+                        <SummaryRow
+                          label="Prossimo passo"
+                          value={friendlyAiNextAction(selectedSuggestion.nextAction)}
+                        />
+                        <SummaryRow
+                          label="Indirizzo"
+                          value={selectedSuggestion.address ?? "Da confermare"}
+                        />
+                        <SummaryRow
+                          label="Finestra"
+                          value={selectedSuggestion.preferredWindow ?? "Non indicata"}
+                        />
+                        <SummaryRow
+                          label="Affidabilita"
+                          value={`${friendlyConfidence(selectedSuggestion.confidence.toUpperCase())} · ${friendlyAiSource(selectedSuggestion.source)}`}
+                        />
+                      </div>
+
+                      {selectedSuggestion.materialsMentioned.length ? (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                            Materiali citati
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {selectedSuggestion.materialsMentioned.map((material) => (
+                              <InfoChip key={material} label={material} />
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {selectedSuggestion.missingFields.length ? (
+                        <div className="rounded-2xl border border-warning-200 bg-warning-50 p-4 text-sm text-warning-900">
+                          Mancano ancora: {selectedSuggestion.missingFields.map(friendlyMissingField).join(", ")}.
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-neutral-600">
+                      Nessuna analisi disponibile. Apri un thread con testo o trascrizione vocale per vedere la scheda suggerita.
+                    </p>
+                  )}
+                </SectionCard>
+
                 <SectionCard
                   title="Cosa fare adesso"
                   subtitle="Una decisione chiara, poi eventuali azioni secondarie."
@@ -904,6 +1058,48 @@ export function WhatsAppAdminPanel({
               createWhatsAppIntake();
             }}
           >
+            <Field
+              label="Messaggio WhatsApp o trascrizione vocale"
+              placeholder="Incolla il messaggio del cliente o una nota vocale trascritta. Schedio prova a compilare da solo tipo lavoro, indirizzo e finestra."
+              multiline
+              value={intakeForm.rawIntake}
+              onChange={(value) =>
+                setIntakeForm((current) => ({ ...current, rawIntake: value }))
+              }
+            />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={isAnalyzingIntake}
+                onClick={analyzeDraftIntake}
+              >
+                {isAnalyzingIntake ? "Analisi in corso..." : "Analizza testo o voce"}
+              </Button>
+              <p className="text-sm text-neutral-600">
+                Utile per richieste incollate da WhatsApp e trascrizioni vocali rapide.
+              </p>
+            </div>
+
+            {intakeSuggestion ? (
+              <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4">
+                <p className="text-sm font-medium text-ink">Scheda suggerita</p>
+                <div className="mt-3 space-y-3 text-sm">
+                  <SummaryRow label="Tipo lavoro" value={intakeSuggestion.serviceType} />
+                  <SummaryRow label="Urgenza" value={friendlyUrgency(intakeSuggestion.urgency)} />
+                  <SummaryRow
+                    label="Sopralluogo"
+                    value={intakeSuggestion.visitNeeded ? "Consigliato" : "Intervento diretto possibile"}
+                  />
+                  <SummaryRow
+                    label="Prossimo passo"
+                    value={friendlyAiNextAction(intakeSuggestion.nextAction)}
+                  />
+                </div>
+                <p className="mt-3 text-sm text-neutral-700">{intakeSuggestion.summary}</p>
+              </div>
+            ) : null}
+
             <Field
               label="Nome cliente"
               placeholder="Es. Mario Rossi"
@@ -1124,6 +1320,39 @@ function friendlyNextStep(item: WhatsAppAdminItem) {
     return "Apri l'appuntamento confermato";
   }
   return "Controlla il thread";
+}
+
+function friendlyAiNextAction(action: AiIntakeSuggestion["nextAction"]) {
+  const labels: Record<AiIntakeSuggestion["nextAction"], string> = {
+    ask_clarification: "Chiedi un dettaglio in piu",
+    schedule_visit: "Proponi sopralluogo",
+    book_intervention: "Valuta intervento diretto"
+  };
+
+  return labels[action];
+}
+
+function friendlyUrgency(urgency: AiIntakeSuggestion["urgency"]) {
+  const labels: Record<AiIntakeSuggestion["urgency"], string> = {
+    high: "Alta",
+    medium: "Media",
+    low: "Bassa"
+  };
+
+  return labels[urgency];
+}
+
+function friendlyAiSource(source: AiIntakeSuggestion["source"]) {
+  return source === "openai" ? "AI live" : "Parser guidato";
+}
+
+function friendlyMissingField(field: string) {
+  const labels: Record<string, string> = {
+    address: "indirizzo",
+    scope: "dettagli del lavoro"
+  };
+
+  return labels[field] ?? field;
 }
 
 function primaryDescription(item: WhatsAppAdminItem) {

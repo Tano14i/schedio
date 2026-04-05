@@ -21,6 +21,8 @@ export type JobSize = "unknown" | "small" | "medium" | "large";
 export type BudgetRange = "unknown" | "low" | "medium" | "high";
 export type NextBestAction = "propose_visit" | "ask_clarification" | "reject" | "defer";
 export type QualificationConfidence = "high" | "medium" | "low";
+export type AiIntakeSource = "heuristic" | "openai";
+export type AiIntakeNextAction = "ask_clarification" | "schedule_visit" | "book_intervention";
 
 export type JobStatus =
   | "scheduled"
@@ -76,6 +78,22 @@ export type Lead = {
   qualifiedAt?: string;
   createdAt: string;
   nextAction: string;
+};
+
+export type AiIntakeSuggestion = {
+  customerName?: string;
+  serviceType: string;
+  address?: string;
+  urgency: "low" | "medium" | "high";
+  preferredWindow?: string;
+  materialsMentioned: string[];
+  measurements?: string;
+  visitNeeded: boolean;
+  nextAction: AiIntakeNextAction;
+  summary: string;
+  missingFields: string[];
+  confidence: QualificationConfidence;
+  source: AiIntakeSource;
 };
 
 export type Job = {

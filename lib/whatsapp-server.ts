@@ -17,6 +17,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { normalizePhone, parseWhatsAppWebhookPayload } from "@/lib/whatsapp";
 import { getThreadStatusAfterInbound, shouldConvertThreadToLead } from "@/lib/whatsapp-p0";
+import { analyzeWorkIntake } from "@/lib/ai-intake";
 
 const DEFAULT_COMPANY_NAME = "Schedio";
 
@@ -313,7 +314,10 @@ export async function createLeadFromWhatsAppThread(threadId: string) {
   }
 
   const textMessages = thread.messages.filter(
-    (message) => message.messageType === WhatsAppMessageType.TEXT && message.textBody
+    (message) =>
+      message.direction === WhatsAppMessageDirection.INBOUND &&
+      message.messageType === WhatsAppMessageType.TEXT &&
+      message.textBody
   );
   const imageMessages = thread.messages.filter(
     (message) => message.messageType === WhatsAppMessageType.IMAGE
@@ -322,17 +326,33 @@ export async function createLeadFromWhatsAppThread(threadId: string) {
   const description =
     textMessages.map((message) => message.textBody).filter(Boolean).join("\n").trim() ||
     "Richiesta arrivata da WhatsApp.";
-  const serviceType = guessServiceType(description);
+  const intakeSuggestion = await analyzeWorkIntake({
+    text: description,
+    customerName: thread.customer?.fullName ?? thread.contact.profileName ?? undefined,
+    phone: thread.contact.waId,
+    photoCount: imageMessages.length
+  });
 
   const customer =
     thread.customer ??
     (await prisma.customer.create({
       data: {
         companyId: thread.companyId,
-        fullName: thread.contact.profileName || `Cliente ${thread.contact.waId}`,
-        phone: thread.contact.waId
+        fullName:
+          intakeSuggestion.customerName ||
+          thread.contact.profileName ||
+          `Cliente ${thread.contact.waId}`,
+        phone: thread.contact.waId,
+        address: intakeSuggestion.address
       }
     }));
+
+  if (!customer.address && intakeSuggestion.address) {
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: { address: intakeSuggestion.address }
+    });
+  }
 
   if (!thread.customerId) {
     await prisma.whatsAppContact.update({
@@ -346,9 +366,10 @@ export async function createLeadFromWhatsAppThread(threadId: string) {
       companyId: thread.companyId,
       customerId: customer.id,
       source: LeadSource.WHATSAPP,
-      serviceType,
+      serviceType: intakeSuggestion.serviceType || guessServiceType(description),
       description,
-      urgency: "medium",
+      urgency: intakeSuggestion.urgency,
+      urgencyLevel: intakeSuggestion.urgency,
       status: LeadStatus.NEW
     }
   });
@@ -369,10 +390,11 @@ export async function createLeadFromWhatsAppThread(threadId: string) {
       companyId: thread.companyId,
       entityType: "lead",
       entityId: lead.id,
-        eventType: "lead_created_from_whatsapp",
+      eventType: "lead_created_from_whatsapp",
       metadataJson: toJsonValue({
         threadId: thread.id,
-        images: imageMessages.map((message) => message.storagePath).filter(Boolean)
+        images: imageMessages.map((message) => message.storagePath).filter(Boolean),
+        aiIntake: intakeSuggestion
       })
     }
   });
@@ -385,6 +407,7 @@ export async function createLeadCaptureFromWhatsAppIntake(input: {
   phone: string;
   serviceType: string;
   description: string;
+  rawIntake?: string;
   address?: string;
   measurements?: string;
   preferredWindow?: string;
@@ -420,7 +443,9 @@ export async function createLeadCaptureFromWhatsAppIntake(input: {
     contactId: contact.id,
     threadId: thread.id,
     type: WhatsAppMessageType.TEXT,
-    textBody: `${input.serviceType}\n${input.description}${input.measurements ? `\nMisure: ${input.measurements}` : ""}${input.address ? `\nIndirizzo: ${input.address}` : ""}${input.preferredWindow ? `\nFinestra preferita: ${input.preferredWindow}` : ""}`,
+    textBody:
+      input.rawIntake?.trim() ||
+      `${input.serviceType}\n${input.description}${input.measurements ? `\nMisure: ${input.measurements}` : ""}${input.address ? `\nIndirizzo: ${input.address}` : ""}${input.preferredWindow ? `\nFinestra preferita: ${input.preferredWindow}` : ""}`,
     rawPayload: input as unknown as Record<string, unknown>,
     receivedAt: new Date()
   });
