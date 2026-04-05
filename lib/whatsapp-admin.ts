@@ -57,6 +57,7 @@ export async function getWhatsAppAdminItems(): Promise<WhatsAppAdminItem[]> {
         direction: message.direction,
         type: message.messageType,
         text: message.textBody,
+        mimeType: message.mimeType,
         storagePath: message.storagePath,
         createdAt: message.createdAt.toISOString()
       })),

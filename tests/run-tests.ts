@@ -4,6 +4,7 @@ import "./beta-core-flows.test";
 import "./authz-role.test";
 import "./google-oauth.test";
 import "./ai-intake.test";
+import "./whatsapp-ai.test";
 import "./ai-estimates.test";
 import "./ai-followups.test";
 import "./job-financials.test";

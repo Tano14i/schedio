@@ -1,6 +1,7 @@
 import { jsonOk } from "@/lib/api";
 import { analyzeWorkIntake } from "@/lib/ai-intake";
 import { prisma } from "@/lib/prisma";
+import { collectInboundIntakeText } from "@/lib/whatsapp-ai";
 import { WhatsAppMessageDirection, WhatsAppMessageType } from "@prisma/client";
 
 export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
@@ -21,16 +22,22 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
     return Response.json({ message: "Thread non trovato." }, { status: 404 });
   }
 
-  const text = thread.messages
-    .filter(
-      (message) =>
-        message.direction === WhatsAppMessageDirection.INBOUND &&
-        message.messageType === WhatsAppMessageType.TEXT &&
-        message.textBody
-    )
-    .map((message) => message.textBody)
-    .join("\n")
-    .trim();
+  const text = collectInboundIntakeText(
+    thread.messages
+      .filter(
+        (message) =>
+          message.direction === WhatsAppMessageDirection.INBOUND &&
+          Boolean(message.textBody) &&
+          (message.messageType === WhatsAppMessageType.TEXT ||
+            message.messageType === WhatsAppMessageType.DOCUMENT)
+      )
+      .map((message) => ({
+        direction: message.direction,
+        messageType: message.messageType,
+        textBody: message.textBody,
+        mimeType: message.mimeType
+      }))
+  );
 
   const item = await analyzeWorkIntake({
     text: text || "Richiesta WhatsApp da chiarire.",

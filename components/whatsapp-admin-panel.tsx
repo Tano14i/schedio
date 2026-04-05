@@ -34,6 +34,7 @@ export type WhatsAppAdminItem = {
     direction: "INBOUND" | "OUTBOUND";
     type: string;
     text?: string | null;
+    mimeType?: string | null;
     storagePath?: string | null;
     createdAt: string;
   }>;
@@ -399,6 +400,11 @@ function SelectedThreadWorkspace({
             <div className="space-y-3">
               {selected.messages.map((message) => (
                 <div key={message.id} className={`max-w-[92%] rounded-3xl px-4 py-3 text-sm leading-6 shadow-soft ${message.direction === "OUTBOUND" ? "ml-auto bg-primary-500 text-white" : "border border-slate-200 bg-white text-neutral-800"}`}>
+                  {message.mimeType?.startsWith("audio/") ? (
+                    <p className={`mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] ${message.direction === "OUTBOUND" ? "text-primary-100" : "text-neutral-500"}`}>
+                      Nota vocale trascritta
+                    </p>
+                  ) : null}
                   <p>{message.text ?? message.storagePath ?? message.type}</p>
                   <p className={`mt-2 text-xs ${message.direction === "OUTBOUND" ? "text-primary-100" : "text-neutral-500"}`}>{formatDateTime(message.createdAt)}</p>
                 </div>

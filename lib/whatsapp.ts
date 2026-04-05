@@ -15,6 +15,8 @@ type MetaWebhookChange = {
       type?: string;
       text?: { body?: string };
       image?: { id?: string; mime_type?: string };
+      audio?: { id?: string; mime_type?: string };
+      document?: { id?: string; mime_type?: string };
       interactive?: { type?: string };
       timestamp?: string;
     }>;
@@ -240,11 +242,18 @@ export function parseWhatsAppWebhookPayload(payload: unknown) {
       id: message.id ?? `wa_msg_${crypto.randomUUID()}`,
       from: message.from ?? "",
       type: message.type ?? "text",
-      mediaId: message.image?.id,
+      mediaId: message.image?.id ?? message.audio?.id ?? message.document?.id,
+      mimeType: message.image?.mime_type ?? message.audio?.mime_type ?? message.document?.mime_type,
       interactiveType: message.interactive?.type,
       text:
         message.text?.body ??
-        (message.type === "image" ? "Foto ricevuta da cliente." : "Messaggio WhatsApp ricevuto."),
+        (message.type === "image"
+          ? "Foto ricevuta da cliente."
+          : message.type === "audio"
+            ? "Nota vocale ricevuta."
+            : message.type === "document"
+              ? "Documento ricevuto."
+              : "Messaggio WhatsApp ricevuto."),
       timestamp: message.timestamp ?? new Date().toISOString(),
       raw: message
     }))

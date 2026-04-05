@@ -18,6 +18,8 @@ import { prisma } from "@/lib/prisma";
 import { normalizePhone, parseWhatsAppWebhookPayload } from "@/lib/whatsapp";
 import { getThreadStatusAfterInbound, shouldConvertThreadToLead } from "@/lib/whatsapp-p0";
 import { analyzeWorkIntake } from "@/lib/ai-intake";
+import { transcribeAudioFromUrl } from "@/lib/ai-transcription";
+import { collectInboundIntakeText, isAudioMimeType } from "@/lib/whatsapp-ai";
 
 const DEFAULT_COMPANY_NAME = "Schedio";
 
@@ -316,16 +318,22 @@ export async function createLeadFromWhatsAppThread(threadId: string) {
   const textMessages = thread.messages.filter(
     (message) =>
       message.direction === WhatsAppMessageDirection.INBOUND &&
-      message.messageType === WhatsAppMessageType.TEXT &&
-      message.textBody
+      Boolean(message.textBody) &&
+      (message.messageType === WhatsAppMessageType.TEXT ||
+        (message.messageType === WhatsAppMessageType.DOCUMENT && isAudioMimeType(message.mimeType)))
   );
   const imageMessages = thread.messages.filter(
     (message) => message.messageType === WhatsAppMessageType.IMAGE
   );
 
-  const description =
-    textMessages.map((message) => message.textBody).filter(Boolean).join("\n").trim() ||
-    "Richiesta arrivata da WhatsApp.";
+  const description = collectInboundIntakeText(
+    textMessages.map((message) => ({
+      direction: message.direction,
+      messageType: message.messageType,
+      textBody: message.textBody,
+      mimeType: message.mimeType
+    }))
+  ) || "Richiesta arrivata da WhatsApp.";
   const intakeSuggestion = await analyzeWorkIntake({
     text: description,
     customerName: thread.customer?.fullName ?? thread.contact.profileName ?? undefined,
@@ -798,9 +806,11 @@ export async function handleWhatsAppWebhook(payload: unknown) {
     const messageType =
       inbound.type === "image"
         ? WhatsAppMessageType.IMAGE
-        : inbound.type === "interactive"
-          ? WhatsAppMessageType.INTERACTIVE_BUTTON
-          : WhatsAppMessageType.TEXT;
+        : inbound.type === "audio" || inbound.type === "document"
+          ? WhatsAppMessageType.DOCUMENT
+          : inbound.type === "interactive"
+            ? WhatsAppMessageType.INTERACTIVE_BUTTON
+            : WhatsAppMessageType.TEXT;
 
     let mediaData:
       | {
@@ -811,8 +821,29 @@ export async function handleWhatsAppWebhook(payload: unknown) {
         }
       | undefined;
 
-    if (messageType === WhatsAppMessageType.IMAGE && "mediaId" in inbound && inbound.mediaId) {
+    if (
+      (messageType === WhatsAppMessageType.IMAGE || messageType === WhatsAppMessageType.DOCUMENT) &&
+      "mediaId" in inbound &&
+      inbound.mediaId
+    ) {
       mediaData = await downloadWhatsAppMedia({ mediaId: inbound.mediaId });
+    }
+
+    let textBody = inbound.text;
+
+    if (
+      messageType === WhatsAppMessageType.DOCUMENT &&
+      isAudioMimeType(inbound.mimeType ?? mediaData?.mimeType) &&
+      mediaData?.downloadUrl
+    ) {
+      const transcript = await transcribeAudioFromUrl({
+        downloadUrl: mediaData.downloadUrl,
+        mimeType: inbound.mimeType ?? mediaData.mimeType,
+        fileId: inbound.mediaId ?? mediaData.mediaId,
+        accessToken: process.env.WHATSAPP_ACCESS_TOKEN
+      });
+
+      textBody = transcript ?? "Nota vocale ricevuta.";
     }
 
     await persistInboundMessage({
@@ -821,7 +852,7 @@ export async function handleWhatsAppWebhook(payload: unknown) {
       threadId: thread.id,
       metaMessageId: inbound.id,
       type: messageType,
-      textBody: inbound.text,
+      textBody,
       mediaId: inbound.mediaId ?? mediaData?.mediaId,
       mediaUrl: mediaData?.downloadUrl ?? undefined,
       mimeType: mediaData?.mimeType,
