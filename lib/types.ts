@@ -96,6 +96,34 @@ export type AiIntakeSuggestion = {
   source: AiIntakeSource;
 };
 
+export type EstimateAiAssist = {
+  source: "heuristic" | "openai";
+  summary: string;
+  targetMarginRate: number;
+  currentTotal: number;
+  trackedCost: number;
+  currentMargin: number | null;
+  currentMarginRate: number | null;
+  recommendedMinimumTotal: number | null;
+  suggestedTotal: number;
+  projectedMargin: number | null;
+  projectedMarginRate: number | null;
+  laborCost: number;
+  materialCost: number;
+  otherCost: number;
+  suggestedItems: Array<{
+    label: string;
+    description?: string;
+    qty: number;
+    unitPrice: number;
+  }>;
+  alerts: Array<{
+    severity: "high" | "medium" | "low";
+    title: string;
+    body: string;
+  }>;
+};
+
 export type Job = {
   id: string;
   leadId?: string;

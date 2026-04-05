@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, ButtonLink } from "@/components/button";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
 import { StatusBadge } from "@/components/status-badge";
-import type { Customer, Estimate, EstimateTemplate, Lead } from "@/lib/types";
+import type { Customer, Estimate, EstimateAiAssist, EstimateTemplate, Lead } from "@/lib/types";
 import { formatCompactDate, formatCurrency } from "@/lib/utils";
 
 type EstimateRecord = Estimate & {
@@ -31,6 +31,8 @@ export function EstimatesWorkspace({
   const [filter, setFilter] = useState<"all" | "waiting" | "viewed" | "follow_up" | "accepted" | "rejected">("all");
   const [feedback, setFeedback] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [aiAssist, setAiAssist] = useState<EstimateAiAssist | null>(null);
+  const [isAiAssistLoading, setIsAiAssistLoading] = useState(false);
 
   const selectedEstimate = useMemo(
     () => estimates.find((estimate) => estimate.id === selectedId) ?? estimates[0] ?? null,
@@ -61,6 +63,42 @@ export function EstimatesWorkspace({
     setEstimates((current) => current.map((estimate) => (estimate.id === next.id ? next : estimate)));
     setSelectedId(next.id);
   }
+
+  useEffect(() => {
+    if (!selectedEstimate?.id) {
+      setAiAssist(null);
+      return;
+    }
+
+    let canceled = false;
+    setIsAiAssistLoading(true);
+
+    fetch(`/api/estimates/${selectedEstimate.id}/ai-assist`, { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(result?.message ?? "Assistente non disponibile.");
+        }
+
+        if (!canceled) {
+          setAiAssist((result?.item as EstimateAiAssist) ?? null);
+        }
+      })
+      .catch(() => {
+        if (!canceled) {
+          setAiAssist(null);
+        }
+      })
+      .finally(() => {
+        if (!canceled) {
+          setIsAiAssistLoading(false);
+        }
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [selectedEstimate?.id]);
 
   async function patchEstimate(payload: Partial<EstimateRecord>) {
     if (!selectedEstimate) {
@@ -389,6 +427,118 @@ export function EstimatesWorkspace({
                 onChange={(value) => updateLocalEstimate({ ...selectedEstimate, terms: value })}
               />
 
+              <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-700">
+                      Assistente preventivo
+                    </p>
+                    <p className="mt-2 text-sm text-neutral-700">
+                      {isAiAssistLoading
+                        ? "Sto ricalcolando voci e rischio margine..."
+                        : aiAssist?.summary ?? "Nessun suggerimento AI disponibile per questo preventivo."}
+                    </p>
+                  </div>
+                  {aiAssist ? (
+                    <Button
+                      variant="secondary"
+                      className="w-full lg:w-auto"
+                      disabled={isPending}
+                      onClick={() =>
+                        updateLocalEstimate({
+                          ...selectedEstimate,
+                          items: aiAssist.suggestedItems.map((item, index) => ({
+                            id: selectedEstimate.items[index]?.id ?? `ai-${index}`,
+                            label: item.label,
+                            description: item.description,
+                            qty: item.qty,
+                            unitPrice: item.unitPrice
+                          })),
+                          notes:
+                            selectedEstimate.notes ??
+                            `Bozza aggiornata con assistente preventivo. Margine target ${aiAssist.targetMarginRate}%.`
+                        })
+                      }
+                    >
+                      Applica bozza AI
+                    </Button>
+                  ) : null}
+                </div>
+
+                {aiAssist ? (
+                  <>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                      <MetricPill label="Costi tracciati" value={formatCurrency(aiAssist.trackedCost)} />
+                      <MetricPill
+                        label="Margine attuale"
+                        value={aiAssist.currentMarginRate !== null ? `${aiAssist.currentMarginRate}%` : "n/d"}
+                      />
+                      <MetricPill
+                        label="Minimo consigliato"
+                        value={
+                          aiAssist.recommendedMinimumTotal !== null
+                            ? formatCurrency(aiAssist.recommendedMinimumTotal)
+                            : "n/d"
+                        }
+                      />
+                      <MetricPill
+                        label="Margine bozza AI"
+                        value={aiAssist.projectedMarginRate !== null ? `${aiAssist.projectedMarginRate}%` : "n/d"}
+                      />
+                    </div>
+
+                    <div className="mt-4 grid gap-3 lg:grid-cols-[1.15fr_0.85fr]">
+                      <div className="rounded-2xl border border-white/60 bg-white/80 p-4">
+                        <p className="text-sm font-medium text-ink">Bozza suggerita</p>
+                        <div className="mt-3 space-y-2">
+                          {aiAssist.suggestedItems.map((item, index) => (
+                            <div
+                              key={`${item.label}-${index}`}
+                              className="flex items-start justify-between gap-4 rounded-xl border border-neutral-200 bg-white px-3 py-3 text-sm"
+                            >
+                              <div>
+                                <p className="font-medium text-ink">{item.label}</p>
+                                {item.description ? (
+                                  <p className="mt-1 text-neutral-600">{item.description}</p>
+                                ) : null}
+                              </div>
+                              <div className="text-right text-neutral-700">
+                                <p>{item.qty}x</p>
+                                <p className="font-medium">{formatCurrency(item.unitPrice)}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {aiAssist.alerts.length ? (
+                          aiAssist.alerts.map((alert, index) => (
+                            <div
+                              key={`${alert.title}-${index}`}
+                              className={`rounded-2xl border p-4 text-sm ${
+                                alert.severity === "high"
+                                  ? "border-danger-200 bg-danger-50 text-danger-900"
+                                  : alert.severity === "medium"
+                                    ? "border-warning-200 bg-warning-50 text-warning-900"
+                                    : "border-primary-200 bg-white text-neutral-800"
+                              }`}
+                            >
+                              <p className="font-semibold">{alert.title}</p>
+                              <p className="mt-1">{alert.body}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="rounded-2xl border border-success-200 bg-success-50 p-4 text-sm text-success-900">
+                            Il preventivo non mostra alert critici con i costi registrati oggi.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+
               <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Voci preventivo</p>
@@ -633,6 +783,15 @@ function MiniStat({
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-ink">{value}</p>
       <p className="text-sm text-neutral-600">{detail}</p>
+    </div>
+  );
+}
+
+function MetricPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/60 bg-white/80 px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-ink">{value}</p>
     </div>
   );
 }
