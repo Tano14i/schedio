@@ -124,6 +124,28 @@ export type EstimateAiAssist = {
   }>;
 };
 
+export type EstimateFollowUpAiAssist = {
+  source: "heuristic" | "openai";
+  scenario: "not_viewed" | "viewed_not_accepted";
+  summary: string;
+  message: string;
+  recommendation: "follow_up_now" | "call_customer";
+};
+
+export type InvoiceReminderAiAssist = {
+  source: "heuristic" | "openai";
+  scenario: "before_due" | "overdue";
+  summary: string;
+  message: string;
+  recommendation: "send_reminder" | "call_customer";
+};
+
+export type ReviewRequestAiAssist = {
+  source: "heuristic" | "openai";
+  summary: string;
+  message: string;
+};
+
 export type Job = {
   id: string;
   leadId?: string;

@@ -17,6 +17,7 @@ import {
   queueAutomationLog,
   removeQueuedAutomationLogs
 } from "@/lib/automation-runtime";
+import { buildEstimateFollowUpAiAssist } from "@/lib/ai-followups";
 import { persistOutboundMessage } from "@/lib/whatsapp-server";
 
 type EstimateItemInput = {
@@ -741,10 +742,14 @@ export async function sendDueEstimateFollowUps() {
 
     const thread = estimate.lead?.whatsappThreads[0];
     const link = `${getAppUrl()}/public/estimates/${estimate.publicToken}`;
-    const text =
-      item.reason === "viewed_not_accepted"
-        ? `Ciao ${estimate.customer.fullName}, volevamo sapere se hai domande sul preventivo. Se vuoi, possiamo sentirci per chiarimenti. ${link}`
-        : `Ciao ${estimate.customer.fullName}, hai avuto modo di vedere il preventivo? Se vuoi, possiamo chiarire qualsiasi dubbio. ${link}`;
+    const assist = await buildEstimateFollowUpAiAssist({
+      customerName: estimate.customer.fullName,
+      title: estimate.title,
+      total: estimate.total,
+      publicUrl: link,
+      viewedAt: estimate.viewedAt,
+      reason: item.reason
+    });
 
     if (!thread) {
       await prisma.estimateFollowUp.update({
@@ -765,7 +770,7 @@ export async function sendDueEstimateFollowUps() {
       contactId: thread.contactId,
       threadId: thread.id,
       type: WhatsAppMessageType.TEXT,
-      textBody: text,
+      textBody: assist.message,
       status: WhatsAppMessageStatus.SENT
     });
 
@@ -783,7 +788,11 @@ export async function sendDueEstimateFollowUps() {
       companyId: estimate.companyId,
       entityType: "estimate",
       entityId: estimate.id,
-      eventType: "estimate_followup_sent"
+      eventType: "estimate_followup_sent",
+      metadata: {
+        aiSource: assist.source,
+        scenario: assist.scenario
+      }
     });
   }
 

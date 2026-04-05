@@ -17,6 +17,10 @@ import {
   removeQueuedAutomationLogs
 } from "@/lib/automation-runtime";
 import {
+  buildInvoiceReminderAiAssist,
+  buildReviewRequestAiAssist
+} from "@/lib/ai-followups";
+import {
   getInvoiceReminderReason,
   sendInvoiceState,
   sendReviewRequestState,
@@ -666,12 +670,21 @@ export async function sendDueInvoiceReminders() {
       continue;
     }
 
+    const assist = await buildInvoiceReminderAiAssist({
+      customerName: invoice.customer.fullName,
+      invoiceNumber: invoice.number,
+      total: invoice.total,
+      dueDate: invoice.dueDate,
+      publicUrl: invoice.publicToken ? `${getAppUrl()}/public/invoices/${invoice.publicToken}` : null,
+      reason: reminder.reason.toLowerCase()
+    });
+
     await persistOutboundMessage({
       companyId: invoice.companyId,
       contactId: thread.contactId,
       threadId: thread.id,
       type: WhatsAppMessageType.TEXT,
-      textBody: `Ciao ${invoice.customer.fullName}, ti ricordiamo la fattura ${invoice.number} di ${invoice.total} euro. Se hai bisogno di chiarimenti siamo a disposizione.`,
+      textBody: assist.message,
       status: WhatsAppMessageStatus.SENT
     });
 
@@ -692,7 +705,11 @@ export async function sendDueInvoiceReminders() {
       companyId: invoice.companyId,
       entityType: "invoice",
       entityId: invoice.id,
-      eventType: "invoice_reminder_sent"
+      eventType: "invoice_reminder_sent",
+      metadata: {
+        aiSource: assist.source,
+        scenario: assist.scenario
+      }
     });
   }
 
@@ -714,13 +731,18 @@ export async function sendReviewRequestNow(reviewRequestId: string) {
   }
 
   const thread = await findLatestThreadByLead(request.invoice?.leadId);
+  const assist = await buildReviewRequestAiAssist({
+    customerName: request.customer.fullName,
+    reviewLink: request.reviewLink,
+    workSummary: request.invoice?.title
+  });
   if (thread) {
     await persistOutboundMessage({
       companyId: request.companyId,
       contactId: thread.contactId,
       threadId: thread.id,
       type: WhatsAppMessageType.TEXT,
-      textBody: `Grazie ancora per averci scelto. Se ti va, ci lasci una recensione? ${request.reviewLink ?? "https://g.page/r/demo-review-link"}`,
+      textBody: assist.message,
       status: WhatsAppMessageStatus.SENT
     });
   } else {
@@ -758,7 +780,10 @@ export async function sendReviewRequestNow(reviewRequestId: string) {
     companyId: request.companyId,
     entityType: "invoice",
     entityId: request.invoiceId ?? request.id,
-    eventType: "review_request_sent"
+    eventType: "review_request_sent",
+    metadata: {
+      aiSource: assist.source
+    }
   });
 
   return updated;

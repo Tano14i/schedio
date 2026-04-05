@@ -7,7 +7,14 @@ import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
 import { StatusBadge } from "@/components/status-badge";
-import type { Customer, Estimate, EstimateAiAssist, EstimateTemplate, Lead } from "@/lib/types";
+import type {
+  Customer,
+  Estimate,
+  EstimateAiAssist,
+  EstimateFollowUpAiAssist,
+  EstimateTemplate,
+  Lead
+} from "@/lib/types";
 import { formatCompactDate, formatCurrency } from "@/lib/utils";
 
 type EstimateRecord = Estimate & {
@@ -33,6 +40,8 @@ export function EstimatesWorkspace({
   const [isPending, startTransition] = useTransition();
   const [aiAssist, setAiAssist] = useState<EstimateAiAssist | null>(null);
   const [isAiAssistLoading, setIsAiAssistLoading] = useState(false);
+  const [followUpAssist, setFollowUpAssist] = useState<EstimateFollowUpAiAssist | null>(null);
+  const [isFollowUpAssistLoading, setIsFollowUpAssistLoading] = useState(false);
 
   const selectedEstimate = useMemo(
     () => estimates.find((estimate) => estimate.id === selectedId) ?? estimates[0] ?? null,
@@ -99,6 +108,42 @@ export function EstimatesWorkspace({
       canceled = true;
     };
   }, [selectedEstimate?.id]);
+
+  useEffect(() => {
+    if (!selectedEstimate?.id || !["sent", "viewed"].includes(selectedEstimate.status)) {
+      setFollowUpAssist(null);
+      return;
+    }
+
+    let canceled = false;
+    setIsFollowUpAssistLoading(true);
+
+    fetch(`/api/estimates/${selectedEstimate.id}/ai-followup`, { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(result?.message ?? "Assistente follow-up non disponibile.");
+        }
+
+        if (!canceled) {
+          setFollowUpAssist((result?.item as EstimateFollowUpAiAssist | null) ?? null);
+        }
+      })
+      .catch(() => {
+        if (!canceled) {
+          setFollowUpAssist(null);
+        }
+      })
+      .finally(() => {
+        if (!canceled) {
+          setIsFollowUpAssistLoading(false);
+        }
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [selectedEstimate?.id, selectedEstimate?.status]);
 
   async function patchEstimate(payload: Partial<EstimateRecord>) {
     if (!selectedEstimate) {
@@ -186,6 +231,22 @@ export function EstimatesWorkspace({
 
       setFeedback("Bozza fattura creata.");
       router.push("/invoices");
+      router.refresh();
+    });
+  }
+
+  async function sendFollowUpNow(estimateId: string) {
+    setFeedback("");
+    startTransition(async () => {
+      const response = await fetch(`/api/estimates/${estimateId}/send-follow-up-now`, { method: "POST" });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setFeedback(result?.message ?? "Impossibile inviare il follow-up.");
+        return;
+      }
+
+      setFeedback("Follow-up inviato.");
       router.refresh();
     });
   }
@@ -538,6 +599,52 @@ export function EstimatesWorkspace({
                   </>
                 ) : null}
               </div>
+
+              {selectedEstimate.status === "sent" || selectedEstimate.status === "viewed" ? (
+                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                        Assistente follow-up
+                      </p>
+                      <p className="mt-2 text-sm text-neutral-700">
+                        {isFollowUpAssistLoading
+                          ? "Sto preparando il messaggio piu adatto per questo cliente..."
+                          : followUpAssist?.summary ?? "Nessun suggerimento follow-up disponibile."}
+                      </p>
+                    </div>
+                    {followUpAssist ? (
+                      <Button
+                        variant="secondary"
+                        className="w-full lg:w-auto"
+                        disabled={isPending}
+                        onClick={() => sendFollowUpNow(selectedEstimate.id)}
+                      >
+                        Invia follow-up ora
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  {followUpAssist ? (
+                    <div className="mt-4 grid gap-3 lg:grid-cols-[0.85fr_1.15fr]">
+                      <MetricPill
+                        label="Prossimo passo"
+                        value={
+                          followUpAssist.recommendation === "call_customer"
+                            ? "Meglio chiarire o chiamare"
+                            : "Messaggio pronto da inviare"
+                        }
+                      />
+                      <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+                        <p className="text-sm font-medium text-ink">Messaggio suggerito</p>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
+                          {followUpAssist.message}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
 
               <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

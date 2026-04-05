@@ -1,13 +1,20 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Button, ButtonLink } from "@/components/button";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
 import { StatCard } from "@/components/stat-card";
 import { StatusBadge } from "@/components/status-badge";
-import type { Customer, Invoice, InvoiceMetrics, InvoiceWorkItem, ReviewRequest } from "@/lib/types";
+import type {
+  Customer,
+  Invoice,
+  InvoiceMetrics,
+  InvoiceReminderAiAssist,
+  InvoiceWorkItem,
+  ReviewRequest
+} from "@/lib/types";
 import { formatCompactDate, formatCurrency } from "@/lib/utils";
 
 type InvoiceRecord = Invoice & {
@@ -33,6 +40,8 @@ export function InvoicesWorkspace({
   const [reviewRequests, setReviewRequests] = useState(initialReviewRequests);
   const [feedback, setFeedback] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [aiReminderAssist, setAiReminderAssist] = useState<InvoiceReminderAiAssist | null>(null);
+  const [isAiReminderLoading, setIsAiReminderLoading] = useState(false);
 
   const selectedInvoice = useMemo(
     () => invoices.find((invoice) => invoice.id === selectedId) ?? invoices[0] ?? null,
@@ -42,6 +51,42 @@ export function InvoicesWorkspace({
     selectedInvoice?.customerName ??
     initialCustomers.find((customer) => customer.id === selectedInvoice?.customerId)?.fullName ??
     "Cliente";
+
+  useEffect(() => {
+    if (!selectedInvoice?.id || !["sent", "overdue"].includes(selectedInvoice.status)) {
+      setAiReminderAssist(null);
+      return;
+    }
+
+    let canceled = false;
+    setIsAiReminderLoading(true);
+
+    fetch(`/api/invoices/${selectedInvoice.id}/ai-reminder`, { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(result?.message ?? "Assistente reminder non disponibile.");
+        }
+
+        if (!canceled) {
+          setAiReminderAssist((result?.item as InvoiceReminderAiAssist | null) ?? null);
+        }
+      })
+      .catch(() => {
+        if (!canceled) {
+          setAiReminderAssist(null);
+        }
+      })
+      .finally(() => {
+        if (!canceled) {
+          setIsAiReminderLoading(false);
+        }
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [selectedInvoice?.id, selectedInvoice?.status]);
 
   const filteredInvoices = invoices.filter((invoice) => {
     if (filter === "all") return true;
@@ -354,6 +399,50 @@ export function InvoicesWorkspace({
                   })
                 }
               />
+
+              {(selectedInvoice.status === "sent" || selectedInvoice.status === "overdue") ? (
+                <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-700">
+                        Assistente reminder
+                      </p>
+                      <p className="mt-2 text-sm text-neutral-700">
+                        {isAiReminderLoading
+                          ? "Sto preparando il messaggio piu adatto per il sollecito..."
+                          : aiReminderAssist?.summary ?? "Nessun suggerimento reminder disponibile."}
+                      </p>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      className="w-full lg:w-auto"
+                      disabled={isPending}
+                      onClick={() => sendReminderNow(selectedInvoice.id)}
+                    >
+                      Sollecita ora
+                    </Button>
+                  </div>
+
+                  {aiReminderAssist ? (
+                    <div className="mt-4 grid gap-3 lg:grid-cols-[0.85fr_1.15fr]">
+                      <MetricPill
+                        label="Prossimo passo"
+                        value={
+                          aiReminderAssist.recommendation === "call_customer"
+                            ? "Meglio chiamare il cliente"
+                            : "Reminder pronto da inviare"
+                        }
+                      />
+                      <div className="rounded-2xl border border-white/60 bg-white/80 p-4">
+                        <p className="text-sm font-medium text-ink">Messaggio suggerito</p>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
+                          {aiReminderAssist.message}
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
 
               <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -729,5 +818,14 @@ function InfoChip({ label }: { label: string }) {
     <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-700 shadow-soft">
       {label}
     </span>
+  );
+}
+
+function MetricPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/60 bg-white/80 px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-neutral-500">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-ink">{value}</p>
+    </div>
   );
 }
