@@ -19,7 +19,8 @@ import { normalizePhone, parseWhatsAppWebhookPayload } from "@/lib/whatsapp";
 import { getThreadStatusAfterInbound, shouldConvertThreadToLead } from "@/lib/whatsapp-p0";
 import { analyzeWorkIntake } from "@/lib/ai-intake";
 import { transcribeAudioFromUrl } from "@/lib/ai-transcription";
-import { collectInboundIntakeText, isAudioMimeType } from "@/lib/whatsapp-ai";
+import { extractTextFromImageUrl } from "@/lib/ai-vision";
+import { collectInboundIntakeText, isAudioMimeType, isImageMimeType } from "@/lib/whatsapp-ai";
 
 const DEFAULT_COMPANY_NAME = "Schedio";
 
@@ -829,7 +830,7 @@ export async function handleWhatsAppWebhook(payload: unknown) {
       mediaData = await downloadWhatsAppMedia({ mediaId: inbound.mediaId });
     }
 
-    let textBody = inbound.text;
+    let textBody = inbound.type === "text" ? inbound.text : undefined;
 
     if (
       messageType === WhatsAppMessageType.DOCUMENT &&
@@ -843,7 +844,21 @@ export async function handleWhatsAppWebhook(payload: unknown) {
         accessToken: process.env.WHATSAPP_ACCESS_TOKEN
       });
 
-      textBody = transcript ?? "Nota vocale ricevuta.";
+      textBody = transcript ?? undefined;
+    }
+
+    if (
+      messageType === WhatsAppMessageType.IMAGE &&
+      isImageMimeType(inbound.mimeType ?? mediaData?.mimeType) &&
+      mediaData?.downloadUrl
+    ) {
+      const extracted = await extractTextFromImageUrl({
+        downloadUrl: mediaData.downloadUrl,
+        mimeType: inbound.mimeType ?? mediaData.mimeType,
+        accessToken: process.env.WHATSAPP_ACCESS_TOKEN
+      });
+
+      textBody = extracted ?? undefined;
     }
 
     await persistInboundMessage({

@@ -404,6 +404,10 @@ function SelectedThreadWorkspace({
                     <p className={`mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] ${message.direction === "OUTBOUND" ? "text-primary-100" : "text-neutral-500"}`}>
                       Nota vocale trascritta
                     </p>
+                  ) : message.type === "IMAGE" && message.text ? (
+                    <p className={`mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] ${message.direction === "OUTBOUND" ? "text-primary-100" : "text-neutral-500"}`}>
+                      Testo letto da immagine
+                    </p>
                   ) : null}
                   <p>{message.text ?? message.storagePath ?? message.type}</p>
                   <p className={`mt-2 text-xs ${message.direction === "OUTBOUND" ? "text-primary-100" : "text-neutral-500"}`}>{formatDateTime(message.createdAt)}</p>

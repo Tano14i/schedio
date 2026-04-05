@@ -29,7 +29,8 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
           message.direction === WhatsAppMessageDirection.INBOUND &&
           Boolean(message.textBody) &&
           (message.messageType === WhatsAppMessageType.TEXT ||
-            message.messageType === WhatsAppMessageType.DOCUMENT)
+            message.messageType === WhatsAppMessageType.DOCUMENT ||
+            message.messageType === WhatsAppMessageType.IMAGE)
       )
       .map((message) => ({
         direction: message.direction,

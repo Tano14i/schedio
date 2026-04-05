@@ -9,6 +9,10 @@ export function isAudioMimeType(mimeType?: string | null) {
   return Boolean(mimeType?.toLowerCase().startsWith("audio/"));
 }
 
+export function isImageMimeType(mimeType?: string | null) {
+  return Boolean(mimeType?.toLowerCase().startsWith("image/"));
+}
+
 export function shouldUseMessageForAiIntake(message: IntakeMessageLike) {
   if (message.direction !== "INBOUND" || !message.textBody?.trim()) {
     return false;
@@ -16,7 +20,8 @@ export function shouldUseMessageForAiIntake(message: IntakeMessageLike) {
 
   return (
     message.messageType === "TEXT" ||
-    (message.messageType === "DOCUMENT" && isAudioMimeType(message.mimeType))
+    (message.messageType === "DOCUMENT" && isAudioMimeType(message.mimeType)) ||
+    (message.messageType === "IMAGE" && Boolean(message.textBody?.trim()))
   );
 }
 
