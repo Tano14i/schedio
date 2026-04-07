@@ -5,6 +5,7 @@ import { canAccessPath, getPostLoginPath } from "@/lib/authz";
 
 const PUBLIC_PATHS = [
   "/login",
+  "/pricing",
   "/public",
   "/api/public",
   "/api/auth",
