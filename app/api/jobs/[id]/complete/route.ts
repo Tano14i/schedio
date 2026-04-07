@@ -5,7 +5,7 @@ import { getJobByIdForUser } from "@/lib/jobs-server";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const session = getSessionFromRequest(request);
+  const session = await getSessionFromRequest(request);
   const job = await getJobByIdForUser(
     id,
     session

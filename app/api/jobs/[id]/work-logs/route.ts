@@ -4,7 +4,7 @@ import { getJobByIdForUser, addJobWorkLog } from "@/lib/jobs-server";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const session = getSessionFromRequest(request);
+  const session = await getSessionFromRequest(request);
 
   if (!session || (!isOwner(session.role) && !isWorker(session.role))) {
     return Response.json({ message: "Sessione non valida." }, { status: 401 });

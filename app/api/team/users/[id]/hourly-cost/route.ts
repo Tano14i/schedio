@@ -6,7 +6,7 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const session = getSessionFromRequest(request);
+  const session = await getSessionFromRequest(request);
 
   if (!session || !isOwner(session.role)) {
     return Response.json({ message: "Permessi insufficienti." }, { status: 403 });

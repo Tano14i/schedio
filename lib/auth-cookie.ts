@@ -33,11 +33,20 @@ function base64urlEncode(buffer: ArrayBuffer): string {
     .replace(/=/g, "");
 }
 
-function base64urlToBytes(str: string): Uint8Array {
+function base64urlToBytes(str: string): Uint8Array<ArrayBuffer> {
   const padded = str.replace(/-/g, "+").replace(/_/g, "/");
   const rem = padded.length % 4;
   const withPadding = rem === 0 ? padded : padded + "=".repeat(4 - rem);
-  return Uint8Array.from(atob(withPadding), (c) => c.charCodeAt(0));
+  const binary = atob(withPadding);
+  // Costruiamo da ArrayBuffer esplicito: new Uint8Array(length) restituisce
+  // Uint8Array<ArrayBufferLike> in TypeScript strict, ma crypto.subtle.verify
+  // richiede Uint8Array<ArrayBuffer>. Passare new ArrayBuffer() risolve il tipo.
+  const buffer = new ArrayBuffer(binary.length);
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
 export async function encodeSessionCookie(payload: SessionPayload): Promise<string> {

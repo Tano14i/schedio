@@ -5,7 +5,7 @@ import { getJobByIdForUser, updateJob } from "@/lib/jobs-server";
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const session = getSessionFromRequest(request);
+  const session = await getSessionFromRequest(request);
   const item = await getJobByIdForUser(
     id,
     session
@@ -24,7 +24,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const session = getSessionFromRequest(request);
+  const session = await getSessionFromRequest(request);
   const job = await getJobByIdForUser(
     id,
     session

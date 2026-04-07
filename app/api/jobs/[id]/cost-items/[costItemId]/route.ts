@@ -7,7 +7,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string; costItemId: string }> }
 ) {
   const { id, costItemId } = await context.params;
-  const session = getSessionFromRequest(request);
+  const session = await getSessionFromRequest(request);
   const job = await getJobByIdForUser(
     id,
     session

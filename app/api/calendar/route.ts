@@ -3,7 +3,7 @@ import { getSessionFromRequest } from "@/lib/auth";
 import { getCalendarData } from "@/lib/jobs-server";
 
 export async function GET(request: Request) {
-  const session = getSessionFromRequest(request);
+  const session = await getSessionFromRequest(request);
   const { jobs } = await getCalendarData(
     session
       ? {

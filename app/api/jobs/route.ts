@@ -3,7 +3,7 @@ import { getSessionFromRequest, isOwner } from "@/lib/auth";
 import { createJob, getJobsPageData } from "@/lib/jobs-server";
 
 export async function GET(request: Request) {
-  const session = getSessionFromRequest(request);
+  const session = await getSessionFromRequest(request);
   const items = await getJobsPageData(
     session
       ? {
@@ -45,7 +45,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = getSessionFromRequest(request);
+  const session = await getSessionFromRequest(request);
   if (!session || !isOwner(session.role)) {
     return Response.json({ message: "Permessi insufficienti." }, { status: 403 });
   }
