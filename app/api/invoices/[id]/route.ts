@@ -1,7 +1,10 @@
 import { jsonOk, jsonUpdated } from "@/lib/api";
+import { requireSession } from "@/lib/auth";
 import { getInvoicePageData, updateInvoice } from "@/lib/invoices-server";
 
-export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
   const { id } = await context.params;
   const { invoices } = await getInvoicePageData();
   const item = invoices.find((invoice) => invoice.id === id) ?? null;
@@ -9,6 +12,9 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
+
   const { id } = await context.params;
   const body = (await request.json().catch(() => ({}))) as {
     title?: string | null;

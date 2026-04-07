@@ -1,7 +1,10 @@
 import { jsonCreated, jsonOk } from "@/lib/api";
+import { requireSession } from "@/lib/auth";
 import { createLeadWithCustomer, deriveLeadNextAction, getLeadsPageData } from "@/lib/crm-server";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
   const { leads } = await getLeadsPageData();
   return jsonOk({
     items: leads.map((lead) => ({
@@ -31,6 +34,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
+
   const body = (await request.json().catch(() => ({}))) as {
     fullName?: string;
     phone?: string;

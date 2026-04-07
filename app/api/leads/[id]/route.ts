@@ -1,7 +1,10 @@
 import { jsonOk, jsonUpdated } from "@/lib/api";
+import { requireSession } from "@/lib/auth";
 import { deriveLeadNextAction, getLeadById, updateLead } from "@/lib/crm-server";
 
-export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
   const { id } = await context.params;
   const lead = await getLeadById(id);
 
@@ -35,6 +38,9 @@ export async function GET(_: Request, context: { params: Promise<{ id: string }>
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
+
   const { id } = await context.params;
   const body = (await request.json().catch(() => ({}))) as {
     status?: "new" | "contacted" | "scheduled" | "quoted" | "won" | "lost";

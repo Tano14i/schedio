@@ -8,17 +8,64 @@ export type SessionPayload = {
   role: SessionRole;
 };
 
-export function encodeSessionCookie(payload: SessionPayload) {
-  return btoa(JSON.stringify(payload));
+function getSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error("SESSION_SECRET must be set and at least 32 characters");
+  }
+  return secret;
 }
 
-export function decodeSessionCookie(value?: string | null): SessionPayload | null {
-  if (!value) {
-    return null;
-  }
+async function importHmacKey(secret: string): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"]
+  );
+}
+
+function base64urlEncode(buffer: ArrayBuffer): string {
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+}
+
+function base64urlToBytes(str: string): Uint8Array {
+  const padded = str.replace(/-/g, "+").replace(/_/g, "/");
+  const rem = padded.length % 4;
+  const withPadding = rem === 0 ? padded : padded + "=".repeat(4 - rem);
+  return Uint8Array.from(atob(withPadding), (c) => c.charCodeAt(0));
+}
+
+export async function encodeSessionCookie(payload: SessionPayload): Promise<string> {
+  const data = btoa(JSON.stringify(payload));
+  const key = await importHmacKey(getSecret());
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
+  return `${data}.${base64urlEncode(sig)}`;
+}
+
+export async function decodeSessionCookie(value?: string | null): Promise<SessionPayload | null> {
+  if (!value) return null;
+
+  const dot = value.lastIndexOf(".");
+  if (dot === -1) return null; // vecchio formato plain-base64 → rigettato
+
+  const data = value.slice(0, dot);
+  const sigBytes = base64urlToBytes(value.slice(dot + 1));
 
   try {
-    return JSON.parse(atob(value)) as SessionPayload;
+    const key = await importHmacKey(getSecret());
+    const valid = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      sigBytes,
+      new TextEncoder().encode(data)
+    );
+    if (!valid) return null;
+    return JSON.parse(atob(data)) as SessionPayload;
   } catch {
     return null;
   }

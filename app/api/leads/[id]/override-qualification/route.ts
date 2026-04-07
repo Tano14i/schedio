@@ -3,9 +3,13 @@ import {
   QualificationStatus
 } from "@prisma/client";
 import { jsonUpdated } from "@/lib/api";
+import { requireSession } from "@/lib/auth";
 import { overrideLeadQualification } from "@/lib/lead-qualification-server";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
+
   const { id } = await context.params;
   const body = (await request.json()) as {
     qualificationStatus?: keyof typeof QualificationStatus;

@@ -1,8 +1,11 @@
 import { jsonOk } from "@/lib/api";
+import { requireSession } from "@/lib/auth";
 import { buildEstimateAiAssist } from "@/lib/ai-estimates";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
   const { id } = await context.params;
 
   const estimate = await prisma.estimate.findUnique({

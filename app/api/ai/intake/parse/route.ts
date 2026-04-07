@@ -1,7 +1,10 @@
 import { jsonOk } from "@/lib/api";
+import { requireSession } from "@/lib/auth";
 import { analyzeWorkIntake } from "@/lib/ai-intake";
 
 export async function POST(request: Request) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
   const body = (await request.json()) as {
     text?: string;
     customerName?: string;

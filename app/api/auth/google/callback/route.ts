@@ -114,7 +114,7 @@ export async function GET(request: Request) {
       maxAge: 0
     });
 
-    setSessionCookie(response, {
+    await setSessionCookie(response, {
       userId: user.id,
       companyId: user.companyId,
       role: user.role

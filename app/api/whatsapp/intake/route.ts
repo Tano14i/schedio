@@ -1,8 +1,11 @@
 import { jsonCreated } from "@/lib/api";
+import { requireSession } from "@/lib/auth";
 import { createLeadCaptureFromWhatsAppIntake } from "@/lib/whatsapp-server";
 import { analyzeWorkIntake } from "@/lib/ai-intake";
 
 export async function POST(request: Request) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
   const body = (await request.json()) as {
     customerName?: string;
     phone?: string;

@@ -40,16 +40,16 @@ function parseCookieHeader(header: string | null) {
   }, {});
 }
 
-export function getSessionFromRequest(request: Request) {
+export async function getSessionFromRequest(request: Request) {
   const cookieHeader = request.headers.get("cookie");
   const cookiesMap = parseCookieHeader(cookieHeader);
-  return decodeSessionCookie(cookiesMap[SESSION_COOKIE_NAME]);
+  return await decodeSessionCookie(cookiesMap[SESSION_COOKIE_NAME]);
 }
 
 export async function getCurrentSession(): Promise<AuthSession | null> {
   const cookieStore = await cookies();
   const raw = cookieStore.get(SESSION_COOKIE_NAME)?.value;
-  const payload = decodeSessionCookie(raw);
+  const payload = await decodeSessionCookie(raw);
 
   if (!payload?.userId) {
     return null;
@@ -85,11 +85,27 @@ export async function requireCurrentSession() {
   return session;
 }
 
-export function setSessionCookie(
+/**
+ * Verifica la sessione dalla Request e restituisce il SessionPayload.
+ * Se la sessione non è valida restituisce un Response 401 pronto da returnare.
+ *
+ * Utilizzo:
+ *   const session = await requireSession(request);
+ *   if (session instanceof Response) return session;
+ */
+export async function requireSession(request: Request): Promise<SessionPayload | Response> {
+  const session = await getSessionFromRequest(request);
+  if (!session) {
+    return Response.json({ error: "Non autorizzato." }, { status: 401 });
+  }
+  return session;
+}
+
+export async function setSessionCookie(
   response: NextResponse,
   payload: SessionPayload
 ) {
-  response.cookies.set(SESSION_COOKIE_NAME, encodeSessionCookie(payload), {
+  response.cookies.set(SESSION_COOKIE_NAME, await encodeSessionCookie(payload), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

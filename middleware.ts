@@ -13,11 +13,11 @@ const PUBLIC_PATHS = [
   "/favicon.ico"
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === "/") {
-    const session = decodeSessionCookie(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+    const session = await decodeSessionCookie(request.cookies.get(SESSION_COOKIE_NAME)?.value);
 
     if (!session) {
       return NextResponse.next();
@@ -34,7 +34,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = decodeSessionCookie(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+  const session = await decodeSessionCookie(request.cookies.get(SESSION_COOKIE_NAME)?.value);
 
   if (!session) {
     const loginUrl = new URL("/login", request.url);

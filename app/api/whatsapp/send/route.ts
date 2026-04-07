@@ -1,4 +1,5 @@
 import { jsonCreated } from "@/lib/api";
+import { requireSession } from "@/lib/auth";
 import {
   buildWhatsAppTemplatePayload,
   buildWhatsAppTextPayload,
@@ -7,6 +8,8 @@ import {
 } from "@/lib/whatsapp";
 
 export async function POST(request: Request) {
+  const session = await requireSession(request);
+  if (session instanceof Response) return session;
   const body = (await request.json()) as {
     to?: string;
     message?: string;

@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
   const redirectTarget = getPostLoginPath(user.role, next);
   const response = NextResponse.redirect(new URL(redirectTarget, request.url), 303);
-  setSessionCookie(response, {
+  await setSessionCookie(response, {
     userId: user.id,
     companyId: user.companyId,
     role: user.role
