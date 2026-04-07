@@ -109,9 +109,6 @@ export default function PricingPage() {
             <Link href="/#funzionalita" className="text-sm font-medium text-neutral-500 transition hover:text-ink">
               Funzionalità
             </Link>
-            <Link href="/#come-funziona" className="text-sm font-medium text-neutral-500 transition hover:text-ink">
-              Come funziona
-            </Link>
             <Link href="/pricing" className="text-sm font-medium text-ink underline decoration-amber-400 underline-offset-4">
               Prezzi
             </Link>

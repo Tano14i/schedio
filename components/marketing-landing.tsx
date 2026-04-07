@@ -79,9 +79,6 @@ export function MarketingLanding() {
             <a href="#funzionalita" className="text-sm font-medium text-neutral-500 transition hover:text-ink">
               Funzionalità
             </a>
-            <a href="#come-funziona" className="text-sm font-medium text-neutral-500 transition hover:text-ink">
-              Come funziona
-            </a>
             <a href="/pricing" className="text-sm font-medium text-neutral-500 transition hover:text-ink">
               Prezzi
             </a>
