@@ -217,6 +217,7 @@ enum ProposalApprovedVia {
 model Company {
   id             String          @id @default(cuid())
   name           String
+  trade          String?
   phone          String?
   email          String?
   address        String?

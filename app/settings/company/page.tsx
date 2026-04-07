@@ -2,6 +2,7 @@ import { AppShell } from "@/components/app-shell";
 import { ButtonLink } from "@/components/button";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
+import { TradeEditForm } from "@/components/trade-edit-form";
 import { WhatsAppSetupCard } from "@/components/whatsapp-setup-card";
 import { getCurrentSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +11,8 @@ import { getWhatsAppConnectionStatus } from "@/lib/whatsapp-config";
 export default async function CompanySetupPage() {
   try {
     const session = await getCurrentSession();
-    const company = session?.user.company ?? await prisma.company.findFirstOrThrow({
+    const company = await prisma.company.findFirstOrThrow({
+      where: session ? { id: session.user.company.id } : undefined,
       orderBy: { createdAt: "asc" }
     });
     const connection = getWhatsAppConnectionStatus();
@@ -31,6 +33,10 @@ export default async function CompanySetupPage() {
               <Field label="Telefono" value={company.phone ?? undefined} />
               <Field label="Indirizzo" value={company.address ?? undefined} />
             </div>
+          </SectionCard>
+
+          <SectionCard title="Mestiere" subtitle="Specifica la tua specializzazione — appare nella checklist di onboarding e personalizza Schedio.">
+            <TradeEditForm currentTrade={company.trade} />
           </SectionCard>
 
           <SectionCard title="Team e costi orari" subtitle="Imposta il costo orario dei tecnici per calcolare davvero la marginalita dei lavori.">

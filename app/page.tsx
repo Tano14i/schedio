@@ -114,8 +114,8 @@ export default async function DashboardPage() {
   ]);
 
   const funnelSteps = [
-    { label: "Lead ricevuti", value: funnel.leadsReceived },
-    { label: "Lead qualificati", value: funnel.leadsQualified },
+    { label: "Richieste ricevute", value: funnel.leadsReceived },
+    { label: "Richieste qualificate", value: funnel.leadsQualified },
     { label: "Sopralluoghi confermati", value: funnel.visitsConfirmed },
     { label: "Sopralluoghi completati", value: funnel.visitsCompleted },
     { label: "Preventivi creati", value: funnel.estimatesCreated },
@@ -135,7 +135,7 @@ export default async function DashboardPage() {
                 Oggi conta questo.
               </h1>
               <p className="mt-2 text-sm leading-6 text-neutral-600">
-                Lead da lavorare, preventivi da seguire e incassi da sbloccare.
+                Richieste da lavorare, preventivi da seguire e incassi da sbloccare.
               </p>
             </div>
 
@@ -143,7 +143,7 @@ export default async function DashboardPage() {
               <MobileHeroCard label="Da seguire" value={`${worklist.length}`} detail="preventivi aperti" tone="sand" />
               <MobileHeroCard label="Da incassare" value={`${invoiceWorklist.length}`} detail="fatture attive" />
               <MobileHeroCard label="Incassato" value={formatCurrency(invoiceMetrics.cashCollectedMonth)} detail="questo mese" />
-              <MobileHeroCard label="Lead nuovi" value={`${funnel.leadsReceived}`} detail="ingressi nel funnel" />
+              <MobileHeroCard label="Richieste nuove" value={`${funnel.leadsReceived}`} detail="ingressi nel funnel" />
             </div>
           </section>
 
@@ -159,7 +159,7 @@ export default async function DashboardPage() {
           </SectionCard>
 
           <SectionCard title="Da dove partire" subtitle="Primi passi chiari per capire il valore di Schedio.">
-            <OnboardingChecklist />
+            <OnboardingChecklist companyId={session.user.company.id} />
           </SectionCard>
 
           <DemoPlaybookCard />
@@ -287,7 +287,7 @@ export default async function DashboardPage() {
           <PwaInstallCard />
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <StatCard label="Lead ricevuti" value={`${funnel.leadsReceived}`} detail="Ingresso del funnel" accent="sand" />
+            <StatCard label="Richieste ricevute" value={`${funnel.leadsReceived}`} detail="Ingresso del funnel" accent="sand" />
             <StatCard label="Sopralluoghi confermati" value={`${funnel.visitsConfirmed}`} detail="Agenda che si riempie" />
             <StatCard label="Preventivi inviati" value={`${funnel.estimatesSent}`} detail="Preventivi aperti" />
             <StatCard label="Preventivi accettati" value={`${funnel.estimatesAccepted}`} detail="Lavori che si chiudono" />
@@ -316,7 +316,7 @@ export default async function DashboardPage() {
 
           <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
             <SectionCard title="Onboarding rapido" subtitle="Le 4 cose da fare per sentire subito il valore del prodotto.">
-              <OnboardingChecklist />
+              <OnboardingChecklist companyId={session.user.company.id} />
             </SectionCard>
 
             <SectionCard title="Playbook demo" subtitle="Il percorso piu semplice da mostrare a un handyman in 10 minuti.">
@@ -363,8 +363,8 @@ export default async function DashboardPage() {
 
           <SectionCard title="Tempi medi" subtitle="Dove stai accelerando e dove stai perdendo tempo.">
             <div className="space-y-4">
-              <TimingRow label="Lead -> decisione" value={operations.avgLeadToQualificationHours} />
-              <TimingRow label="Lead -> sopralluogo confermato" value={operations.avgLeadToVisitConfirmationHours} />
+              <TimingRow label="Richiesta -> decisione" value={operations.avgLeadToQualificationHours} />
+              <TimingRow label="Richiesta -> sopralluogo confermato" value={operations.avgLeadToVisitConfirmationHours} />
               <TimingRow label="Sopralluogo completato -> preventivo inviato" value={operations.avgVisitCompletedToEstimateSentHours} />
               <TimingRow label="Preventivo inviato -> visto" value={operations.avgEstimateSentToViewedHours} />
             </div>

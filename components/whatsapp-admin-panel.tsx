@@ -378,7 +378,7 @@ function SelectedThreadWorkspace({
             <div className="flex flex-wrap gap-2">
               <InfoChip label={friendlyThreadStatus(selected.status)} />
               <InfoChip label={`${selected.photoCount} foto`} tone="neutral" />
-              <InfoChip label={selected.leadId ? "Lead gia creata" : "Da trasformare in lead"} tone={selected.leadId ? "accent" : "warning"} />
+              <InfoChip label={selected.leadId ? "Richiesta gia creata" : "Da trasformare in richiesta"} tone={selected.leadId ? "accent" : "warning"} />
             </div>
             <div className="rounded-[26px] border border-slate-200 bg-slate-50/75 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Contesto cliente</p>
@@ -467,16 +467,16 @@ function SelectedThreadWorkspace({
         </div>
       </div>
 
-      <SectionCard title="Altre azioni" subtitle="Intervieni manualmente solo se devi cambiare la direzione del lead.">
+      <SectionCard title="Altre azioni" subtitle="Intervieni manualmente solo se devi cambiare la direzione della richiesta.">
         {selected.leadId ? (
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-            <Button variant="secondary" disabled={isPending} onClick={() => runAction({ url: `/api/leads/${selected.leadId}/qualify`, success: "Lead qualificata." })}>Rivaluta lead</Button>
-            <Button variant="secondary" disabled={isPending} onClick={() => runAction({ url: `/api/leads/${selected.leadId}/mark-out-of-area`, success: "Lead segnata fuori area." })}>Segna fuori area</Button>
-            <Button variant="secondary" disabled={isPending} onClick={() => runAction({ url: `/api/leads/${selected.leadId}/mark-low-priority`, success: "Lead segnata a bassa priorita." })}>Segna bassa priorita</Button>
+            <Button variant="secondary" disabled={isPending} onClick={() => runAction({ url: `/api/leads/${selected.leadId}/qualify`, success: "Richiesta qualificata." })}>Rivaluta richiesta</Button>
+            <Button variant="secondary" disabled={isPending} onClick={() => runAction({ url: `/api/leads/${selected.leadId}/mark-out-of-area`, success: "Richiesta segnata fuori area." })}>Segna fuori area</Button>
+            <Button variant="secondary" disabled={isPending} onClick={() => runAction({ url: `/api/leads/${selected.leadId}/mark-low-priority`, success: "Richiesta segnata a bassa priorita." })}>Segna bassa priorita</Button>
             <Button variant="secondary" disabled={isPending} onClick={() => runAction({ url: `/api/leads/${selected.leadId}/override-qualification`, body: { qualificationStatus: "QUALIFIED", nextBestAction: "PROPOSE_VISIT", qualificationReason: "manual_override" }, success: "Override manuale applicato." })}>Forza qualificato</Button>
           </div>
         ) : (
-          <p className="text-sm text-neutral-600">Prima crea il lead dal thread, poi qui compariranno le azioni manuali.</p>
+          <p className="text-sm text-neutral-600">Prima crea la richiesta dal thread, poi qui compariranno le azioni manuali.</p>
         )}
       </SectionCard>
     </div>
@@ -500,7 +500,7 @@ function DecisionPanel({ selected }: { selected: WhatsAppAdminItem }) {
       <div className="mt-5 rounded-2xl border border-white/80 bg-white/80 p-4">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Stato decisione</p>
         <div className="mt-3 space-y-2 text-sm">
-          <SummaryRow label="Lead" value={friendlyQualification(selected.qualificationStatus)} />
+          <SummaryRow label="Richiesta" value={friendlyQualification(selected.qualificationStatus)} />
           <SummaryRow label="Perche" value={friendlyReason(selected.qualificationReason)} />
           <SummaryRow label="Sicurezza" value={friendlyConfidence(selected.qualificationConfidence)} />
         </div>
@@ -524,9 +524,9 @@ function PrimaryAction({ selected }: { selected: WhatsAppAdminItem }) {
     });
   }
 
-  if (!selected.leadId) return <Button disabled={isPending} className="w-full" onClick={() => run(`/api/whatsapp/threads/${selected.id}/convert-to-lead`, "Lead creata.")}>Crea lead dal thread</Button>;
+  if (!selected.leadId) return <Button disabled={isPending} className="w-full" onClick={() => run(`/api/whatsapp/threads/${selected.id}/convert-to-lead`, "Richiesta creata.")}>Crea richiesta dal thread</Button>;
   if (selected.qualificationStatus === "NEEDS_CLARIFICATION") return <Button disabled={isPending} className="w-full" onClick={() => run(`/api/leads/${selected.leadId}/request-clarification`, "Messaggio inviato.")}>Chiedi chiarimento</Button>;
-  if (selected.qualificationStatus === "OUT_OF_AREA" || selected.qualificationStatus === "LOW_PRIORITY") return <ActionGhostLink href="/leads" label="Apri lead" />;
+  if (selected.qualificationStatus === "OUT_OF_AREA" || selected.qualificationStatus === "LOW_PRIORITY") return <ActionGhostLink href="/leads" label="Apri richieste" />;
   if (!selected.proposal) return <Button disabled={isPending} className="w-full" onClick={() => run(`/api/leads/${selected.leadId}/propose-slots`, "Slot generati.")}>Genera slot candidati</Button>;
   if (selected.proposal.status === "PENDING_HANDYMAN_APPROVAL") return <Button disabled={isPending} className="w-full" onClick={() => run(`/api/scheduling-proposals/${selected.proposal?.id}/approve`, "Proposta approvata.")}>Approva slot</Button>;
   if (selected.proposal.status === "APPROVED") return <Button disabled={isPending} className="w-full" onClick={() => run(`/api/scheduling-proposals/${selected.proposal?.id}/send-to-customer`, "Proposta inviata.")}>Invia proposta al cliente</Button>;

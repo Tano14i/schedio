@@ -209,9 +209,9 @@ export function CalendarWorkspace({
           <MiniStat label="Oggi" value={`${todayJobs.length}`} detail="appuntamenti" />
           <MiniStat label="Attivi" value={`${pendingJobs.length}`} detail="da gestire" />
           <MiniStat
-            label="Lead aperti"
+            label="Richieste aperte"
             value={`${leads.filter((lead) => lead.status !== "won" && lead.status !== "lost").length}`}
-            detail="ancora in pipeline"
+            detail="ancora in corso"
           />
         </div>
 
