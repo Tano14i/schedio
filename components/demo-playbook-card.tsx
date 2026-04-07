@@ -4,7 +4,7 @@ const demoSteps = [
   "1. Nuova richiesta da WhatsApp o manuale",
   "2. Pianifica il sopralluogo",
   "3. Chiudi il lavoro e crea il preventivo",
-  "4. Invia il preventivo e fai follow-up",
+  "4. Invia il preventivo e manda un promemoria",
   "5. Crea fattura, registra pagamento, chiedi recensione"
 ];
 

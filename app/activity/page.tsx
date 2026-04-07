@@ -27,7 +27,7 @@ export default async function ActivityPage() {
       <AppShell pathname="/activity">
         <ActivityWorkspace
           initialItems={[]}
-          notice="Impossibile caricare l'activity log adesso. Riprova tra poco."
+          notice="Impossibile caricare il registro attivita adesso. Riprova tra poco."
         />
       </AppShell>
     );

@@ -71,7 +71,7 @@ export function TeamSettingsWorkspace({ initialMembers }: { initialMembers: Team
                   <p className="text-base font-semibold text-ink">{member.name}</p>
                   <p className="mt-1 text-sm text-neutral-600">{member.email}</p>
                   <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                    {member.role === "owner" ? "Owner" : "Worker"}
+                    {member.role === "owner" ? "Responsabile" : "Collaboratore"}
                   </p>
                 </div>
 

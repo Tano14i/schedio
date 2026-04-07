@@ -4,7 +4,11 @@
       "Bash(npm run:*)",
       "Bash(npx prisma:*)",
       "Bash(grep -v \"//.*Lead\")",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(grep -v \"^\\\\s*//\")",
+      "Bash(grep -v \"node_modules\\\\|/api/\\\\|^\\\\s*//\")",
+      "Bash(python3 scripts/ui-lang-fix.py)",
+      "Bash(node scripts/ui-lang-fix.js)"
     ]
   }
 }

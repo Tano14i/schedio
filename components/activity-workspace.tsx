@@ -16,9 +16,9 @@ export function ActivityWorkspace({
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Activity log"
+        eyebrow="Registro attivita"
         title="La cronologia che spiega cosa e successo"
-        description="Eventi automatici di richieste, appuntamenti, preventivi, fatture e review request."
+        description="Eventi automatici di richieste, appuntamenti, preventivi, fatture e richieste di recensione."
       />
 
       <SectionCard title="Azioni rapide" subtitle="Vai subito dove serve senza leggere tutta la timeline.">

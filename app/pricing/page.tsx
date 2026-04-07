@@ -23,7 +23,7 @@ const plans = [
       { text: "Supporto email", included: true },
       { text: "WhatsApp Business AI", included: false },
       { text: "AI assist per stime", included: false },
-      { text: "Follow-up automatici", included: false },
+      { text: "Promemoria automatici", included: false },
     ],
   },
   {
@@ -42,7 +42,7 @@ const plans = [
       { text: "Supporto prioritario", included: true },
       { text: "WhatsApp Business AI", included: true },
       { text: "AI assist per stime", included: true },
-      { text: "Follow-up automatici", included: true },
+      { text: "Promemoria automatici", included: true },
     ],
   },
   {
@@ -65,7 +65,7 @@ const plans = [
 
 const faqs = [
   {
-    q: "Devo inserire la carta di credito per il trial?",
+    q: "Devo inserire la carta di credito per il periodo di prova?",
     a: "No. Puoi provare Schedio per 14 giorni senza inserire nessun dato di pagamento. La carta ti viene chiesta solo quando decidi di attivare un piano.",
   },
   {
@@ -78,7 +78,7 @@ const faqs = [
   },
   {
     q: "WhatsApp Business API è inclusa nel piano?",
-    a: "L'integrazione è inclusa nei piani Pro e Team. Per usarla ti serve un numero WhatsApp Business verificato da Meta — ti guidiamo noi nel setup durante l'onboarding.",
+    a: "L'integrazione è inclusa nei piani Pro e Team. Per usarla ti serve un numero WhatsApp Business verificato da Meta — ti guidiamo noi nel setup durante la configurazione iniziale.",
   },
   {
     q: "Posso cambiare piano in un secondo momento?",

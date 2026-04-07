@@ -21,9 +21,9 @@ export default async function CompanySetupPage() {
       <AppShell pathname="/settings/company">
         <div className="space-y-6">
           <PageHeader
-            eyebrow="Company setup"
+            eyebrow="Impostazioni azienda"
             title="Configurazione azienda"
-            description="Setup iniziale leggero: nome attivita, contatti, indirizzo e impostazioni base del brand commerciale."
+            description="Configurazione iniziale: nome attivita, contatti, indirizzo e impostazioni base."
           />
 
           <SectionCard title="Profilo azienda" subtitle="Base pronta per logo, termini documento e canali automazioni.">
@@ -35,7 +35,7 @@ export default async function CompanySetupPage() {
             </div>
           </SectionCard>
 
-          <SectionCard title="Mestiere" subtitle="Specifica la tua specializzazione — appare nella checklist di onboarding e personalizza Schedio.">
+          <SectionCard title="Mestiere" subtitle="Specifica la tua specializzazione — appare nella lista di avvio e personalizza Schedio.">
             <TradeEditForm currentTrade={company.trade} />
           </SectionCard>
 
@@ -52,7 +52,7 @@ export default async function CompanySetupPage() {
 
           <WhatsAppSetupCard connection={connection} />
 
-          <SectionCard title="Setup iniziale consigliato" subtitle="Le 3 mosse che rendono Schedio subito piu utile.">
+          <SectionCard title="Configurazione iniziale consigliata" subtitle="Le 3 cose che rendono Schedio subito piu utile.">
             <div className="grid gap-3 md:grid-cols-3">
               <SetupStep
                 title="1. Team"
@@ -82,9 +82,9 @@ export default async function CompanySetupPage() {
       <AppShell pathname="/settings/company">
         <div className="space-y-6">
           <PageHeader
-            eyebrow="Company setup"
+            eyebrow="Impostazioni azienda"
             title="Configurazione azienda"
-            description="Setup iniziale leggero: nome attivita, contatti, indirizzo e impostazioni base del brand commerciale."
+            description="Configurazione iniziale: nome attivita, contatti, indirizzo e impostazioni base."
           />
 
           <SectionCard title="Profilo azienda">

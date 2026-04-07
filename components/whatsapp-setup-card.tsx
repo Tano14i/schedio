@@ -39,8 +39,8 @@ export function WhatsAppSetupCard({ connection }: { connection: WhatsAppConnecti
 
       setFeedback(
         result?.ok
-          ? "Messaggio test inviato tramite WhatsApp Cloud API."
-          : result?.message ?? "Payload test generato."
+          ? "Messaggio di test inviato."
+          : result?.message ?? "Messaggio di test generato."
       );
     });
   }
@@ -73,7 +73,7 @@ export function WhatsAppSetupCard({ connection }: { connection: WhatsAppConnecti
       setFeedback(
         result?.ok
           ? "Template hello_world inviato. Questo e il test migliore per la prima connessione Meta."
-          : result?.message ?? "Payload template generato."
+          : result?.message ?? "Messaggio template generato."
       );
     });
   }
@@ -81,19 +81,19 @@ export function WhatsAppSetupCard({ connection }: { connection: WhatsAppConnecti
   return (
     <div id="whatsapp">
       <SectionCard
-        title="Setup WhatsApp Cloud API"
-        subtitle="Configurazione tecnica da fare una volta sola: webhook, token e invio test."
+        title="Configurazione WhatsApp"
+        subtitle="Configurazione tecnica da fare una volta sola. Segui i passi sotto."
       >
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatusPill
-              label="Verify token"
+              label="Codice di verifica"
               value={connection.verifyTokenConfigured ? "Configurato" : "Manca"}
               tone={connection.verifyTokenConfigured ? "ok" : "warning"}
             />
             <StatusPill
-              label="Access token"
+              label="Codice di accesso"
               value={connection.accessTokenConfigured ? "Configurato" : "Manca"}
               tone={connection.accessTokenConfigured ? "ok" : "warning"}
             />
@@ -103,7 +103,7 @@ export function WhatsAppSetupCard({ connection }: { connection: WhatsAppConnecti
               tone={connection.phoneNumberIdConfigured ? "ok" : "warning"}
             />
             <StatusPill
-              label="Cloud API"
+              label="Connessione API"
               value={connection.cloudApiReady ? "Pronta" : "Da completare"}
               tone={connection.cloudApiReady ? "ok" : "warning"}
             />

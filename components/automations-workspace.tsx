@@ -59,7 +59,7 @@ export function AutomationsWorkspace({
 
       const item = result?.item;
       setFeedback(
-        `Runner completato. Follow-up: ${item?.estimateFollowUpsSent ?? 0}, reminder fatture: ${item?.invoiceRemindersSent ?? 0}, review request: ${item?.reviewRequestsSent ?? 0}.`
+        `Esecuzione completata. Promemoria preventivi: ${item?.estimateFollowUpsSent ?? 0}, promemoria fatture: ${item?.invoiceRemindersSent ?? 0}, richieste recensione: ${item?.reviewRequestsSent ?? 0}.`
       );
       router.refresh();
     });
@@ -89,8 +89,8 @@ export function AutomationsWorkspace({
     <div className="space-y-6">
       <PageHeader
         eyebrow="Automazioni"
-        title="Runner, code e ultimi invii in un solo posto."
-        description="Qui controlli cosa deve partire, lanci i runner e vedi subito se qualcosa si blocca."
+        title="Esecuzioni, code e ultimi invii in un solo posto."
+        description="Qui controlli cosa deve partire, avvii le esecuzioni e vedi subito se qualcosa si blocca."
       />
 
       <SectionCard title="Azioni rapide" subtitle="Controllo veloce delle automazioni operative.">
@@ -99,7 +99,7 @@ export function AutomationsWorkspace({
             {isPending ? "Esecuzione..." : "Esegui automazioni ora"}
           </Button>
           <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Follow-up</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-500">Promemoria</p>
             <p className="mt-1 text-lg font-semibold text-ink">{queueSummary.estimateFollowUps}</p>
           </div>
           <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
@@ -121,13 +121,13 @@ export function AutomationsWorkspace({
 
       <SectionCard
         title="Controllo rapido"
-        subtitle="Esegui i runner adesso e verifica quante automazioni restano in coda."
+        subtitle="Esegui le automazioni adesso e verifica quante restano in coda."
       >
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <SummaryCard label="Follow-up preventivi" value={queueSummary.estimateFollowUps} />
+            <SummaryCard label="Promemoria preventivi" value={queueSummary.estimateFollowUps} />
             <SummaryCard label="Reminder fatture" value={queueSummary.invoiceReminders} />
-            <SummaryCard label="Review request" value={queueSummary.reviewRequests} />
+            <SummaryCard label="Richieste recensione" value={queueSummary.reviewRequests} />
             <SummaryCard label="Errori recenti" value={queueSummary.failedRuns} tone="danger" />
           </div>
           <Button className="w-full lg:w-auto" disabled={isPending} onClick={runNow}>
@@ -240,7 +240,7 @@ function SummaryCard({
 
 function automationLabel(type: string) {
   const labels: Record<string, string> = {
-    ESTIMATE_FOLLOWUP: "Follow-up preventivo",
+    ESTIMATE_FOLLOWUP: "Promemoria preventivo",
     INVOICE_REMINDER: "Reminder fattura",
     REVIEW_REQUEST: "Richiesta recensione",
     APPOINTMENT_CONFIRMATION: "Conferma appuntamento",
@@ -270,9 +270,9 @@ function delayLabel(delayMinutes: number) {
 
 function entityLabel(entityType: string) {
   const labels: Record<string, string> = {
-    estimate_follow_up: "Follow-up preventivo",
+    estimate_follow_up: "Promemoria preventivo",
     invoice_reminder: "Reminder fattura",
-    review_request: "Review request"
+    review_request: "Richiesta recensione"
   };
 
   return labels[entityType] ?? entityType;

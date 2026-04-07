@@ -21,7 +21,7 @@ import { getVisibleNavHrefs } from "@/lib/authz";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Dashboard", icon: Gauge },
+  { href: "/", label: "Panoramica", icon: Gauge },
   { href: "/leads", label: "Richieste", icon: ClipboardList },
   { href: "/calendar", label: "Calendario", icon: CalendarDays },
   { href: "/whatsapp", label: "WhatsApp", icon: MessageSquare },
@@ -81,7 +81,7 @@ export async function AppShell({
             </p>
             <h2 className="mt-3 text-2xl font-semibold">Schedio</h2>
             <p className="mt-2 text-sm text-primary-100">
-              Organizza richieste, appuntamenti, preventivi e follow-up in un solo posto.
+              Organizza richieste, appuntamenti, preventivi e promemoria in un solo posto.
             </p>
           </div>
 
@@ -137,7 +137,7 @@ export async function AppShell({
                 <div className="hidden text-right md:block">
                   <p className="text-sm font-medium text-ink">{currentUser?.name ?? "Schedio User"}</p>
                   <p className="text-xs text-neutral-500">
-                    {currentUser?.role === UserRole.WORKER ? "Worker" : "Owner"}
+                    {currentUser?.role === UserRole.WORKER ? "Collaboratore" : "Responsabile"}
                   </p>
                 </div>
                 <form action="/api/auth/logout" method="post" className="hidden md:block">
@@ -192,7 +192,7 @@ export async function AppShell({
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-600">
-                        {pathname === "/" ? (isWorker ? "Home worker" : "Home owner") : currentSection}
+                        {pathname === "/" ? (isWorker ? "Riepilogo collaboratore" : "Riepilogo responsabile") : currentSection}
                       </p>
                       <p className="mt-1 text-sm text-neutral-600">
                         {mobileShortcuts.length
@@ -301,7 +301,7 @@ function CompactShortcut({
 
 function getSectionLabel(pathname: string) {
   const labels: Array<[string, string]> = [
-    ["/", "Dashboard"],
+    ["/", "Panoramica"],
     ["/leads", "Richieste"],
     ["/calendar", "Calendario"],
     ["/whatsapp", "WhatsApp"],
@@ -376,7 +376,7 @@ function getMobileShortcuts(pathname: string, isWorker: boolean) {
 
   if (pathname.startsWith("/automations")) {
     return [
-      { href: "/automations", label: "Runner" },
+      { href: "/automations", label: "Esecuzioni" },
       { href: "/activity", label: "Ultime attivita" }
     ];
   }

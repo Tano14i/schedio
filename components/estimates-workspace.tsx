@@ -122,7 +122,7 @@ export function EstimatesWorkspace({
       .then(async (response) => {
         const result = await response.json().catch(() => null);
         if (!response.ok) {
-          throw new Error(result?.message ?? "Assistente follow-up non disponibile.");
+          throw new Error(result?.message ?? "Assistente promemoria non disponibile.");
         }
 
         if (!canceled) {
@@ -242,11 +242,11 @@ export function EstimatesWorkspace({
       const result = await response.json().catch(() => null);
 
       if (!response.ok) {
-        setFeedback(result?.message ?? "Impossibile inviare il follow-up.");
+        setFeedback(result?.message ?? "Impossibile inviare il promemoria.");
         return;
       }
 
-      setFeedback("Follow-up inviato.");
+      setFeedback("Promemoria inviato.");
       router.refresh();
     });
   }
@@ -262,7 +262,7 @@ export function EstimatesWorkspace({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <MiniStat label="Totali" value={`${estimateStats.total}`} detail="in elenco" />
         <MiniStat label="In attesa" value={`${estimateStats.waiting}`} detail="da inviare o seguire" />
-        <MiniStat label="Follow-up" value={`${estimateStats.followUp}`} detail="da non perdere" />
+        <MiniStat label="Promemoria" value={`${estimateStats.followUp}`} detail="da non perdere" />
       </div>
 
       {selectedEstimate ? (
@@ -319,7 +319,7 @@ export function EstimatesWorkspace({
                 ["all", `Tutti (${estimates.length})`],
                 ["waiting", `In attesa (${estimateStats.waiting})`],
                 ["viewed", `Visti (${estimates.filter((estimate) => estimate.status === "viewed").length})`],
-                ["follow_up", `Da seguire (${estimateStats.followUp})`],
+                ["follow_up", `Promemoria (${estimateStats.followUp})`],
                 ["accepted", `Accettati (${estimates.filter((estimate) => estimate.status === "accepted").length})`],
                 ["rejected", `Rifiutati (${estimates.filter((estimate) => estimate.status === "rejected").length})`]
               ].map(([value, label]) => (
@@ -532,19 +532,19 @@ export function EstimatesWorkspace({
                       <MetricPill label="Costi tracciati" value={formatCurrency(aiAssist.trackedCost)} />
                       <MetricPill
                         label="Margine attuale"
-                        value={aiAssist.currentMarginRate !== null ? `${aiAssist.currentMarginRate}%` : "n/d"}
+                        value={aiAssist.currentMarginRate !== null ? `${aiAssist.currentMarginRate}%` : "—"}
                       />
                       <MetricPill
                         label="Minimo consigliato"
                         value={
                           aiAssist.recommendedMinimumTotal !== null
                             ? formatCurrency(aiAssist.recommendedMinimumTotal)
-                            : "n/d"
+                            : "—"
                         }
                       />
                       <MetricPill
                         label="Margine bozza AI"
-                        value={aiAssist.projectedMarginRate !== null ? `${aiAssist.projectedMarginRate}%` : "n/d"}
+                        value={aiAssist.projectedMarginRate !== null ? `${aiAssist.projectedMarginRate}%` : "—"}
                       />
                     </div>
 
@@ -605,12 +605,12 @@ export function EstimatesWorkspace({
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                        Assistente follow-up
+                        Assistente promemoria
                       </p>
                       <p className="mt-2 text-sm text-neutral-700">
                         {isFollowUpAssistLoading
                           ? "Sto preparando il messaggio piu adatto per questo cliente..."
-                          : followUpAssist?.summary ?? "Nessun suggerimento follow-up disponibile."}
+                          : followUpAssist?.summary ?? "Nessun suggerimento promemoria disponibile."}
                       </p>
                     </div>
                     {followUpAssist ? (
@@ -620,7 +620,7 @@ export function EstimatesWorkspace({
                         disabled={isPending}
                         onClick={() => sendFollowUpNow(selectedEstimate.id)}
                       >
-                        Invia follow-up ora
+                        Invia promemoria ora
                       </Button>
                     ) : null}
                   </div>
@@ -692,7 +692,7 @@ export function EstimatesWorkspace({
               </div>
 
               <div className="grid gap-4 rounded-2xl border border-neutral-200 bg-white p-4 sm:grid-cols-2 md:grid-cols-3">
-                <Meta label="Tipo lavoro" value={selectedLead?.serviceType ?? "n/d"} />
+                <Meta label="Tipo lavoro" value={selectedLead?.serviceType ?? "—"} />
                 <Meta
                   label="Validita"
                   value={selectedEstimate.validUntil ? formatCompactDate(selectedEstimate.validUntil) : "Da definire"}
@@ -854,10 +854,10 @@ function Meta({
 
 function followUpBadgeLabel(status: "scheduled" | "sent" | "canceled" | "failed") {
   const labels = {
-    scheduled: "Follow-up schedulato",
-    sent: "Follow-up inviato",
-    canceled: "Follow-up annullato",
-    failed: "Follow-up fallito"
+    scheduled: "Promemoria pianificato",
+    sent: "Promemoria inviato",
+    canceled: "Promemoria annullato",
+    failed: "Promemoria fallito"
   };
 
   return labels[status];

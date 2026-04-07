@@ -163,7 +163,7 @@ export function InvoicesWorkspace({
         setReviewRequests(reviewResult.items);
       }
 
-      setFeedback("Pagamento registrato e review request pianificata.");
+      setFeedback("Pagamento registrato e richiesta recensione pianificata.");
     });
   }
 
@@ -172,7 +172,7 @@ export function InvoicesWorkspace({
       const response = await fetch(`/api/review-requests/${reviewRequestId}/send-now`, { method: "POST" });
       const result = await response.json();
       if (!response.ok) {
-        setFeedback(result?.message ?? "Impossibile inviare la review request.");
+        setFeedback(result?.message ?? "Impossibile inviare la richiesta recensione.");
         return;
       }
 
@@ -187,7 +187,7 @@ export function InvoicesWorkspace({
             : item
         )
       );
-      setFeedback("Review request inviata.");
+      setFeedback("Richiesta recensione inviata.");
     });
   }
 
@@ -212,14 +212,14 @@ export function InvoicesWorkspace({
       <PageHeader
         eyebrow="Fatture"
         title="Chiudi il lavoro fino all'incasso e alla recensione."
-        description="Crea fatture da preventivi accettati o lavori completati, segna il pagamento e lascia che Schedio faccia partire il reminder e la review request."
+        description="Crea fatture da preventivi accettati o lavori completati, segna il pagamento e lascia che Schedio faccia partire il promemoria e la richiesta di recensione."
       />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Fatture aperte" value={`${metrics.openInvoices}`} detail="Da incassare" accent="sand" />
         <StatCard label="Fatture scadute" value={`${metrics.overdueInvoices}`} detail="Da sollecitare" />
         <StatCard label="Incassato mese" value={formatCurrency(metrics.cashCollectedMonth)} detail="Cassa registrata" />
-        <StatCard label="Review request inviate" value={`${metrics.reviewRequestsSent}`} detail={`${metrics.reviewRequestsClicked} cliccate`} />
+        <StatCard label="Richieste recensione inviate" value={`${metrics.reviewRequestsSent}`} detail={`${metrics.reviewRequestsClicked} cliccate`} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
@@ -628,7 +628,7 @@ export function InvoicesWorkspace({
           </div>
         </SectionCard>
 
-        <SectionCard title="Review request" subtitle="Programmate o inviate dopo l'incasso.">
+        <SectionCard title="Richieste recensione" subtitle="Programmate o inviate dopo l'incasso.">
           <div className="space-y-3">
             {reviewRequests.length ? (
               reviewRequests.map((item) => {
@@ -670,7 +670,7 @@ export function InvoicesWorkspace({
               })
             ) : (
               <EmptyState
-                title="Nessuna review request ancora"
+                title="Nessuna richiesta recensione ancora"
                 description="Quando una fattura viene pagata, qui compare la richiesta recensione pianificata."
               />
             )}

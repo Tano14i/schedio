@@ -6,9 +6,9 @@ import { SectionCard } from "@/components/section-card";
 const ownerSections = [
   { href: "/whatsapp", label: "WhatsApp", description: "Thread, lead e proposte sopralluogo." },
   { href: "/customers", label: "Clienti", description: "Rubrica e schede cliente." },
-  { href: "/estimates", label: "Preventivi", description: "Bozze, invii e follow-up." },
+  { href: "/estimates", label: "Preventivi", description: "Bozze, invii e promemoria." },
   { href: "/invoices", label: "Fatture", description: "Incassi, reminder e review." },
-  { href: "/automations", label: "Automazioni", description: "Runner, code e ultime esecuzioni." },
+  { href: "/automations", label: "Automazioni", description: "Esecuzioni, code e ultime automazioni." },
   { href: "/activity", label: "Attivita", description: "Timeline unificata degli eventi." },
   { href: "/settings/team", label: "Team", description: "Costo orario di owner e worker." },
   { href: "/settings/company", label: "Impostazioni", description: "Dati azienda e configurazione." }

@@ -469,7 +469,7 @@ export function InAppTutorial({
               <p className="mt-1 text-sm text-neutral-600">
                 {allCompleted
                   ? "Ora puoi rifarlo come demo oppure continuare a usare Schedio senza buco iniziale."
-                  : "Ti sto evidenziando il punto esatto da cliccare, uno step alla volta."}
+                  : "Ti sto evidenziando il punto esatto da cliccare, un passo alla volta."}
               </p>
             </div>
             <button
@@ -535,7 +535,7 @@ export function InAppTutorial({
                   size="md"
                   className="w-full sm:w-auto"
                 >
-                  {isCurrentComplete ? "Vai al prossimo step" : "Ho cliccato, vai avanti"}
+                  {isCurrentComplete ? "Vai al passo successivo" : "Ho cliccato, vai avanti"}
                 </Button>
               </div>
             </div>

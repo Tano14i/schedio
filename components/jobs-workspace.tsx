@@ -110,10 +110,10 @@ export function JobsWorkspace({ jobs, isOwner }: { jobs: JobListItem[]; isOwner:
                         {isOwner
                           ? job.financials?.margin !== undefined
                             ? formatCurrency(job.financials.margin)
-                            : "n/d"
+                            : "—"
                           : job.laborCost !== undefined
                             ? formatCurrency(job.laborCost)
-                            : "n/d"}
+                            : "—"}
                       </p>
                     </div>
                   </div>
@@ -163,10 +163,10 @@ export function JobsWorkspace({ jobs, isOwner }: { jobs: JobListItem[]; isOwner:
                       isOwner
                         ? job.financials?.margin !== undefined
                           ? formatCurrency(job.financials.margin)
-                          : "n/d"
+                          : "—"
                         : job.laborCost !== undefined
                           ? formatCurrency(job.laborCost)
-                          : "n/d"
+                          : "—"
                   },
                   {
                     key: "actions",

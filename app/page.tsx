@@ -143,7 +143,7 @@ export default async function DashboardPage() {
               <MobileHeroCard label="Da seguire" value={`${worklist.length}`} detail="preventivi aperti" tone="sand" />
               <MobileHeroCard label="Da incassare" value={`${invoiceWorklist.length}`} detail="fatture attive" />
               <MobileHeroCard label="Incassato" value={formatCurrency(invoiceMetrics.cashCollectedMonth)} detail="questo mese" />
-              <MobileHeroCard label="Richieste nuove" value={`${funnel.leadsReceived}`} detail="ingressi nel funnel" />
+              <MobileHeroCard label="Richieste nuove" value={`${funnel.leadsReceived}`} detail="ingressi nel flusso" />
             </div>
           </section>
 
@@ -278,8 +278,8 @@ export default async function DashboardPage() {
           </section>
 
           <PageHeader
-            eyebrow="Dashboard ROI"
-            title="Vedi dove si blocca il funnel e cosa seguire oggi."
+            eyebrow="Pannello operativo"
+            title="Vedi dove si blocca il flusso e cosa seguire oggi."
             description="Schedio ti mostra quanti lead stanno diventando sopralluoghi, quanti sopralluoghi diventano preventivi e quali preventivi stanno fermando la cassa."
             action={{ href: "/estimates", label: "Apri preventivi" }}
           />
@@ -287,7 +287,7 @@ export default async function DashboardPage() {
           <PwaInstallCard />
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <StatCard label="Richieste ricevute" value={`${funnel.leadsReceived}`} detail="Ingresso del funnel" accent="sand" />
+            <StatCard label="Richieste ricevute" value={`${funnel.leadsReceived}`} detail="Ingresso del flusso" accent="sand" />
             <StatCard label="Sopralluoghi confermati" value={`${funnel.visitsConfirmed}`} detail="Agenda che si riempie" />
             <StatCard label="Preventivi inviati" value={`${funnel.estimatesSent}`} detail="Preventivi aperti" />
             <StatCard label="Preventivi accettati" value={`${funnel.estimatesAccepted}`} detail="Lavori che si chiudono" />
@@ -297,7 +297,7 @@ export default async function DashboardPage() {
             <StatCard label="Fatture aperte" value={`${invoiceMetrics.openInvoices}`} detail="Da incassare" accent="sand" />
             <StatCard label="Fatture scadute" value={`${invoiceMetrics.overdueInvoices}`} detail="Da sollecitare" />
             <StatCard label="Incassato mese" value={formatCurrency(invoiceMetrics.cashCollectedMonth)} detail="Cassa registrata" />
-            <StatCard label="Review request inviate" value={`${invoiceMetrics.reviewRequestsSent}`} detail={`${invoiceMetrics.reviewRequestsClicked} cliccate`} />
+            <StatCard label="Richieste recensione inviate" value={`${invoiceMetrics.reviewRequestsSent}`} detail={`${invoiceMetrics.reviewRequestsClicked} cliccate`} />
           </div>
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -309,22 +309,22 @@ export default async function DashboardPage() {
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4">
             <StatCard label="Margine medio" value={formatCurrency(marginOverview.metrics.averageMarginValue)} detail="Media lavori tracciati" accent="sand" />
-            <StatCard label="Margine medio %" value={marginOverview.metrics.averageMarginRate !== null ? `${marginOverview.metrics.averageMarginRate}%` : "n/d"} detail="Quanto resta sul lavoro" />
+            <StatCard label="Margine medio %" value={marginOverview.metrics.averageMarginRate !== null ? `${marginOverview.metrics.averageMarginRate}%` : "—"} detail="Quanto resta sul lavoro" />
             <StatCard label="Ore registrate" value={`${marginOverview.metrics.totalWorkedHours}h`} detail="Tempo caricato dai tecnici" />
             <StatCard label="Lavori da proteggere" value={`${marginOverview.metrics.atRiskJobs}`} detail="Dove intervenire subito" />
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-            <SectionCard title="Onboarding rapido" subtitle="Le 4 cose da fare per sentire subito il valore del prodotto.">
+            <SectionCard title="Inizia con Schedio" subtitle="I primi passi per usare Schedio al meglio.">
               <OnboardingChecklist companyId={session.user.company.id} />
             </SectionCard>
 
-            <SectionCard title="Playbook demo" subtitle="Il percorso piu semplice da mostrare a un handyman in 10 minuti.">
+            <SectionCard title="Guida rapida" subtitle="Il percorso piu semplice per iniziare in 10 minuti.">
               <DemoPlaybookCard />
             </SectionCard>
           </div>
 
-          <SectionCard title="Azioni rapide" subtitle="I passaggi che muovono il funnel oggi.">
+          <SectionCard title="Azioni rapide" subtitle="I passaggi che muovono il flusso di lavori oggi.">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <ButtonLink href="/leads?action=new" className="w-full">
                 Nuova richiesta
@@ -342,7 +342,7 @@ export default async function DashboardPage() {
           </SectionCard>
 
           <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-          <SectionCard title="Funnel del mese" subtitle="Numeri assoluti e passaggio tra uno step e il successivo.">
+          <SectionCard title="Flusso del mese" subtitle="Numeri assoluti e passaggio tra un passo e il successivo.">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {funnelSteps.map((step, index) => {
                 const previous = index === 0 ? null : funnelSteps[index - 1].value;
@@ -353,7 +353,7 @@ export default async function DashboardPage() {
                     <p className="text-sm text-neutral-500">{step.label}</p>
                     <p className="mt-2 text-2xl font-semibold text-ink">{step.value}</p>
                     <p className="mt-2 text-xs text-neutral-500">
-                      {ratio === null ? "Base funnel" : `${ratio}% rispetto allo step precedente`}
+                      {ratio === null ? "Base flusso" : `${ratio}% rispetto al passo precedente`}
                     </p>
                   </div>
                 );
@@ -413,7 +413,7 @@ export default async function DashboardPage() {
               </div>
             </SectionCard>
 
-            <SectionCard title="Attivita recenti" subtitle="Eventi che alimentano funnel e worklist.">
+            <SectionCard title="Attivita recenti" subtitle="Gli ultimi eventi del flusso di lavoro.">
               <ActivityTimeline items={activityItems} />
             </SectionCard>
           </div>
@@ -496,7 +496,7 @@ function TimingRow({ label, value }: { label: string; value: number | null }) {
   return (
     <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white p-4">
       <p className="text-sm font-medium text-ink">{label}</p>
-      <p className="text-sm text-neutral-600">{value === null ? "n/d" : `${value} h`}</p>
+      <p className="text-sm text-neutral-600">{value === null ? "—" : `${value} h`}</p>
     </div>
   );
 }
@@ -504,10 +504,10 @@ function TimingRow({ label, value }: { label: string; value: number | null }) {
 function followUpLabel(status: string) {
   const labels: Record<string, string> = {
     due: "Da seguire ora",
-    scheduled: "Follow-up schedulato",
-    sent: "Follow-up inviato",
-    failed: "Follow-up fallito",
-    canceled: "Follow-up annullato"
+    scheduled: "Promemoria pianificato",
+    sent: "Promemoria inviato",
+    failed: "Promemoria fallito",
+    canceled: "Promemoria annullato"
   };
 
   return labels[status] ?? status;
@@ -515,7 +515,7 @@ function followUpLabel(status: string) {
 
 function recommendationLabel(status: string) {
   const labels: Record<string, string> = {
-    follow_up_now: "Invia follow-up ora",
+    follow_up_now: "Invia promemoria ora",
     wait: "Attendi",
     call_customer: "Chiama cliente"
   };

@@ -616,7 +616,7 @@ export function JobDetailWorkspace({
                 />
                 <FinancialCard
                   label="Margine %"
-                  value={financials.marginRate !== null ? `${financials.marginRate}%` : "n/d"}
+                  value={financials.marginRate !== null ? `${financials.marginRate}%` : "—"}
                   tone={
                     financials.marginRate === null
                       ? "neutral"
