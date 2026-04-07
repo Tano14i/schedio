@@ -70,17 +70,44 @@ const config: Config = {
           800: "#1C2731",
           900: "#111827"
         },
+        // amber: accent caldo per landing CTA, eyebrow, highlight
+        amber: {
+          50: "#FFF7ED",
+          100: "#FFEDD5",
+          200: "#FED7AA",
+          300: "#FDBA74",
+          400: "#FB923C",
+          500: "#F07027",
+          600: "#C2540A",
+          700: "#9A3E08",
+          800: "#7C3206",
+          900: "#612804"
+        },
+        // navy: dark profondo per pannello hero e navbar
+        navy: {
+          50: "#EEF3F8",
+          100: "#D4E1EC",
+          200: "#A9C3D9",
+          300: "#7BA4C5",
+          400: "#4D83AF",
+          500: "#1A4B6E",
+          600: "#123755",
+          700: "#0D2840",
+          800: "#081A2C",
+          900: "#040E1A"
+        },
+        // brand: alias amber — identità visiva esterna (landing, public pages)
         brand: {
-          50: "#EEF6FA",
-          100: "#DCECF5",
-          200: "#B8D8EA",
-          300: "#8DBFD9",
-          400: "#5E9EC2",
-          500: "#1F4D6B",
-          600: "#16384E",
-          700: "#122E40",
-          800: "#0D2230",
-          900: "#091721"
+          50: "#FFF7ED",
+          100: "#FFEDD5",
+          200: "#FED7AA",
+          300: "#FDBA74",
+          400: "#FB923C",
+          500: "#F07027",
+          600: "#C2540A",
+          700: "#9A3E08",
+          800: "#7C3206",
+          900: "#612804"
         },
         ink: "#1C2731"
       },
