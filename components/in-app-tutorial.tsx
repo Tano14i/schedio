@@ -86,25 +86,6 @@ const OWNER_STEPS: TutorialStep[] = [
     ]
   },
   {
-    id: "owner_estimate_send",
-    title: "Invia il preventivo al cliente",
-    description: "Il cliente riceve un link per accettare online — nessun PDF da allegare.",
-    href: "/estimates",
-    cta: "Vai ai Preventivi",
-    navTarget: {
-      paths: [],
-      selector: '[data-tour="nav-estimates"]',
-      hint: "Apri i preventivi."
-    },
-    pageTargets: [
-      {
-        paths: ["/estimates"],
-        selector: '[data-tour="estimates-send-client"]',
-        hint: "Clicca qui per inviare il preventivo al cliente."
-      }
-    ]
-  },
-  {
     id: "owner_invoice",
     title: "Segna il lavoro come pagato",
     description: "Quando incassi, aggiorna la fattura e tieni il margine sotto controllo.",
@@ -211,8 +192,8 @@ const WORKER_STEPS: TutorialStep[] = [
 
 function getStorageKey(role: UserRole) {
   return role === UserRole.WORKER
-    ? "schedio_tutorial_worker_v3"
-    : "schedio_tutorial_owner_v3";
+    ? "schedio_tutorial_worker_v4"
+    : "schedio_tutorial_owner_v4";
 }
 
 function matchesPath(pathname: string, paths: string[]) {

@@ -8,7 +8,10 @@
       "Bash(grep -v \"^\\\\s*//\")",
       "Bash(grep -v \"node_modules\\\\|/api/\\\\|^\\\\s*//\")",
       "Bash(python3 scripts/ui-lang-fix.py)",
-      "Bash(node scripts/ui-lang-fix.js)"
+      "Bash(node scripts/ui-lang-fix.js)",
+      "Bash(node -e ':*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
