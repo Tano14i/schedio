@@ -591,6 +591,7 @@ export function InvoicesWorkspace({
                       ) : null}
                       {item.recommendation === "mark_paid" ? (
                         <Button
+                          data-tour="invoices-mark-paid"
                           size="md"
                           variant="secondary"
                           className="w-full sm:w-auto"

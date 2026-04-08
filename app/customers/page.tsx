@@ -20,7 +20,7 @@ export default async function CustomersPage() {
             eyebrow="Clienti"
             title="Una scheda unica per vedere tutta la relazione"
             description="Dati contatto, indirizzi, jobs, preventivi, fatture e timeline nello stesso posto. Questa e la fonte unica di verita del v1."
-            action={firstCustomer ? { href: `/customers/${firstCustomer.id}`, label: "Apri ultimo cliente" } : undefined}
+            action={{ href: "/leads?action=new", label: "Nuova richiesta", dataTour: "customers-new" }}
           />
 
           <SectionCard title="Rubrica clienti" subtitle="Essenziale ma completa per owner e admin.">

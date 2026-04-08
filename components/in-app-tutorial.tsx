@@ -303,9 +303,19 @@ export function InAppTutorial({
     let frame = 0;
     const update = () => {
       const el = document.querySelector(activeTarget.selector) as HTMLElement | null;
-      if (!el) { setSpotlight(null); return; }
-      const r = el.getBoundingClientRect();
-      setSpotlight({ top: r.top, left: r.left, width: r.width, height: r.height });
+      const r = el?.getBoundingClientRect();
+      if (r && (r.width > 0 || r.height > 0)) {
+        setSpotlight({ top: r.top, left: r.left, width: r.width, height: r.height });
+        return;
+      }
+      // Element missing or hidden (e.g. desktop sidebar on mobile) — fall back to navTarget
+      const navEl = document.querySelector(currentStep.navTarget.selector) as HTMLElement | null;
+      const navR = navEl?.getBoundingClientRect();
+      if (navR && (navR.width > 0 || navR.height > 0)) {
+        setSpotlight({ top: navR.top, left: navR.left, width: navR.width, height: navR.height });
+      } else {
+        setSpotlight(null);
+      }
     };
     const schedule = () => {
       window.cancelAnimationFrame(frame);

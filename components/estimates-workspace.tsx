@@ -257,6 +257,7 @@ export function EstimatesWorkspace({
         eyebrow="Preventivi"
         title="Da sopralluogo completato a preventivo inviato in pochi click."
         description="Apri una bozza precompilata, rivedi i dettagli e inviala al cliente senza partire da una pagina vuota."
+        action={{ href: "/leads?action=new", label: "Nuovo preventivo", dataTour: "estimates-new" }}
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
