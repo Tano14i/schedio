@@ -73,7 +73,7 @@ export async function AppShell({
 
   return (
     <div className="min-h-screen bg-neutral-50 text-ink">
-      <div className="mx-auto flex max-w-[1440px] gap-4 px-3 py-3 sm:px-4 sm:py-4 lg:gap-6 lg:px-6">
+      <div className="mx-auto flex max-w-[1440px] gap-4 overflow-x-hidden px-3 py-3 sm:px-4 sm:py-4 lg:gap-6 lg:px-6">
         <aside className="hidden w-72 shrink-0 rounded-[24px] bg-primary-900 p-6 text-white lg:flex lg:flex-col">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary-200">
@@ -116,7 +116,7 @@ export async function AppShell({
           </div>
         </aside>
 
-        <div className="flex min-h-screen flex-1 flex-col">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           <header className="mb-4 space-y-3 sm:mb-6 sm:space-y-4">
             <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-3 py-3 shadow-soft sm:px-4">
               <div className="hidden items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 md:flex">
@@ -241,14 +241,14 @@ export async function AppShell({
                   href={item.href}
                   data-tour={tourIdForHref(item.href)}
                   className={cn(
-                    "flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium",
+                    "flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-[10px] font-medium",
                     isMobileNavActive(pathname, item.href)
                       ? "bg-primary-50 text-primary-700"
                       : "text-neutral-500"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="w-full truncate text-center">{item.label}</span>
                 </Link>
               );
             })}

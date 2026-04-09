@@ -150,11 +150,11 @@ export default async function DashboardPage() {
           <PwaInstallCard />
 
           <SectionCard title="Azioni rapide" subtitle="Le 4 azioni che usi piu spesso da telefono.">
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-3">
               <ButtonLink href="/leads?action=new" className="w-full">Nuova richiesta</ButtonLink>
-              <ButtonLink href="/calendar" variant="secondary" className="w-full">Nuovo appuntamento</ButtonLink>
-              <ButtonLink href="/estimates" variant="secondary" className="w-full">Apri preventivi</ButtonLink>
-              <ButtonLink href="/invoices" variant="secondary" className="w-full">Apri fatture</ButtonLink>
+              <ButtonLink href="/calendar" variant="secondary" className="w-full">Appuntamento</ButtonLink>
+              <ButtonLink href="/estimates" variant="secondary" className="w-full">Preventivi</ButtonLink>
+              <ButtonLink href="/invoices" variant="secondary" className="w-full">Fatture</ButtonLink>
             </div>
           </SectionCard>
 
@@ -325,7 +325,7 @@ export default async function DashboardPage() {
           </div>
 
           <SectionCard title="Azioni rapide" subtitle="I passaggi che muovono il flusso di lavori oggi.">
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <ButtonLink href="/leads?action=new" className="w-full">
                 Nuova richiesta
               </ButtonLink>

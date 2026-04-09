@@ -176,8 +176,8 @@ export function LeadsWorkspace({
           action={{ href: "/leads?action=new", label: "Nuova richiesta" }}
         />
 
-        <SectionCard title="Azioni rapide" subtitle="Parti da una nuova richiesta o passa subito alla pianificazione.">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <SectionCard title="Azioni rapide" subtitle="Nuova richiesta, calendario, WhatsApp e clienti.">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Button className="w-full" onClick={openDrawer}>
               Nuova richiesta
             </Button>
@@ -204,7 +204,7 @@ export function LeadsWorkspace({
 
         <SectionCard
           title="Filtri"
-          subtitle="Tutte, Nuove, Contattate, Programmate, Preventivo inviato, Lavoro acquisito, Non acquisito."
+          subtitle="Filtra le richieste per stato."
         >
           <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             {filterStatuses.map((status) => (

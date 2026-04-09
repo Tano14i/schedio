@@ -15,7 +15,7 @@ export function SectionCard({
 }) {
   return (
     <section
-      className={`rounded-3xl border border-slate-200/90 bg-white p-4 shadow-[0_10px_30px_rgba(19,42,56,0.06)] sm:p-6 ${className ?? ""}`}
+      className={`overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-4 shadow-[0_10px_30px_rgba(19,42,56,0.06)] sm:p-6 ${className ?? ""}`}
     >
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
