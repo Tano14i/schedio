@@ -54,9 +54,9 @@ export default async function CustomerDetailPage({
           />
 
           <div className="grid gap-2 sm:flex sm:flex-wrap">
-            <ButtonLink href="/leads?action=new" size="md" className="w-full sm:w-auto">Nuova richiesta</ButtonLink>
-            <ButtonLink href="/calendar" variant="secondary" size="md" className="w-full sm:w-auto">Nuovo appuntamento</ButtonLink>
-            <ButtonLink href="/estimates" variant="secondary" size="md" className="w-full sm:w-auto">Nuovo preventivo</ButtonLink>
+            <ButtonLink href={`/leads?action=new&customerId=${customer.id}`} size="md" className="w-full sm:w-auto">Nuova richiesta</ButtonLink>
+            <ButtonLink href={`/calendar?action=schedule&customerId=${customer.id}`} variant="secondary" size="md" className="w-full sm:w-auto">Nuovo appuntamento</ButtonLink>
+            <ButtonLink href={`/estimates?action=new&customerId=${customer.id}`} variant="secondary" size="md" className="w-full sm:w-auto">Nuovo preventivo</ButtonLink>
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[1.1fr_1fr]">

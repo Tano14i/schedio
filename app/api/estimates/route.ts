@@ -1,6 +1,10 @@
 import { jsonCreated, jsonOk } from "@/lib/api";
 import { requireSession } from "@/lib/auth";
-import { createEstimateDraftFromJob, getEstimatePageData } from "@/lib/estimates-server";
+import {
+  createEstimateDraftForCustomer,
+  createEstimateDraftFromJob,
+  getEstimatePageData
+} from "@/lib/estimates-server";
 
 export async function GET(request: Request) {
   const session = await requireSession(request);
@@ -13,13 +17,18 @@ export async function POST(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
 
-  const body = (await request.json()) as { jobId?: string };
+  const body = (await request.json()) as { jobId?: string; customerId?: string };
+
+  if (body.customerId && !body.jobId) {
+    const item = await createEstimateDraftForCustomer(body.customerId);
+    return jsonCreated({ message: "Bozza preventivo creata per il cliente.", item });
+  }
 
   if (!body.jobId) {
-    return jsonCreated({
-      message: "Serve un job completato per creare la bozza preventivo.",
-      item: null
-    });
+    return Response.json(
+      { message: "Serve un cliente o un job completato per creare la bozza preventivo." },
+      { status: 400 }
+    );
   }
 
   const item = await createEstimateDraftFromJob(body.jobId);

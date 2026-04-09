@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function LeadsPage({
   searchParams
 }: {
-  searchParams: Promise<{ action?: string }>;
+  searchParams: Promise<{ action?: string; customerId?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
 
@@ -45,6 +45,7 @@ export default async function LeadsPage({
             return acc;
           }, {})}
           initialOpen={resolvedSearchParams.action === "new"}
+          initialCustomerId={resolvedSearchParams.customerId}
         />
       </AppShell>
     );
@@ -60,6 +61,7 @@ export default async function LeadsPage({
             initialLeads={[]}
             initialJobLinks={{}}
             initialOpen={resolvedSearchParams.action === "new"}
+            initialCustomerId={resolvedSearchParams.customerId}
           />
         </div>
       </AppShell>

@@ -19,6 +19,7 @@ type Props = {
   initialLeads: Lead[];
   initialJobLinks: Record<string, string>;
   initialOpen: boolean;
+  initialCustomerId?: string;
 };
 
 type FormState = {
@@ -47,7 +48,8 @@ export function LeadsWorkspace({
   initialCustomers,
   initialLeads,
   initialJobLinks,
-  initialOpen
+  initialOpen,
+  initialCustomerId
 }: Props) {
   const router = useRouter();
   const [customers, setCustomers] = useState(initialCustomers);
@@ -57,6 +59,8 @@ export function LeadsWorkspace({
   const [form, setForm] = useState<FormState>(emptyForm);
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [showCustomerList, setShowCustomerList] = useState(false);
 
   useEffect(() => {
     setJobLinksByLead(initialJobLinks);
@@ -65,6 +69,20 @@ export function LeadsWorkspace({
   useEffect(() => {
     setIsCreateOpen(initialOpen);
   }, [initialOpen]);
+
+  useEffect(() => {
+    if (!initialOpen || !initialCustomerId) return;
+    const customer = customers.find((c) => c.id === initialCustomerId);
+    if (!customer) return;
+    setForm((current) => ({
+      ...current,
+      fullName: customer.fullName,
+      phone: customer.phone,
+      email: customer.email ?? "",
+      address: customer.address ?? ""
+    }));
+    setCustomerSearch(customer.fullName);
+  }, [initialOpen, initialCustomerId, customers]);
 
   const filterStatuses = useMemo(
     () => ["new", "contacted", "scheduled", "quoted", "won", "lost"] as const,
@@ -339,6 +357,64 @@ export function LeadsWorkspace({
               saveLead();
             }}
           >
+            <div className="block">
+              <span className="mb-2 block text-sm font-medium text-ink">Cerca cliente esistente</span>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Cerca cliente esistente..."
+                  value={customerSearch}
+                  onChange={(event) => {
+                    setCustomerSearch(event.target.value);
+                    setShowCustomerList(true);
+                  }}
+                  onFocus={() => setShowCustomerList(true)}
+                  onBlur={() => setTimeout(() => setShowCustomerList(false), 150)}
+                  className="w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm text-ink outline-none transition focus:border-primary-300"
+                />
+                {showCustomerList && customerSearch.length > 0 ? (
+                  <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-soft">
+                    {customers
+                      .filter((c) =>
+                        c.fullName.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                        c.phone.includes(customerSearch)
+                      )
+                      .slice(0, 5)
+                      .map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => {
+                            setForm((current) => ({
+                              ...current,
+                              fullName: c.fullName,
+                              phone: c.phone,
+                              email: c.email ?? "",
+                              address: c.address ?? ""
+                            }));
+                            setCustomerSearch(c.fullName);
+                            setShowCustomerList(false);
+                          }}
+                          className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-neutral-50"
+                        >
+                          <span className="font-medium text-ink">{c.fullName}</span>
+                          <span className="text-neutral-500">{c.phone}</span>
+                        </button>
+                      ))}
+                    {customers.filter((c) =>
+                      c.fullName.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                      c.phone.includes(customerSearch)
+                    ).length === 0 ? (
+                      <p className="px-4 py-3 text-sm text-neutral-500">
+                        Nessun cliente trovato — compila i campi sotto per aggiungerne uno nuovo.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
             <Field
               label="Nome cliente"
               placeholder="Es. Mario Rossi"

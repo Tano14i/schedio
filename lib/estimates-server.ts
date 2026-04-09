@@ -168,6 +168,42 @@ export async function completeJobAndCaptureSummary(
   return job;
 }
 
+export async function createEstimateDraftForCustomer(customerId: string) {
+  const company = await getDefaultCompany();
+  const number = await nextEstimateNumber(company.id);
+  const validUntil = new Date();
+  validUntil.setDate(validUntil.getDate() + 7);
+
+  const estimate = await prisma.estimate.create({
+    data: {
+      companyId: company.id,
+      customerId,
+      number,
+      status: EstimateStatus.DRAFT,
+      title: "Nuovo preventivo",
+      subtotal: 0,
+      tax: 0,
+      total: 0,
+      validUntil,
+      publicToken: crypto.randomUUID(),
+      items: {
+        create: [{ label: "Voce da definire", qty: 1, unitPrice: 0, sortOrder: 1 }]
+      }
+    },
+    include: { items: { orderBy: { sortOrder: "asc" } } }
+  });
+
+  await logActivity({
+    companyId: company.id,
+    entityType: "estimate",
+    entityId: estimate.id,
+    eventType: "estimate_draft_created",
+    metadata: { customerId }
+  });
+
+  return estimate;
+}
+
 export async function createEstimateDraftFromJob(jobId: string) {
   const job = await prisma.job.findUniqueOrThrow({
     where: { id: jobId },

@@ -4,7 +4,15 @@ import { deriveLeadNextAction, getLeadsPageData } from "@/lib/crm-server";
 import { getEstimatePageData } from "@/lib/estimates-server";
 import type { EstimateTemplate } from "@/lib/types";
 
-export default async function EstimatesPage() {
+export const dynamic = "force-dynamic";
+
+export default async function EstimatesPage({
+  searchParams
+}: {
+  searchParams: Promise<{ action?: string; customerId?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+
   try {
     const [{ estimates, templates }, { customers, leads }] = await Promise.all([
       getEstimatePageData(),
@@ -94,6 +102,8 @@ export default async function EstimatesPage() {
             createdAt: template.createdAt.toISOString(),
             updatedAt: template.updatedAt.toISOString()
           }))}
+          initialNewOpen={resolvedSearchParams.action === "new"}
+          initialNewCustomerId={resolvedSearchParams.customerId}
         />
       </AppShell>
     );
@@ -109,6 +119,8 @@ export default async function EstimatesPage() {
             initialEstimates={[]}
             initialLeads={[]}
             initialTemplates={[]}
+            initialNewOpen={resolvedSearchParams.action === "new"}
+            initialNewCustomerId={resolvedSearchParams.customerId}
           />
         </div>
       </AppShell>

@@ -13,6 +13,7 @@ export default async function CalendarPage({
     action?: string;
     leadId?: string;
     kind?: "estimate_visit" | "job";
+    customerId?: string;
   }>;
 }) {
   const resolvedSearchParams = await searchParams;
@@ -73,6 +74,7 @@ export default async function CalendarPage({
           initialOpen={resolvedSearchParams.action === "schedule"}
           selectedLeadId={resolvedSearchParams.leadId}
           selectedKind={resolvedSearchParams.kind}
+          selectedCustomerId={resolvedSearchParams.customerId}
           canSchedule={!workerMode}
           defaultAssignedTo={workerMode ? session?.user.name : undefined}
         />
@@ -88,6 +90,7 @@ export default async function CalendarPage({
           initialOpen={false}
           selectedLeadId={resolvedSearchParams.leadId}
           selectedKind={resolvedSearchParams.kind}
+          selectedCustomerId={resolvedSearchParams.customerId}
           canSchedule={!workerMode}
           defaultAssignedTo={workerMode ? session?.user.name : undefined}
         />

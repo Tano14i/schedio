@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button, ButtonLink } from "@/components/button";
+import { Drawer } from "@/components/drawer";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
@@ -25,12 +26,16 @@ export function EstimatesWorkspace({
   initialCustomers,
   initialEstimates,
   initialLeads,
-  initialTemplates
+  initialTemplates,
+  initialNewOpen = false,
+  initialNewCustomerId
 }: {
   initialCustomers: Customer[];
   initialEstimates: EstimateRecord[];
   initialLeads: Lead[];
   initialTemplates: EstimateTemplate[];
+  initialNewOpen?: boolean;
+  initialNewCustomerId?: string;
 }) {
   const router = useRouter();
   const [estimates, setEstimates] = useState(initialEstimates);
@@ -42,6 +47,24 @@ export function EstimatesWorkspace({
   const [isAiAssistLoading, setIsAiAssistLoading] = useState(false);
   const [followUpAssist, setFollowUpAssist] = useState<EstimateFollowUpAiAssist | null>(null);
   const [isFollowUpAssistLoading, setIsFollowUpAssistLoading] = useState(false);
+  const [isNewOpen, setIsNewOpen] = useState(initialNewOpen);
+  const [newCustomerSearch, setNewCustomerSearch] = useState("");
+  const [newCustomerSelectedId, setNewCustomerSelectedId] = useState(initialNewCustomerId ?? "");
+  const [showNewCustomerList, setShowNewCustomerList] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "warning" | "success" } | null>(null);
+
+  const newCustomerSelected = useMemo(
+    () => initialCustomers.find((c) => c.id === newCustomerSelectedId) ?? null,
+    [initialCustomers, newCustomerSelectedId]
+  );
+
+  useEffect(() => {
+    if (initialNewOpen && initialNewCustomerId) {
+      const customer = initialCustomers.find((c) => c.id === initialNewCustomerId);
+      if (customer) setNewCustomerSearch(customer.fullName);
+    }
+  }, [initialNewOpen, initialNewCustomerId, initialCustomers]);
 
   const selectedEstimate = useMemo(
     () => estimates.find((estimate) => estimate.id === selectedId) ?? estimates[0] ?? null,
@@ -235,6 +258,98 @@ export function EstimatesWorkspace({
     });
   }
 
+  async function createEstimate() {
+    if (!newCustomerSelectedId) {
+      setFeedback("Seleziona un cliente prima di creare il preventivo.");
+      return;
+    }
+
+    setIsCreating(true);
+    setFeedback("");
+
+    try {
+      const response = await fetch("/api/estimates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: newCustomerSelectedId })
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok || !result?.item) {
+        setFeedback(result?.message ?? "Impossibile creare la bozza preventivo.");
+        return;
+      }
+
+      const newEstimate: EstimateRecord = {
+        id: result.item.id,
+        customerId: result.item.customerId,
+        leadId: result.item.leadId ?? undefined,
+        jobId: result.item.jobId ?? undefined,
+        number: result.item.number,
+        customerName: newCustomerSelected?.fullName,
+        status: "draft",
+        title: result.item.title ?? undefined,
+        introText: result.item.introText ?? undefined,
+        scopeSummary: result.item.scopeSummary ?? undefined,
+        notes: result.item.notes ?? undefined,
+        terms: result.item.terms ?? undefined,
+        sentAt: undefined,
+        viewedAt: undefined,
+        acceptedAt: undefined,
+        rejectedAt: undefined,
+        validUntil: result.item.validUntil ?? undefined,
+        subtotal: result.item.subtotal,
+        tax: result.item.tax,
+        total: result.item.total,
+        publicToken: result.item.publicToken,
+        followUpStatus: undefined,
+        followUpReason: undefined,
+        items: (result.item.items ?? []).map((item: { id: string; label: string; description?: string; qty: number; unitPrice: number }) => ({
+          id: item.id,
+          label: item.label,
+          description: item.description ?? undefined,
+          qty: item.qty,
+          unitPrice: item.unitPrice
+        }))
+      };
+
+      setEstimates((current) => [newEstimate, ...current]);
+      setSelectedId(newEstimate.id);
+      setIsNewOpen(false);
+      setNewCustomerSearch("");
+      setNewCustomerSelectedId("");
+      router.refresh();
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
+  function showToast(message: string, type: "warning" | "success") {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  function sendViaWhatsApp() {
+    if (!selectedEstimate) return;
+
+    const customer = initialCustomers.find((c) => c.id === selectedEstimate.customerId);
+    const rawPhone = customer?.phone ?? "";
+    const phone = rawPhone.replace(/\D/g, "");
+
+    if (!phone) {
+      showToast("Aggiungi il numero del cliente per inviare via WhatsApp.", "warning");
+      return;
+    }
+
+    const publicUrl = `${window.location.origin}/public/estimates/${selectedEstimate.publicToken}`;
+    const name = selectedCustomerName;
+    const message = encodeURIComponent(
+      `Ciao ${name}, ti invio il preventivo che abbiamo preparato per te.\n\nPuoi vederlo qui: ${publicUrl}\n\nSe hai domande sono a disposizione!`
+    );
+
+    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+  }
+
   async function sendFollowUpNow(estimateId: string) {
     setFeedback("");
     startTransition(async () => {
@@ -253,11 +368,23 @@ export function EstimatesWorkspace({
 
   return (
     <div className="space-y-6">
+      {toast ? (
+        <div
+          className={`fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-2xl px-5 py-3 text-sm font-medium shadow-panel transition-all ${
+            toast.type === "warning"
+              ? "bg-warning-50 text-warning-900 border border-warning-200"
+              : "bg-success-50 text-success-900 border border-success-200"
+          }`}
+        >
+          {toast.message}
+        </div>
+      ) : null}
+
       <PageHeader
         eyebrow="Preventivi"
         title="Da sopralluogo completato a preventivo inviato in pochi click."
         description="Apri una bozza precompilata, rivedi i dettagli e inviala al cliente senza partire da una pagina vuota."
-        action={{ href: "/leads?action=new", label: "Nuovo preventivo", dataTour: "estimates-new" }}
+        action={{ onClick: () => { setIsNewOpen(true); setFeedback(""); }, label: "Nuovo preventivo", dataTour: "estimates-new" }}
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -294,6 +421,13 @@ export function EstimatesWorkspace({
               >
                 Apri pagina cliente
               </ButtonLink>
+              <Button
+                variant="secondary"
+                className="w-full sm:w-auto"
+                onClick={sendViaWhatsApp}
+              >
+                Invia via WhatsApp
+              </Button>
               {selectedEstimate.status === "accepted" ? (
                 <Button
                   variant="secondary"
@@ -739,6 +873,13 @@ export function EstimatesWorkspace({
                 >
                   Apri pagina cliente
                 </ButtonLink>
+                <Button
+                  variant="secondary"
+                  className="w-full sm:w-auto"
+                  onClick={sendViaWhatsApp}
+                >
+                  Invia via WhatsApp
+                </Button>
                 {selectedEstimate.status === "accepted" ? (
                   <Button
                     variant="secondary"
@@ -795,6 +936,113 @@ export function EstimatesWorkspace({
           )}
         </SectionCard>
       </div>
+
+      {isNewOpen ? (
+        <Drawer
+          title="Nuovo preventivo"
+          description="Seleziona il cliente e crea subito una bozza vuota da completare nel composer."
+          closeHref="/estimates"
+        >
+          <div className="space-y-5">
+            <div className="block">
+              <span className="mb-2 block text-sm font-medium text-ink">Cliente</span>
+              {newCustomerSelected ? (
+                <div className="flex items-center justify-between rounded-2xl border border-primary-200 bg-primary-50 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-ink">{newCustomerSelected.fullName}</p>
+                    <p className="text-xs text-neutral-500">{newCustomerSelected.phone}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewCustomerSelectedId("");
+                      setNewCustomerSearch("");
+                    }}
+                    className="text-xs text-neutral-500 hover:text-neutral-800"
+                  >
+                    Cambia
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Cerca cliente per nome o telefono..."
+                    value={newCustomerSearch}
+                    onChange={(event) => {
+                      setNewCustomerSearch(event.target.value);
+                      setShowNewCustomerList(true);
+                    }}
+                    onFocus={() => setShowNewCustomerList(true)}
+                    onBlur={() => setTimeout(() => setShowNewCustomerList(false), 150)}
+                    className="w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm text-ink outline-none transition focus:border-primary-300"
+                  />
+                  {showNewCustomerList && newCustomerSearch.length > 0 ? (
+                    <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-soft">
+                      {initialCustomers
+                        .filter((c) =>
+                          c.fullName.toLowerCase().includes(newCustomerSearch.toLowerCase()) ||
+                          c.phone.includes(newCustomerSearch)
+                        )
+                        .slice(0, 5)
+                        .map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setNewCustomerSelectedId(c.id);
+                              setNewCustomerSearch(c.fullName);
+                              setShowNewCustomerList(false);
+                            }}
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-neutral-50"
+                          >
+                            <span className="font-medium text-ink">{c.fullName}</span>
+                            <span className="text-neutral-500">{c.phone}</span>
+                          </button>
+                        ))}
+                      {initialCustomers.filter((c) =>
+                        c.fullName.toLowerCase().includes(newCustomerSearch.toLowerCase()) ||
+                        c.phone.includes(newCustomerSearch)
+                      ).length === 0 ? (
+                        <p className="px-4 py-3 text-sm text-neutral-500">Nessun cliente trovato.</p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-600">
+              Verrà creata una bozza vuota con numero progressivo. Potrai completarla nel composer e inviarla quando è pronta.
+            </div>
+
+            {feedback ? <p className="text-sm text-danger-600">{feedback}</p> : null}
+
+            <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+              <Button
+                className="sm:order-2"
+                disabled={isCreating || !newCustomerSelectedId}
+                onClick={createEstimate}
+              >
+                {isCreating ? "Creazione..." : "Crea bozza preventivo"}
+              </Button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsNewOpen(false);
+                  setNewCustomerSearch("");
+                  setNewCustomerSelectedId("");
+                  setFeedback("");
+                }}
+                className="inline-flex items-center justify-center rounded-xl px-4 py-3 text-sm font-medium text-neutral-600 transition hover:bg-neutral-100 sm:order-1"
+              >
+                Annulla
+              </button>
+            </div>
+          </div>
+        </Drawer>
+      ) : null}
     </div>
   );
 }

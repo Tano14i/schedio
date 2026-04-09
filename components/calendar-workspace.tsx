@@ -21,6 +21,7 @@ type Props = {
   selectedKind?: "estimate_visit" | "job";
   canSchedule?: boolean;
   defaultAssignedTo?: string;
+  selectedCustomerId?: string;
 };
 
 type ScheduleForm = {
@@ -49,7 +50,8 @@ export function CalendarWorkspace({
   selectedLeadId,
   selectedKind,
   canSchedule = true,
-  defaultAssignedTo
+  defaultAssignedTo,
+  selectedCustomerId
 }: Props) {
   const router = useRouter();
   const [customers, setCustomers] = useState(initialCustomers);
@@ -59,6 +61,9 @@ export function CalendarWorkspace({
   const [form, setForm] = useState<ScheduleForm>(emptyForm);
   const [feedback, setFeedback] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [localCustomerId, setLocalCustomerId] = useState(selectedCustomerId ?? "");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [showCustomerList, setShowCustomerList] = useState(false);
 
   useEffect(() => {
     setJobs(initialJobs);
@@ -69,8 +74,10 @@ export function CalendarWorkspace({
     [leads, selectedLeadId]
   );
   const selectedCustomer = useMemo(
-    () => customers.find((customer) => customer.id === selectedLead?.customerId),
-    [customers, selectedLead]
+    () => customers.find((customer) =>
+      customer.id === selectedLead?.customerId || customer.id === localCustomerId
+    ),
+    [customers, selectedLead, localCustomerId]
   );
 
   useEffect(() => {
@@ -119,8 +126,8 @@ export function CalendarWorkspace({
   }
 
   async function saveSchedule() {
-    if (!selectedLead || !selectedCustomer || !form.date || !form.time || !form.title.trim()) {
-      setFeedback("Seleziona una richiesta valida, data e ora.");
+    if (!selectedCustomer || !form.date || !form.time || !form.title.trim()) {
+      setFeedback("Seleziona un cliente, data, ora e titolo.");
       return;
     }
 
@@ -133,7 +140,7 @@ export function CalendarWorkspace({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          leadId: selectedLead.id,
+          leadId: selectedLead?.id,
           customerId: selectedCustomer.id,
           title: form.title.trim(),
           type: selectedKind ?? "estimate_visit",
@@ -170,20 +177,22 @@ export function CalendarWorkspace({
       };
 
       setJobs((current) => [nextJob, ...current]);
-      setLeads((current) =>
-        current.map((lead) =>
-          lead.id === selectedLead.id
-            ? {
-                ...lead,
-                status: selectedKind === "job" ? "won" : "scheduled",
-                nextAction:
-                  selectedKind === "job"
-                    ? "Aprire lavoro e confermare dettagli"
-                    : "Aprire appuntamento e confermare dettagli"
-              }
-            : lead
-        )
-      );
+      if (selectedLead) {
+        setLeads((current) =>
+          current.map((lead) =>
+            lead.id === selectedLead.id
+              ? {
+                  ...lead,
+                  status: selectedKind === "job" ? "won" : "scheduled",
+                  nextAction:
+                    selectedKind === "job"
+                      ? "Aprire lavoro e confermare dettagli"
+                      : "Aprire appuntamento e confermare dettagli"
+                }
+              : lead
+          )
+        );
+      }
       closeDrawer();
       router.refresh();
     } finally {
@@ -324,7 +333,9 @@ export function CalendarWorkspace({
           description={
             selectedLead && selectedCustomer
               ? `${selectedCustomer.fullName} - ${selectedLead.serviceType}`
-              : "Programma la prossima azione con data, ora e assegnazione."
+              : selectedCustomer
+                ? selectedCustomer.fullName
+                : "Seleziona un cliente e programma l'appuntamento."
           }
           closeHref="/calendar"
         >
@@ -335,12 +346,67 @@ export function CalendarWorkspace({
               saveSchedule();
             }}
           >
-            <Field
-              label="Cliente"
-              value={selectedCustomer?.fullName ?? ""}
-              placeholder="Cliente"
-              disabled
-            />
+            {selectedCustomer ? (
+              <Field
+                label="Cliente"
+                value={selectedCustomer.fullName}
+                placeholder="Cliente"
+                disabled
+              />
+            ) : (
+              <div className="block">
+                <span className="mb-2 block text-sm font-medium text-ink">Cliente</span>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Cerca cliente per nome o telefono..."
+                    value={customerSearch}
+                    onChange={(event) => {
+                      setCustomerSearch(event.target.value);
+                      setShowCustomerList(true);
+                    }}
+                    onFocus={() => setShowCustomerList(true)}
+                    onBlur={() => setTimeout(() => setShowCustomerList(false), 150)}
+                    className="w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm text-ink outline-none transition focus:border-primary-300"
+                  />
+                  {showCustomerList && customerSearch.length > 0 ? (
+                    <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-soft">
+                      {customers
+                        .filter((c) =>
+                          c.fullName.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                          c.phone.includes(customerSearch)
+                        )
+                        .slice(0, 5)
+                        .map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setLocalCustomerId(c.id);
+                              setCustomerSearch(c.fullName);
+                              setShowCustomerList(false);
+                              if (!form.address && c.address) {
+                                setForm((current) => ({ ...current, address: c.address ?? "" }));
+                              }
+                            }}
+                            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-neutral-50"
+                          >
+                            <span className="font-medium text-ink">{c.fullName}</span>
+                            <span className="text-neutral-500">{c.phone}</span>
+                          </button>
+                        ))}
+                      {customers.filter((c) =>
+                        c.fullName.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                        c.phone.includes(customerSearch)
+                      ).length === 0 ? (
+                        <p className="px-4 py-3 text-sm text-neutral-500">Nessun cliente trovato.</p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            )}
             <Field label="Titolo" value={form.title} placeholder="Titolo appuntamento" onChange={(value) => setForm((current) => ({ ...current, title: value }))} />
             <div className="grid gap-5 md:grid-cols-2">
               <Field
