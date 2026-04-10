@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { BillingEditForm } from "@/components/billing-edit-form";
 import { ButtonLink } from "@/components/button";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
@@ -13,7 +14,23 @@ export default async function CompanySetupPage() {
     const session = await getCurrentSession();
     const company = await prisma.company.findFirstOrThrow({
       where: session ? { id: session.user.company.id } : undefined,
-      orderBy: { createdAt: "asc" }
+      orderBy: { createdAt: "asc" },
+      select: {
+        id: true,
+        name: true,
+        trade: true,
+        phone: true,
+        email: true,
+        address: true,
+        country: true,
+        currency: true,
+        locale: true,
+        vatNumber: true,
+        iban: true,
+        defaultTaxRate: true,
+        invoiceCounter: true,
+        invoiceYear: true
+      }
     });
     const connection = getWhatsAppConnectionStatus();
 
@@ -37,6 +54,33 @@ export default async function CompanySetupPage() {
 
           <SectionCard title="Mestiere" subtitle="Specifica la tua specializzazione — appare nella lista di avvio e personalizza Schedio.">
             <TradeEditForm currentTrade={company.trade} />
+          </SectionCard>
+
+          <SectionCard
+            title="Fatturazione"
+            subtitle="BTW-nummer, IBAN e aliquota IVA — obbligatori per fatture conformi alla normativa olandese."
+          >
+            <div className="mb-4 grid gap-4 md:grid-cols-3">
+              <Field label="Paese" value={company.country} />
+              <Field label="Valuta" value={company.currency} />
+              <Field
+                label="Prossimo numero fattura"
+                value={
+                  company.invoiceYear === new Date().getFullYear()
+                    ? `${company.invoiceYear}-${String(company.invoiceCounter + 1).padStart(3, "0")}`
+                    : `${new Date().getFullYear()}-001`
+                }
+              />
+            </div>
+            <BillingEditForm
+              current={{
+                vatNumber: company.vatNumber,
+                iban: company.iban,
+                defaultTaxRate: company.defaultTaxRate,
+                country: company.country,
+                currency: company.currency
+              }}
+            />
           </SectionCard>
 
           <SectionCard title="Team e costi orari" subtitle="Imposta il costo orario dei tecnici per calcolare davvero la marginalita dei lavori.">

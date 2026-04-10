@@ -81,9 +81,22 @@ async function logActivity(input: {
   });
 }
 
-async function nextInvoiceNumber(companyId: string) {
-  const count = await prisma.invoice.count({ where: { companyId } });
-  return `INV-2026-${String(count + 1).padStart(3, "0")}`;
+async function nextInvoiceNumber(companyId: string): Promise<string> {
+  const currentYear = new Date().getFullYear();
+  // Atomic: reset counter to 1 when year changes, otherwise increment.
+  // Single UPDATE + RETURNING eliminates race conditions.
+  const rows = await prisma.$queryRaw<Array<{ counter: number }>>(
+    Prisma.sql`
+      UPDATE "Company"
+      SET
+        "invoiceCounter" = CASE WHEN "invoiceYear" = ${currentYear} THEN "invoiceCounter" + 1 ELSE 1 END,
+        "invoiceYear"    = ${currentYear}
+      WHERE id = ${companyId}
+      RETURNING "invoiceCounter" AS counter
+    `
+  );
+  const counter = Number(rows[0].counter);
+  return `${currentYear}-${String(counter).padStart(3, "0")}`;
 }
 
 export function calculateInvoiceTotals(items: InvoiceItemInput[], taxRate = 0) {
@@ -151,10 +164,15 @@ export async function createInvoiceDraftFromEstimate(estimateId: string) {
     return estimate.invoices[0];
   }
 
+  const company = await prisma.company.findUniqueOrThrow({
+    where: { id: estimate.companyId },
+    select: { defaultTaxRate: true }
+  });
+  const taxRate = company.defaultTaxRate;
   const number = await nextInvoiceNumber(estimate.companyId);
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + 7);
-  const totals = calculateInvoiceTotals(buildInvoiceItemsFromEstimate(estimate.items));
+  const totals = calculateInvoiceTotals(buildInvoiceItemsFromEstimate(estimate.items), taxRate);
 
   const invoice = await prisma.invoice.create({
     data: {
@@ -169,6 +187,7 @@ export async function createInvoiceDraftFromEstimate(estimateId: string) {
       notes: estimate.notes ?? undefined,
       terms: estimate.terms ?? "Pagamento a fine lavoro.",
       dueDate,
+      taxRate,
       subtotal: totals.subtotal,
       tax: totals.tax,
       total: totals.total,
@@ -221,6 +240,11 @@ export async function createInvoiceDraftFromJob(jobId: string) {
     return job.invoices[0];
   }
 
+  const company = await prisma.company.findUniqueOrThrow({
+    where: { id: job.companyId },
+    select: { defaultTaxRate: true }
+  });
+  const taxRate = company.defaultTaxRate;
   const number = await nextInvoiceNumber(job.companyId);
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + 7);
@@ -231,7 +255,7 @@ export async function createInvoiceDraftFromJob(jobId: string) {
       qty: 1,
       unitPrice: 0
     }
-  ]);
+  ], taxRate);
 
   const invoice = await prisma.invoice.create({
     data: {
@@ -245,6 +269,7 @@ export async function createInvoiceDraftFromJob(jobId: string) {
       notes: job.completionNotes ?? job.notes ?? undefined,
       terms: "Pagamento a fine lavoro.",
       dueDate,
+      taxRate,
       subtotal: totals.subtotal,
       tax: totals.tax,
       total: totals.total,
@@ -281,16 +306,27 @@ export async function updateInvoice(
     notes?: string | null;
     terms?: string | null;
     dueDate?: string | null;
+    taxRate?: number;
     items?: InvoiceItemInput[];
   }
 ) {
   const existing = await prisma.invoice.findUniqueOrThrow({
-    where: { id: invoiceId }
+    where: { id: invoiceId },
+    include: { items: { orderBy: { sortOrder: "asc" } } }
   });
-  const totals = input.items ? calculateInvoiceTotals(input.items) : null;
+  const taxRate = input.taxRate ?? existing.taxRate;
+  const needsRecalc = Boolean(input.items) || input.taxRate !== undefined;
+  const itemsForCalc = input.items ?? existing.items.map((i) => ({
+    label: i.label,
+    description: i.description,
+    qty: i.qty,
+    unitPrice: i.unitPrice,
+    sortOrder: i.sortOrder
+  }));
+  const totals = needsRecalc ? calculateInvoiceTotals(itemsForCalc, taxRate) : null;
 
   const invoice = await prisma.$transaction(async (tx) => {
-    if (totals) {
+    if (needsRecalc) {
       await tx.invoiceItem.deleteMany({ where: { invoiceId } });
     }
 
@@ -301,12 +337,13 @@ export async function updateInvoice(
         notes: input.notes ?? undefined,
         terms: input.terms ?? undefined,
         dueDate: input.dueDate ? new Date(input.dueDate) : input.dueDate === null ? null : undefined,
+        taxRate: input.taxRate ?? undefined,
         subtotal: totals?.subtotal,
         tax: totals?.tax,
         total: totals?.total,
-        items: totals
+        items: needsRecalc
           ? {
-              create: totals.items
+              create: totals!.items
             }
           : undefined
       },
@@ -922,9 +959,13 @@ export async function getInvoiceWorklist() {
     });
 }
 
-export async function getInvoicePageData() {
+export async function getInvoicePageData(opts?: { page?: number; limit?: number }) {
   const company = await getDefaultCompany();
-  const [invoices, customers, reviewRequests] = await Promise.all([
+  const page = Math.max(1, opts?.page ?? 1);
+  const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
+  const paginate = opts !== undefined;
+
+  const [invoices, invoicesTotal, customers, reviewRequests] = await Promise.all([
     prisma.invoice.findMany({
       where: { companyId: company.id },
       include: {
@@ -938,8 +979,12 @@ export async function getInvoicePageData() {
           orderBy: { createdAt: "desc" }
         }
       },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
+      ...(paginate ? { take: limit, skip: (page - 1) * limit } : {})
     }),
+    paginate
+      ? prisma.invoice.count({ where: { companyId: company.id } })
+      : Promise.resolve(0),
     prisma.customer.findMany({
       where: { companyId: company.id },
       orderBy: { createdAt: "asc" }
@@ -954,7 +999,14 @@ export async function getInvoicePageData() {
     })
   ]);
 
-  return { company, invoices, customers, reviewRequests };
+  const total = paginate ? invoicesTotal : invoices.length;
+  return {
+    company,
+    invoices,
+    customers,
+    reviewRequests,
+    pagination: { page, limit, total, hasMore: (page - 1) * limit + invoices.length < total }
+  };
 }
 
 export async function getPublicInvoiceData(publicToken: string) {

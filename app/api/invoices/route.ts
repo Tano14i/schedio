@@ -5,8 +5,11 @@ import { createInvoiceDraftFromJob, getInvoicePageData } from "@/lib/invoices-se
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const { invoices } = await getInvoicePageData();
-  return jsonOk({ items: invoices });
+  const url = new URL(request.url);
+  const page = parseInt(url.searchParams.get("page") ?? "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
+  const { invoices, pagination } = await getInvoicePageData({ page, limit });
+  return jsonOk({ data: invoices, pagination });
 }
 
 export async function POST(request: Request) {

@@ -82,9 +82,13 @@ async function logActivity(input: {
   });
 }
 
-export async function getLeadsPageData() {
+export async function getLeadsPageData(opts?: { page?: number; limit?: number }) {
   const company = await getDefaultCompany();
-  const [customers, leads, jobs] = await Promise.all([
+  const page = Math.max(1, opts?.page ?? 1);
+  const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
+  const paginate = opts !== undefined;
+
+  const [customers, leads, leadsTotal, jobs] = await Promise.all([
     prisma.customer.findMany({
       where: { companyId: company.id },
       orderBy: { createdAt: "desc" }
@@ -92,8 +96,12 @@ export async function getLeadsPageData() {
     prisma.lead.findMany({
       where: { companyId: company.id },
       include: { customer: true },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
+      ...(paginate ? { take: limit, skip: (page - 1) * limit } : {})
     }),
+    paginate
+      ? prisma.lead.count({ where: { companyId: company.id } })
+      : Promise.resolve(0),
     prisma.job.findMany({
       where: { companyId: company.id, leadId: { not: null } },
       select: {
@@ -103,7 +111,14 @@ export async function getLeadsPageData() {
     })
   ]);
 
-  return { company, customers, leads, jobs };
+  const total = paginate ? leadsTotal : leads.length;
+  return {
+    company,
+    customers,
+    leads,
+    jobs,
+    pagination: { page, limit, total, hasMore: (page - 1) * limit + leads.length < total }
+  };
 }
 
 export async function createLeadWithCustomer(input: {
@@ -214,22 +229,38 @@ export async function updateLead(
   return lead;
 }
 
-export async function getCustomersPageData() {
+export async function getCustomersPageData(opts?: { page?: number; limit?: number }) {
   const company = await getDefaultCompany();
-  return prisma.customer.findMany({
-    where: { companyId: company.id },
-    include: {
-      _count: {
-        select: {
-          jobs: true,
-          estimates: true,
-          invoices: true,
-          leads: true
+  const page = Math.max(1, opts?.page ?? 1);
+  const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
+  const paginate = opts !== undefined;
+
+  const [customers, total] = await Promise.all([
+    prisma.customer.findMany({
+      where: { companyId: company.id },
+      include: {
+        _count: {
+          select: {
+            jobs: true,
+            estimates: true,
+            invoices: true,
+            leads: true
+          }
         }
-      }
-    },
-    orderBy: { createdAt: "desc" }
-  });
+      },
+      orderBy: { createdAt: "desc" },
+      ...(paginate ? { take: limit, skip: (page - 1) * limit } : {})
+    }),
+    paginate
+      ? prisma.customer.count({ where: { companyId: company.id } })
+      : Promise.resolve(0)
+  ]);
+
+  const tot = paginate ? total : customers.length;
+  return {
+    data: customers,
+    pagination: { page, limit, total: tot, hasMore: (page - 1) * limit + customers.length < tot }
+  };
 }
 
 export async function createCustomer(input: {

@@ -6,9 +6,12 @@ export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
 
-  const items = await getCustomersPageData();
+  const url = new URL(request.url);
+  const page = parseInt(url.searchParams.get("page") ?? "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
+  const { data: items, pagination } = await getCustomersPageData({ page, limit });
   return jsonOk({
-    items: items.map((customer) => ({
+    data: items.map((customer) => ({
       id: customer.id,
       fullName: customer.fullName,
       phone: customer.phone,
@@ -17,7 +20,8 @@ export async function GET(request: Request) {
       notes: customer.notes ?? undefined,
       createdAt: customer.createdAt.toISOString(),
       counts: customer._count
-    }))
+    })),
+    pagination
   });
 }
 

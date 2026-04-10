@@ -215,13 +215,23 @@ enum ProposalApprovedVia {
 }
 
 model Company {
-  id             String          @id @default(cuid())
-  name           String
-  trade          String?
-  phone          String?
-  email          String?
-  address        String?
-  createdAt      DateTime        @default(now())
+  id               String          @id @default(cuid())
+  name             String
+  trade            String?
+  phone            String?
+  email            String?
+  address          String?
+  country          String          @default("NL")
+  currency         String          @default("EUR")
+  locale           String          @default("nl-NL")
+  vatNumber        String?
+  iban             String?
+  defaultTaxRate   Float           @default(0.21)
+  invoiceCounter   Int             @default(0)
+  invoiceYear      Int             @default(0)
+  estimateCounter  Int             @default(0)
+  estimateYear     Int             @default(0)
+  createdAt        DateTime        @default(now())
   users          User[]
   customers      Customer[]
   leads          Lead[]
@@ -272,6 +282,7 @@ model Customer {
   email     String?
   address   String?
   notes     String?
+  vatNumber String?
   createdAt DateTime   @default(now())
   leads     Lead[]
   jobs      Job[]
@@ -280,6 +291,8 @@ model Customer {
   reviewRequests ReviewRequest[]
   whatsappContacts WhatsAppContact[]
   whatsappThreads WhatsAppThread[]
+
+  @@index([companyId, createdAt])
 }
 
 model Lead {
@@ -310,6 +323,9 @@ model Lead {
   invoices      Invoice[]
   schedulingProposals SchedulingProposal[]
   whatsappThreads WhatsAppThread[]
+
+  @@index([companyId, createdAt])
+  @@index([companyId, status])
 }
 
 model Job {
@@ -341,6 +357,9 @@ model Job {
   reviewRequests ReviewRequest[]
   costItems      JobCostItem[]
   workLogs       JobWorkLog[]
+
+  @@index([companyId, startAt])
+  @@index([companyId, status])
 }
 
 model JobCostItem {
@@ -404,12 +423,16 @@ model Estimate {
   viewedAt    DateTime?
   acceptedAt  DateTime?
   rejectedAt  DateTime?
+  taxRate     Float          @default(0.21)
   publicToken String         @unique
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   items       EstimateItem[]
   followUps   EstimateFollowUp[]
   invoices    Invoice[]
+
+  @@index([companyId, createdAt])
+  @@index([companyId, status])
 }
 
 model EstimateItem {
@@ -485,12 +508,16 @@ model Invoice {
   viewedAt    DateTime?
   paidAt      DateTime?
   voidedAt    DateTime?
+  taxRate     Float         @default(0.21)
   publicToken String        @unique
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   items       InvoiceItem[]
   reminders   InvoiceReminder[]
   reviewRequests ReviewRequest[]
+
+  @@index([companyId, createdAt])
+  @@index([companyId, status])
 }
 
 model InvoiceItem {
@@ -582,6 +609,9 @@ model ActivityLog {
   eventType    String
   metadataJson Json?
   createdAt    DateTime @default(now())
+
+  @@index([companyId, createdAt])
+  @@index([companyId, entityId])
 }
 
 model ServiceArea {
@@ -664,6 +694,7 @@ model WhatsAppMessage {
   createdAt            DateTime                 @default(now())
 
   @@index([companyId, threadId, createdAt])
+  @@index([companyId, createdAt])
 }
 
 model MessageTemplate {

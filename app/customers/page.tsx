@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CustomersPage() {
   try {
-    const items = await getCustomersPageData();
+    const { data: items } = await getCustomersPageData();
     const firstCustomer = items[0];
 
     return (

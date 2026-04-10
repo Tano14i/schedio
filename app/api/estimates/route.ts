@@ -9,8 +9,11 @@ import {
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const { estimates } = await getEstimatePageData();
-  return jsonOk({ items: estimates });
+  const url = new URL(request.url);
+  const page = parseInt(url.searchParams.get("page") ?? "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
+  const { estimates, pagination } = await getEstimatePageData({ page, limit });
+  return jsonOk({ data: estimates, pagination });
 }
 
 export async function POST(request: Request) {

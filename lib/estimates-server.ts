@@ -87,10 +87,23 @@ async function logActivity(input: {
   });
 }
 
-async function nextEstimateNumber(companyId: string) {
-  const count = await prisma.estimate.count({ where: { companyId } });
-  return `Q-2026-${String(count + 1).padStart(3, "0")}`;
+async function nextEstimateNumber(companyId: string): Promise<string> {
+  const currentYear = new Date().getFullYear();
+  const rows = await prisma.$queryRaw<Array<{ counter: number }>>(
+    Prisma.sql`
+      UPDATE "Company"
+      SET
+        "estimateCounter" = CASE WHEN "estimateYear" = ${currentYear} THEN "estimateCounter" + 1 ELSE 1 END,
+        "estimateYear"    = ${currentYear}
+      WHERE id = ${companyId}
+      RETURNING "estimateCounter" AS counter
+    `
+  );
+  const counter = Number(rows[0].counter);
+  return `Q-${currentYear}-${String(counter).padStart(3, "0")}`;
 }
+
+export { nextEstimateNumber };
 
 function aggregateThreadNotes(messages: Array<{ textBody: string | null; storagePath: string | null }>) {
   const textNotes = messages
@@ -181,6 +194,7 @@ export async function createEstimateDraftForCustomer(customerId: string) {
       number,
       status: EstimateStatus.DRAFT,
       title: "Nuovo preventivo",
+      taxRate: company.defaultTaxRate,
       subtotal: 0,
       tax: 0,
       total: 0,
@@ -235,7 +249,11 @@ export async function createEstimateDraftFromJob(jobId: string) {
         orderBy: { updatedAt: "desc" }
       })
     : null;
-  const template = await applyEstimateTemplate(job.companyId, job.lead?.serviceType ?? job.title);
+  const [template, companyForRate] = await Promise.all([
+    applyEstimateTemplate(job.companyId, job.lead?.serviceType ?? job.title),
+    prisma.company.findUniqueOrThrow({ where: { id: job.companyId }, select: { defaultTaxRate: true } })
+  ]);
+  const taxRate = companyForRate.defaultTaxRate;
   const threadNotes = aggregateThreadNotes(
     thread?.messages.map((message) => ({
       textBody: message.textBody,
@@ -253,7 +271,7 @@ export async function createEstimateDraftFromJob(jobId: string) {
           unitPrice: 0
         }
       ];
-  const totals = calculateEstimateTotals(suggestedItems);
+  const totals = calculateEstimateTotals(suggestedItems, taxRate);
   const number = await nextEstimateNumber(job.companyId);
   const validUntil = new Date();
   validUntil.setDate(validUntil.getDate() + 7);
@@ -276,6 +294,7 @@ export async function createEstimateDraftFromJob(jobId: string) {
         .join("\n\n"),
       terms: template?.terms ?? "Pagamento a conferma del lavoro o a fine intervento.",
       validUntil,
+      taxRate,
       subtotal: totals.subtotal,
       tax: totals.tax,
       total: totals.total,
@@ -399,17 +418,27 @@ export async function updateEstimate(
     notes?: string | null;
     terms?: string | null;
     validUntil?: string | null;
+    taxRate?: number;
     items?: EstimateItemInput[];
   }
 ) {
   const existing = await prisma.estimate.findUniqueOrThrow({
     where: { id: estimateId },
-    include: { items: true }
+    include: { items: { orderBy: { sortOrder: "asc" } } }
   });
-  const totals = input.items ? calculateEstimateTotals(input.items) : null;
+  const taxRate = input.taxRate ?? existing.taxRate;
+  const needsRecalc = Boolean(input.items) || input.taxRate !== undefined;
+  const itemsForCalc = input.items ?? existing.items.map((i) => ({
+    label: i.label,
+    description: i.description,
+    qty: i.qty,
+    unitPrice: i.unitPrice,
+    sortOrder: i.sortOrder
+  }));
+  const totals = needsRecalc ? calculateEstimateTotals(itemsForCalc, taxRate) : null;
 
   const estimate = await prisma.$transaction(async (tx) => {
-    if (totals) {
+    if (needsRecalc) {
       await tx.estimateItem.deleteMany({ where: { estimateId } });
     }
 
@@ -422,12 +451,13 @@ export async function updateEstimate(
         notes: input.notes ?? undefined,
         terms: input.terms ?? undefined,
         validUntil: input.validUntil ? new Date(input.validUntil) : input.validUntil === null ? null : undefined,
+        taxRate: input.taxRate ?? undefined,
         subtotal: totals?.subtotal,
         tax: totals?.tax,
         total: totals?.total,
-        items: totals
+        items: needsRecalc
           ? {
-              create: totals.items
+              create: totals!.items
             }
           : undefined
       },
@@ -1052,9 +1082,13 @@ export async function updateEstimateTemplate(
   });
 }
 
-export async function getEstimatePageData() {
+export async function getEstimatePageData(opts?: { page?: number; limit?: number }) {
   const company = await getDefaultCompany();
-  const [estimates, templates] = await Promise.all([
+  const page = Math.max(1, opts?.page ?? 1);
+  const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
+  const paginate = opts !== undefined;
+
+  const [estimates, estimatesTotal, templates] = await Promise.all([
     prisma.estimate.findMany({
       where: { companyId: company.id },
       include: {
@@ -1065,15 +1099,25 @@ export async function getEstimatePageData() {
           take: 1
         }
       },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
+      ...(paginate ? { take: limit, skip: (page - 1) * limit } : {})
     }),
+    paginate
+      ? prisma.estimate.count({ where: { companyId: company.id } })
+      : Promise.resolve(0),
     prisma.estimateTemplate.findMany({
       where: { companyId: company.id, active: true },
       orderBy: { createdAt: "asc" }
     })
   ]);
 
-  return { company, estimates, templates };
+  const total = paginate ? estimatesTotal : estimates.length;
+  return {
+    company,
+    estimates,
+    templates,
+    pagination: { page, limit, total, hasMore: (page - 1) * limit + estimates.length < total }
+  };
 }
 
 export async function getJobDetailData(jobId: string) {

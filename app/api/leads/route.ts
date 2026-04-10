@@ -5,9 +5,12 @@ import { createLeadWithCustomer, deriveLeadNextAction, getLeadsPageData } from "
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const { leads } = await getLeadsPageData();
+  const url = new URL(request.url);
+  const page = parseInt(url.searchParams.get("page") ?? "1", 10);
+  const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
+  const { leads, pagination } = await getLeadsPageData({ page, limit });
   return jsonOk({
-    items: leads.map((lead) => ({
+    data: leads.map((lead) => ({
       id: lead.id,
       customerId: lead.customerId,
       source: lead.source.toLowerCase(),
@@ -29,7 +32,8 @@ export async function GET(request: Request) {
             createdAt: lead.customer.createdAt.toISOString()
           }
         : null
-    }))
+    })),
+    pagination
   });
 }
 

@@ -1,7 +1,7 @@
 import { jsonCreated } from "@/lib/api";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { calculateEstimateTotals } from "@/lib/estimates-server";
+import { calculateEstimateTotals, nextEstimateNumber } from "@/lib/estimates-server";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const session = await requireSession(request);
@@ -12,6 +12,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     include: { items: { orderBy: { sortOrder: "asc" } } }
   });
 
+  const taxRate = existing.taxRate;
   const totals = calculateEstimateTotals(
     existing.items.map((item) => ({
       label: item.label,
@@ -19,9 +20,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       qty: item.qty,
       unitPrice: item.unitPrice,
       sortOrder: item.sortOrder
-    }))
+    })),
+    taxRate
   );
-  const number = `Q-2026-${String((await prisma.estimate.count({ where: { companyId: existing.companyId } })) + 1).padStart(3, "0")}`;
+  const number = await nextEstimateNumber(existing.companyId);
 
   const item = await prisma.estimate.create({
     data: {
@@ -37,6 +39,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       notes: existing.notes,
       terms: existing.terms,
       validUntil: existing.validUntil,
+      taxRate,
       subtotal: totals.subtotal,
       tax: totals.tax,
       total: totals.total,
