@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   "/login",
   "/pricing",
   "/public",
+  "/sampietrino",
   "/api/public",
   "/api/auth",
   "/api/whatsapp/webhook",
