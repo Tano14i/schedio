@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sampietrino — Box premium di cucina romana. Ricette tradizionali, ingredienti d'eccellenza. Spedito in Europa." />
+  <title>Sampietrino — La cucina romana. A casa tua.</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ── Navigation ──────────────────────────────────────── -->
+  <header class="nav" role="banner">
+    <div class="container">
+      <nav class="nav__inner" aria-label="Navigation principale">
+        <a href="/" class="nav__logo" aria-label="Sampietrino — homepage">SAMPIETRINO</a>
+        <a href="#box" class="nav__link">Box N°01</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ── Hero ──────────────────────────────────────────── -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__inner">
+        <p class="hero__eyebrow label">Roma · Amsterdam · Europa</p>
+        <h1 class="hero__title" id="hero-title">
+          La cucina romana.<br /><em>A casa tua.</em>
+        </h1>
+        <div class="hero__rule" aria-hidden="true"></div>
+        <p class="hero__sub">
+          Food box premium. Ingredienti selezionati.<br />
+          Spedita in Europa ogni mese.
+        </p>
+        <a href="#box" class="btn">Scopri Box N°01 &rarr;</a>
+      </div>
+    </section>
+
+    <!-- ── Philosophy strip ───────────────────────────────── -->
+    <section class="philosophy section" aria-label="Filosofia">
+      <div class="container">
+        <blockquote>
+          <p class="philosophy__quote">
+            "Cinque ingredienti. Nessun compromesso.<br />La tradizione non si semplifica — si rispetta."
+          </p>
+          <footer class="philosophy__attr">— Sampietrino</footer>
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- ── Box N°01 ───────────────────────────────────────── -->
+    <section class="section section--ruled box-section" id="box" aria-labelledby="box-title">
+      <div class="container">
+
+        <div class="box-grid">
+
+          <!-- Left: info -->
+          <div class="box-info">
+            <p class="box-info__number">Box N°01</p>
+            <h2 class="box-info__title" id="box-title">La Gricia</h2>
+            <p class="box-info__price">&euro;45</p>
+            <p class="box-info__desc">
+              Tutto il necessario per la pasta più antica di Roma.
+              La gricia è la madre della carbonara, dell'amatriciana.
+              Prima che arrivassero le uova e i pomodori, c'era solo questo.
+            </p>
+            <div class="box-info__cta">
+              <a href="mailto:hello@sampietrino.nl?subject=Ordine%20Box%20N%C2%B001" class="btn">Ordina ora &rarr;</a>
+              <p class="box-info__note">Spedizione inclusa &middot; Tutta Europa</p>
+            </div>
+          </div>
+
+          <!-- Right: ingredients -->
+          <div class="ingredients" role="region" aria-label="Contenuto della box">
+            <p class="ingredients__heading">Nella box</p>
+            <ul class="ingredients__list">
+              <li class="ingredients__item">
+                <span class="ingredients__item-name">Guanciale stagionato</span>
+                <span class="ingredients__item-detail">Amatrice, 250 g</span>
+              </li>
+              <li class="ingredients__item">
+                <span class="ingredients__item-name">Pecorino Romano DOP</span>
+                <span class="ingredients__item-detail">Lazio, 200 g</span>
+              </li>
+              <li class="ingredients__item">
+                <span class="ingredients__item-name">Rigatoni Roscioli</span>
+                <span class="ingredients__item-detail">Trafilati al bronzo, 500 g</span>
+              </li>
+              <li class="ingredients__item">
+                <span class="ingredients__item-name">Pepe nero di Sarawak</span>
+                <span class="ingredients__item-detail">Macinato al momento, 30 g</span>
+              </li>
+              <li class="ingredients__item ingredients__item--special">
+                <span class="ingredients__item-name">Recipe card</span>
+                <span class="ingredients__item-detail">Carta cotone, scritta a mano</span>
+              </li>
+              <li class="ingredients__item ingredients__item--special">
+                <span class="ingredients__item-name">QR code &rarr; Chef Remo AI</span>
+                <span class="ingredients__item-detail">Accesso diretto incluso</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Chef Remo teaser ───────────────────────────────── -->
+    <section class="section chef-teaser" id="chef" aria-labelledby="chef-title">
+      <div class="container">
+        <div class="chef-teaser-grid">
+
+          <div class="chef-teaser__content">
+            <p class="label">Incluso in ogni box</p>
+            <h2 class="section__title" id="chef-title">Chef Remo,<br />il tuo cuoco romano.</h2>
+            <div class="chef-teaser__body">
+              <p>
+                Ogni box include l'accesso a Chef Remo, il nostro chef AI
+                cresciuto a Trastevere. Tecniche, sostituti, storia.
+                Chiedilo tutto.
+              </p>
+              <p>
+                Scansiona il QR nella recipe card o apri la chat qui sotto.
+                Chef Remo risponde in italiano e in inglese, come vuoi tu.
+              </p>
+            </div>
+            <a href="ai-chef.html" class="btn btn--ghost">Parla con Chef Remo &rarr;</a>
+          </div>
+
+          <div class="chef-teaser__visual" aria-hidden="true">
+            <div class="chef-avatar">
+              <span class="chef-avatar__initial">R</span>
+              <span class="chef-avatar__label">Chef Remo</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Footer ────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer__inner">
+        <span class="footer__logo">Sampietrino</span>
+        <ul class="footer__links">
+          <li><a href="https://instagram.com/sampietrino" rel="noopener noreferrer">Instagram</a></li>
+          <li><a href="mailto:hello@sampietrino.nl">Contatto</a></li>
+          <li><a href="/spedizioni">Spedizioni</a></li>
+        </ul>
+        <p class="footer__copy">&copy; 2025 Sampietrino &mdash; sampietrino.nl</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js" defer></script>
+</body>
+</html>
