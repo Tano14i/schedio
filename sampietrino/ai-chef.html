@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it" class="chef-page-html">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Chef Remo — Il tuo cuoco romano personale. Chiedi tutto sulla cucina romana." />
+  <title>Chef Remo — Sampietrino</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="chef-page">
+
+  <!-- ── Top bar ───────────────────────────────────────── -->
+  <header class="chef-topbar" role="banner">
+    <a href="index.html" class="chef-topbar__back" aria-label="Torna a Sampietrino">
+      &larr; <span>Sampietrino</span>
+    </a>
+    <span class="chef-topbar__title" aria-hidden="true">Chef Remo</span>
+    <div class="chef-topbar__status" role="status" aria-live="polite" id="chef-status">
+      <span class="chef-topbar__dot" aria-hidden="true"></span>
+      <span>Online</span>
+    </div>
+  </header>
+
+  <!-- ── Chat layout ───────────────────────────────────── -->
+  <div class="chef-layout">
+
+    <!-- Messages area -->
+    <main class="chat-area" id="chat-area" role="log" aria-label="Conversazione con Chef Remo" aria-live="polite">
+      <div class="chat-messages" id="chat-messages">
+
+        <!-- Initial message from Chef Remo -->
+        <div class="message message--chef" role="article" aria-label="Messaggio di Chef Remo">
+          <span class="message__sender">Chef Remo</span>
+          <div class="message__bubble">
+            Benvenuto. Sono Chef Remo, il tuo cuoco romano personale. Chiedimi qualsiasi cosa sulla cucina romana — tecniche, ingredienti, storia. Come posso aiutarti?
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Input area -->
+    <div class="chat-input-area">
+      <form class="chat-form" id="chat-form" autocomplete="off">
+        <label for="chat-input" class="sr-only">Scrivi un messaggio a Chef Remo</label>
+        <textarea
+          id="chat-input"
+          class="chat-input"
+          name="message"
+          placeholder="Chiedi a Chef Remo…"
+          rows="1"
+          aria-label="Messaggio"
+          maxlength="2000"
+        ></textarea>
+        <button type="submit" class="chat-send" id="chat-send" aria-label="Invia messaggio">
+          Invia
+        </button>
+      </form>
+      <p class="chat-disclaimer">
+        Chef Remo è un'AI. Usa sempre ingredienti di qualità e il tuo buon senso in cucina.
+      </p>
+    </div>
+
+  </div>
+
+  <script src="js/chef.js" defer></script>
+</body>
+</html>

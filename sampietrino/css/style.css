@@ -84,7 +84,6 @@ h1, h2, h3 {
   z-index: 100;
   padding: var(--space-sm) 0;
   background-color: transparent;
-  mix-blend-mode: normal;
 }
 
 .nav__inner {
@@ -486,7 +485,7 @@ h1, h2, h3 {
 }
 
 /* =========================================================
-   AI CHEF PAGE (chef page body overrides)
+   AI CHEF PAGE — body/html overrides applied via class
    ========================================================= */
 
 body.chef-page {
@@ -501,6 +500,7 @@ html.chef-page-html {
   overflow: hidden;
 }
 
+/* Top bar */
 .chef-topbar {
   position: fixed;
   top: 0;
@@ -595,6 +595,7 @@ html.chef-page-html {
   max-width: 720px;
   margin-inline: auto;
   width: 100%;
+  padding-bottom: var(--space-sm);
 }
 
 /* Message bubbles */
@@ -679,6 +680,7 @@ html.chef-page-html {
   border-top: 1px solid rgba(245, 240, 232, 0.08);
   background-color: var(--color-charcoal);
   padding: var(--space-sm) var(--space-md);
+  flex-shrink: 0;
 }
 
 .chat-form {
