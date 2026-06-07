@@ -163,6 +163,45 @@ h1, h2, h3 {
   margin: var(--space-md) auto;
 }
 
+/* ── Ticker (static typographic texture, no animation) ─── */
+.ticker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-2xl);
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-charcoal);
+  opacity: 0.4;
+}
+
+.ticker__rule {
+  display: none;
+  width: 48px;
+  height: 1px;
+  background-color: currentColor;
+}
+
+.ticker__text {
+  white-space: normal;
+  text-align: center;
+}
+
+@media (min-width: 600px) {
+  .ticker__rule {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .ticker__text {
+    white-space: nowrap;
+  }
+}
+
 /* ── Buttons ──────────────────────────────────────────── */
 .btn {
   display: inline-block;
@@ -225,6 +264,68 @@ h1, h2, h3 {
   margin-top: var(--space-xs);
 }
 
+/* ── Origini (provenance storytelling) ────────────────── */
+.origins__header {
+  max-width: 60ch;
+}
+
+.origins__intro {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--color-muted);
+  margin-top: var(--space-sm);
+}
+
+.origin-list {
+  list-style: none;
+}
+
+.origin-entry {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+  padding-block: var(--space-lg);
+  border-top: 1px solid var(--color-light-line);
+}
+
+.origin-entry:last-child {
+  border-bottom: 1px solid var(--color-light-line);
+}
+
+.origin-entry__number {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  line-height: 1;
+  color: var(--color-gold);
+  opacity: 0.55;
+}
+
+.origin-entry__name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-terracotta);
+  margin-bottom: var(--space-xs);
+}
+
+.origin-entry__text {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--color-muted);
+  max-width: 60ch;
+}
+
+@media (min-width: 768px) {
+  .origin-entry {
+    grid-template-columns: 120px 1fr;
+    gap: var(--space-lg);
+    align-items: start;
+  }
+}
+
 /* ── Box Section ──────────────────────────────────────── */
 .box-section {
   background-color: var(--color-cream);
@@ -244,6 +345,14 @@ h1, h2, h3 {
   }
 }
 
+.box-info__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
 .box-info__number {
   font-size: 0.68rem;
   font-weight: 600;
@@ -251,6 +360,41 @@ h1, h2, h3 {
   text-transform: uppercase;
   color: var(--color-gold);
   margin-bottom: var(--space-sm);
+}
+
+/* ── Edition seal (pure-CSS hallmark / wax-seal badge) ─── */
+.edition-seal {
+  flex-shrink: 0;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 1px solid var(--color-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.3rem;
+  text-align: center;
+}
+
+.edition-seal__line {
+  font-family: var(--font-serif);
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: var(--color-gold);
+}
+
+.edition-seal__line--main {
+  font-size: 0.85rem;
+}
+
+.edition-seal__line--sub {
+  font-family: var(--font-sans);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
 }
 
 .box-info__title {
@@ -284,6 +428,68 @@ h1, h2, h3 {
   font-size: 0.78rem;
   color: var(--color-muted);
   letter-spacing: 0.04em;
+}
+
+/* ── Tasting notes (wine-style label/value pairs) ─────── */
+.tasting-notes {
+  border-top: 1px solid var(--color-light-line);
+  border-bottom: 1px solid var(--color-light-line);
+  padding-block: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.tasting-notes__heading {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.tasting-notes__row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--color-light-line);
+}
+
+.tasting-notes__row:first-of-type {
+  border-top: none;
+}
+
+.tasting-notes__row dt {
+  font-family: var(--font-sans);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.tasting-notes__row dd {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-charcoal);
+  line-height: 1.6;
+}
+
+@media (min-width: 600px) {
+  .tasting-notes__row {
+    flex-direction: row;
+    align-items: baseline;
+    gap: var(--space-md);
+  }
+
+  .tasting-notes__row dt {
+    flex: 0 0 9rem;
+  }
+
+  .tasting-notes__row dd {
+    flex: 1;
+  }
 }
 
 /* Ingredients list */
@@ -329,6 +535,138 @@ h1, h2, h3 {
 .ingredients__item--special .ingredients__item-name {
   font-style: italic;
   color: var(--color-terracotta);
+}
+
+/* ── Details / Allergeni (elegant native disclosure) ──── */
+.details {
+  border-top: 1px solid var(--color-light-line);
+  margin-top: var(--space-sm);
+}
+
+.details__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-md) 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.details__summary::-webkit-details-marker {
+  display: none;
+}
+
+.details__summary::marker {
+  content: '';
+}
+
+.details__icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.details__icon::before,
+.details__icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background-color: var(--color-charcoal);
+  transition: transform var(--transition);
+}
+
+.details__icon::before {
+  width: 100%;
+  height: 1px;
+  transform: translate(-50%, -50%);
+}
+
+.details__icon::after {
+  width: 1px;
+  height: 100%;
+  transform: translate(-50%, -50%);
+}
+
+.details[open] .details__icon::before,
+.details[open] .details__icon::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.details[open] .details__icon::after {
+  opacity: 0;
+}
+
+.details[open] .details__icon::before {
+  transform: translate(-50%, -50%) rotate(135deg);
+}
+
+.details__content {
+  padding-bottom: var(--space-md);
+}
+
+.details__content p {
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: var(--color-muted);
+  max-width: 56ch;
+}
+
+/* ── Il Rito dell'Apertura (unboxing storytelling) ────── */
+.ritual {
+  background-color: var(--color-cream);
+}
+
+.ritual-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+@media (min-width: 768px) {
+  .ritual-grid {
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--space-xl);
+  }
+}
+
+.ritual__body {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--color-muted);
+  max-width: 50ch;
+}
+
+.ritual__body p + p {
+  margin-top: var(--space-sm);
+}
+
+.ritual-list {
+  list-style: none;
+  border-top: 1px solid var(--color-light-line);
+}
+
+.ritual-list li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-light-line);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--color-charcoal);
+}
+
+.ritual-list__num {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--color-terracotta);
+  flex-shrink: 0;
 }
 
 /* ── Chef Remo teaser ─────────────────────────────────── */
@@ -406,28 +744,50 @@ h1, h2, h3 {
   opacity: 0.7;
 }
 
-/* ── Philosophy strip ─────────────────────────────────── */
+/* ── Manifesto / editorial column ─────────────────────── */
 .philosophy {
   padding-block: var(--space-xl);
   border-top: 1px solid var(--color-light-line);
   border-bottom: 1px solid var(--color-light-line);
 }
 
-.philosophy__quote {
-  font-family: var(--font-serif);
-  font-size: clamp(1.5rem, 3vw, 2.4rem);
-  font-weight: 400;
-  font-style: italic;
-  color: var(--color-charcoal);
-  max-width: 700px;
+.editorial {
+  max-width: 65ch;
   margin-inline: auto;
-  text-align: center;
-  line-height: 1.4;
+  text-align: left;
 }
 
-.philosophy__attr {
-  text-align: center;
-  margin-top: var(--space-sm);
+.editorial__title {
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  margin-top: var(--space-xs);
+  margin-bottom: var(--space-lg);
+}
+
+.editorial p {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--color-charcoal);
+  max-width: 65ch;
+}
+
+.editorial p + p {
+  margin-top: var(--space-md);
+}
+
+/* Large decorative drop-cap on the opening paragraph */
+.editorial p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--font-serif);
+  font-size: 4.2em;
+  line-height: 0.85;
+  font-weight: 400;
+  color: var(--color-terracotta);
+  padding-right: 0.12em;
+  margin-top: 0.05em;
+}
+
+.editorial__attr {
+  margin-top: var(--space-lg);
   font-size: 0.78rem;
   color: var(--color-muted);
   letter-spacing: 0.1em;

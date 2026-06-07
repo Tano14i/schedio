@@ -20,7 +20,7 @@
     <div class="container">
       <nav class="nav__inner" aria-label="Navigation principale">
         <a href="/" class="nav__logo" aria-label="Sampietrino — homepage">SAMPIETRINO</a>
-        <a href="#box" class="nav__link">Box N°01</a>
+        <a href="#box" class="nav__link">Lotto N. 001</a>
       </nav>
     </div>
   </header>
@@ -30,32 +30,88 @@
     <!-- ── Hero ──────────────────────────────────────────── -->
     <section class="hero" aria-labelledby="hero-title">
       <div class="hero__inner">
-        <p class="hero__eyebrow label">Roma · Amsterdam · Europa</p>
+        <p class="hero__eyebrow label">Sampietrino — Lotto N. 001 — Edizione Inverno 2026</p>
         <h1 class="hero__title" id="hero-title">
-          La cucina romana.<br /><em>A casa tua.</em>
+          La gricia non si reinventa.<br /><em>Si rispetta.</em>
         </h1>
         <div class="hero__rule" aria-hidden="true"></div>
         <p class="hero__sub">
-          Food box premium. Ingredienti selezionati.<br />
-          Spedita in Europa ogni mese.
+          Quattro ingredienti. Una tecnica di settant'anni.<br />
+          Cinquecento esemplari, numerati a mano, spediti in tutta Europa.
         </p>
-        <a href="#box" class="btn">Scopri Box N°01 &rarr;</a>
+        <a href="#box" class="btn">Scopri il Lotto N. 001 &rarr;</a>
+
+        <p class="ticker" aria-hidden="true">
+          <span class="ticker__rule"></span>
+          <span class="ticker__text">Roma — Amsterdam — Parigi — Vienna — Berlino — Copenaghen</span>
+          <span class="ticker__rule"></span>
+        </p>
       </div>
     </section>
 
-    <!-- ── Philosophy strip ───────────────────────────────── -->
-    <section class="philosophy section" aria-label="Filosofia">
+    <!-- ── Manifesto ──────────────────────────────────────── -->
+    <section class="philosophy section" aria-labelledby="manifesto-title">
       <div class="container">
-        <blockquote>
-          <p class="philosophy__quote">
-            "Cinque ingredienti. Nessun compromesso.<br />La tradizione non si semplifica — si rispetta."
+        <article class="editorial">
+          <p class="label">Il Manifesto</p>
+          <h2 class="editorial__title" id="manifesto-title">Una pietra, non un piatto.</h2>
+          <p>
+            C'è una pietra, a Roma, che si chiama sampietrino. Pavimenta le strade del centro storico — irregolare, scura, levigata da secoli di passi. Non è elegante. È vera.
           </p>
-          <footer class="philosophy__attr">— Sampietrino</footer>
-        </blockquote>
+          <p>
+            Abbiamo scelto questo nome perché la cucina romana è fatta della stessa materia: ingredienti poveri, gesti rigorosi, nessun fronzolo. Il guanciale non si sostituisce. Il pecorino non si abbassa di qualità per risparmiare un euro. La pasta si trafila al bronzo, non si stampa in serie.
+          </p>
+          <p>
+            Non vendiamo cibo pronto. Vendiamo il tempo che serve per farlo bene — già misurato, già selezionato, già a casa tua.
+          </p>
+          <footer class="editorial__attr">— Il Manifesto Sampietrino</footer>
+        </article>
       </div>
     </section>
 
-    <!-- ── Box N°01 ───────────────────────────────────────── -->
+    <!-- ── Origini ────────────────────────────────────────── -->
+    <section class="section section--ruled origins" aria-labelledby="origins-title">
+      <div class="container">
+        <header class="section__header origins__header">
+          <p class="label">Tracciabilità</p>
+          <h2 class="section__title" id="origins-title">Quattro origini, una sola gricia.</h2>
+          <p class="origins__intro">Non certificati da leggere. Storie da conoscere.</p>
+        </header>
+
+        <ol class="origin-list">
+          <li class="origin-entry">
+            <span class="origin-entry__number" aria-hidden="true">01</span>
+            <div class="origin-entry__body">
+              <p class="origin-entry__name">Guanciale</p>
+              <p class="origin-entry__text">Amatrice, provincia di Rieti. Stagionato 90 giorni in cantine di tufo, dallo stesso produttore dal 2019. Una famiglia, non una filiera.</p>
+            </div>
+          </li>
+          <li class="origin-entry">
+            <span class="origin-entry__number" aria-hidden="true">02</span>
+            <div class="origin-entry__body">
+              <p class="origin-entry__name">Pecorino Romano DOP</p>
+              <p class="origin-entry__text">Lazio meridionale, latte di pecora intero, stagionatura minima otto mesi. Sapore deciso — mai aggressivo, mai industriale.</p>
+            </div>
+          </li>
+          <li class="origin-entry">
+            <span class="origin-entry__number" aria-hidden="true">03</span>
+            <div class="origin-entry__body">
+              <p class="origin-entry__name">Rigatoni Roscioli</p>
+              <p class="origin-entry__text">Pastificio storico, trafilatura al bronzo, essiccazione lenta fino a cinquanta ore. La superficie ruvida trattiene il condimento — non lo respinge.</p>
+            </div>
+          </li>
+          <li class="origin-entry">
+            <span class="origin-entry__number" aria-hidden="true">04</span>
+            <div class="origin-entry__body">
+              <p class="origin-entry__name">Pepe nero di Sarawak</p>
+              <p class="origin-entry__text">Borneo, Malesia. Raccolto a mano, essiccato al sole. Note resinose, quasi agrumate. Va macinato all'ultimo secondo, non prima.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ── Lotto N. 001 ───────────────────────────────────── -->
     <section class="section section--ruled box-section" id="box" aria-labelledby="box-title">
       <div class="container">
 
@@ -63,23 +119,54 @@
 
           <!-- Left: info -->
           <div class="box-info">
-            <p class="box-info__number">Box N°01</p>
-            <h2 class="box-info__title" id="box-title">La Gricia</h2>
-            <p class="box-info__price">&euro;45</p>
+            <div class="box-info__head">
+              <div>
+                <p class="box-info__number">Lotto N. 001</p>
+                <h2 class="box-info__title" id="box-title">La Gricia</h2>
+                <p class="box-info__price">&euro;45</p>
+              </div>
+              <div class="edition-seal" aria-hidden="true">
+                <span class="edition-seal__line edition-seal__line--main">N. 001</span>
+                <span class="edition-seal__line edition-seal__line--sub">500 esemplari</span>
+              </div>
+            </div>
+
             <p class="box-info__desc">
               Tutto il necessario per la pasta più antica di Roma.
               La gricia è la madre della carbonara, dell'amatriciana.
               Prima che arrivassero le uova e i pomodori, c'era solo questo.
             </p>
+
+            <!-- Tasting notes -->
+            <dl class="tasting-notes" aria-label="Note di degustazione">
+              <p class="tasting-notes__heading">Note di Degustazione</p>
+              <div class="tasting-notes__row">
+                <dt>Profilo</dt>
+                <dd>Cremoso, sapido, pepato — nessuna panna, nessuna scorciatoia.</dd>
+              </div>
+              <div class="tasting-notes__row">
+                <dt>Consistenza</dt>
+                <dd>Rigatoni al dente; la salsa si lega solo con amido e calore, mai con fiamma alta.</dd>
+              </div>
+              <div class="tasting-notes__row">
+                <dt>Abbinamento</dt>
+                <dd>Un Frascati Superiore, servito fresco ma non gelato.</dd>
+              </div>
+              <div class="tasting-notes__row">
+                <dt>Tempo</dt>
+                <dd>22 minuti, dal taglio del guanciale al piatto in tavola.</dd>
+              </div>
+            </dl>
+
             <div class="box-info__cta">
-              <a href="mailto:hello@sampietrino.nl?subject=Ordine%20Box%20N%C2%B001" class="btn">Ordina ora &rarr;</a>
-              <p class="box-info__note">Spedizione inclusa &middot; Tutta Europa</p>
+              <a href="mailto:hello@sampietrino.nl?subject=Richiesta%20accesso%20%E2%80%94%20Lotto%20N.%20001" class="btn">Richiedi l'accesso al Lotto N. 001 &rarr;</a>
+              <p class="box-info__note">Spedizione a partire da marzo 2026 &middot; Inclusa in tutta Europa</p>
             </div>
           </div>
 
           <!-- Right: ingredients -->
-          <div class="ingredients" role="region" aria-label="Contenuto della box">
-            <p class="ingredients__heading">Nella box</p>
+          <div class="ingredients" role="region" aria-label="Contenuto del lotto">
+            <p class="ingredients__heading">Cosa contiene</p>
             <ul class="ingredients__list">
               <li class="ingredients__item">
                 <span class="ingredients__item-name">Guanciale stagionato</span>
@@ -106,32 +193,70 @@
                 <span class="ingredients__item-detail">Accesso diretto incluso</span>
               </li>
             </ul>
+
+            <details class="details">
+              <summary class="details__summary">
+                <span class="label">Dettagli &amp; Allergeni</span>
+                <span class="details__icon" aria-hidden="true"></span>
+              </summary>
+              <div class="details__content">
+                <p>
+                  Allergeni: glutine (grano), lattosio (pecorino). Conservazione: frigorifero, max 5&nbsp;°C — consumare entro 10 giorni dall'arrivo. Origine: Lazio, Italia. Confezionato a mano a Roma.
+                </p>
+              </div>
+            </details>
           </div>
 
         </div>
       </div>
     </section>
 
-    <!-- ── Chef Remo teaser ───────────────────────────────── -->
+    <!-- ── Il Rito dell'Apertura ──────────────────────────── -->
+    <section class="section ritual" aria-labelledby="ritual-title">
+      <div class="container">
+        <div class="ritual-grid">
+
+          <div class="ritual__content">
+            <p class="label">L'Esperienza</p>
+            <h2 class="section__title" id="ritual-title">Una scatola, non un pacco.</h2>
+            <div class="ritual__body">
+              <p>
+                Arriva in una scatola di cartone color cemento, chiusa da un sigillo in ceralacca terracotta — lo stesso colore della pietra che le dà il nome.
+              </p>
+              <p>
+                Dentro, ogni elemento è avvolto singolarmente in carta velina écru. In cima, una recipe card scritta a mano: non stampata, non plastificata — con la grafia di chi l'ha confezionata quel giorno, in quell'ora. Si apre lentamente. È pensata così.
+              </p>
+            </div>
+          </div>
+
+          <ol class="ritual-list" aria-label="La sequenza dell'apertura">
+            <li><span class="ritual-list__num" aria-hidden="true">01</span> Il sigillo si rompe — non si srotola.</li>
+            <li><span class="ritual-list__num" aria-hidden="true">02</span> La velina si apre, uno strato alla volta.</li>
+            <li><span class="ritual-list__num" aria-hidden="true">03</span> La card si legge prima di cucinare.</li>
+            <li><span class="ritual-list__num" aria-hidden="true">04</span> Il QR si scansiona quando si è pronti a iniziare.</li>
+          </ol>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Il Concierge ───────────────────────────────────── -->
     <section class="section chef-teaser" id="chef" aria-labelledby="chef-title">
       <div class="container">
         <div class="chef-teaser-grid">
 
           <div class="chef-teaser__content">
-            <p class="label">Incluso in ogni box</p>
-            <h2 class="section__title" id="chef-title">Chef Remo,<br />il tuo cuoco romano.</h2>
+            <p class="label">Il Concierge</p>
+            <h2 class="section__title" id="chef-title">Non un assistente.<br />Un confidente di cucina.</h2>
             <div class="chef-teaser__body">
               <p>
-                Ogni box include l'accesso a Chef Remo, il nostro chef AI
-                cresciuto a Trastevere. Tecniche, sostituti, storia.
-                Chiedilo tutto.
+                Chef Remo conosce ogni box a memoria — cosa contiene, da dove viene, come si comporta in pentola. Non ti dà ricette generiche: ti guida nel gesto esatto, nel momento esatto.
               </p>
               <p>
-                Scansiona il QR nella recipe card o apri la chat qui sotto.
-                Chef Remo risponde in italiano e in inglese, come vuoi tu.
+                Chiedigli del punto di cottura del guanciale, di un vino per stasera, della differenza tra gricia e amatriciana. Risponde come un romano che la cucina la fa sul serio da una vita — non come un motore di ricerca.
               </p>
             </div>
-            <a href="ai-chef.html" class="btn btn--ghost">Parla con Chef Remo &rarr;</a>
+            <a href="ai-chef.html" class="btn btn--ghost">Parla con il Concierge &rarr;</a>
           </div>
 
           <div class="chef-teaser__visual" aria-hidden="true">
