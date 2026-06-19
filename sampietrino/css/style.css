@@ -1138,3 +1138,56 @@ html.chef-page-html {
 .text-muted   { color: var(--color-muted); }
 .mt-sm        { margin-top: var(--space-sm); }
 .mt-md        { margin-top: var(--space-md); }
+
+/* ── Club / Membership section ────────────────────────── */
+.club-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+}
+
+@media (min-width: 768px) {
+  .club-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xl);
+  }
+}
+
+@media (max-width: 767px) {
+  .club-option + .club-option {
+    border-top: 1px solid rgba(245, 240, 232, 0.08);
+    padding-top: var(--space-lg);
+  }
+}
+
+.club-option__heading {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  margin-bottom: var(--space-sm);
+}
+
+.club-option__body {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: rgba(245, 240, 232, 0.7);
+  max-width: 44ch;
+  margin-bottom: var(--space-sm);
+}
+
+.club-option__price {
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-md);
+}
+
+.club-coming-soon {
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  margin-top: var(--space-lg);
+}

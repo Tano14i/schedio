@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="it" class="chef-page-html">
+<html lang="en" class="chef-page-html">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Chef Remo — Il tuo cuoco romano personale. Chiedi tutto sulla cucina romana." />
-  <title>Chef Remo — Sampietrino</title>
+  <meta name="description" content="Remo, the Sampietrino Club Concierge. Your personal guide to Italian and Argentine food and wine." />
+  <title>The Concierge — Sampietrino</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,10 +17,10 @@
 
   <!-- ── Top bar ───────────────────────────────────────── -->
   <header class="chef-topbar" role="banner">
-    <a href="index.html" class="chef-topbar__back" aria-label="Torna a Sampietrino">
+    <a href="index.html" class="chef-topbar__back" aria-label="Back to Sampietrino">
       &larr; <span>Sampietrino</span>
     </a>
-    <span class="chef-topbar__title" aria-hidden="true">Chef Remo</span>
+    <span class="chef-topbar__title" aria-hidden="true">Remo</span>
     <div class="chef-topbar__status" role="status" aria-live="polite" id="chef-status">
       <span class="chef-topbar__dot" aria-hidden="true"></span>
       <span>Online</span>
@@ -31,14 +31,14 @@
   <div class="chef-layout">
 
     <!-- Messages area -->
-    <main class="chat-area" id="chat-area" role="log" aria-label="Conversazione con Chef Remo" aria-live="polite">
+    <main class="chat-area" id="chat-area" role="log" aria-label="Conversation with Remo" aria-live="polite">
       <div class="chat-messages" id="chat-messages">
 
-        <!-- Initial message from Chef Remo -->
-        <div class="message message--chef" role="article" aria-label="Messaggio di Chef Remo">
-          <span class="message__sender">Chef Remo</span>
+        <!-- Initial message from Remo -->
+        <div class="message message--chef" role="article" aria-label="Message from Remo">
+          <span class="message__sender">Remo</span>
           <div class="message__bubble">
-            Buonasera. Sono Remo — non un assistente, un cuoco. Conosco ogni box Sampietrino a memoria: cosa contiene, da dove viene, come trattarla. Dimmi cosa hai davanti, e troviamo insieme il modo giusto di cucinarlo.
+            Good evening. I'm Remo — not an assistant, a cook. I know every Sampietrino box by heart: what's in it, where it comes from, how to treat it. Tell me what you have in front of you, and we'll find the right way to cook it together.
           </div>
         </div>
 
@@ -48,22 +48,22 @@
     <!-- Input area -->
     <div class="chat-input-area">
       <form class="chat-form" id="chat-form" autocomplete="off">
-        <label for="chat-input" class="sr-only">Scrivi un messaggio a Chef Remo</label>
+        <label for="chat-input" class="sr-only">Write a message to Remo</label>
         <textarea
           id="chat-input"
           class="chat-input"
           name="message"
-          placeholder="Scrivi a Remo…"
+          placeholder="Write to Remo…"
           rows="1"
-          aria-label="Messaggio"
+          aria-label="Message"
           maxlength="2000"
         ></textarea>
-        <button type="submit" class="chat-send" id="chat-send" aria-label="Invia messaggio">
-          Invia
+        <button type="submit" class="chat-send" id="chat-send" aria-label="Send message">
+          Send
         </button>
       </form>
       <p class="chat-disclaimer">
-        Chef Remo è un'AI. Usa sempre ingredienti di qualità e il tuo buon senso in cucina.
+        Remo is an AI. Always use quality ingredients and your own judgement in the kitchen.
       </p>
     </div>
 
