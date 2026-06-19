@@ -1191,3 +1191,20 @@ html.chef-page-html {
   letter-spacing: 0.08em;
   margin-top: var(--space-lg);
 }
+
+/* ── About page ───────────────────────────────────────── */
+.about-editorial {
+  max-width: 720px;
+}
+
+.about-editorial .editorial {
+  margin-inline: 0;
+}
+
+.about-editorial .editorial p {
+  color: var(--color-charcoal);
+}
+
+.chef-teaser .about-editorial .editorial p {
+  color: rgba(245, 240, 232, 0.75);
+}
