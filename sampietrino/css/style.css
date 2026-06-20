@@ -1378,3 +1378,151 @@ body:has(button:hover) .cursor-ring {
 [data-reveal="delay-1"] { transition-delay: 0.1s; }
 [data-reveal="delay-2"] { transition-delay: 0.2s; }
 [data-reveal="delay-3"] { transition-delay: 0.3s; }
+
+/* ── Hero Remo teaser ─────────────────────────────────── */
+.hero-remo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: var(--space-lg);
+  padding: 1.1rem 1.4rem;
+  border: 1px solid rgba(219,169,69,0.2);
+  background-color: rgba(219,169,69,0.04);
+  max-width: 480px;
+  margin-inline: auto;
+  text-align: left;
+  transition: border-color var(--transition);
+}
+
+.hero-remo:hover {
+  border-color: rgba(219,169,69,0.45);
+}
+
+.hero-remo__avatar {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--color-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-gold);
+}
+
+.hero-remo__quote {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: rgba(237,232,223,0.65);
+  font-style: italic;
+  margin-bottom: 0.4rem;
+}
+
+.hero-remo__link {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: var(--color-gold);
+  transition: opacity var(--transition);
+}
+
+.hero-remo__link:hover {
+  opacity: 0.7;
+}
+
+/* ── Remo popup ───────────────────────────────────────── */
+.remo-popup {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 500;
+  background-color: #141310;
+  border: 1px solid rgba(219,169,69,0.25);
+  padding: 1.4rem 1.4rem 1.4rem 1.2rem;
+  max-width: 300px;
+  width: calc(100vw - 3rem);
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  pointer-events: none;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+}
+
+.remo-popup.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.remo-popup.is-gone {
+  display: none;
+}
+
+.remo-popup__close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  background: none;
+  border: none;
+  color: rgba(237,232,223,0.35);
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+  transition: color var(--transition);
+}
+
+.remo-popup__close:hover {
+  color: var(--color-cream);
+}
+
+.remo-popup__avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-gold);
+}
+
+.remo-popup__name {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  color: var(--color-gold);
+  margin-bottom: 0.35rem;
+}
+
+.remo-popup__message {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: rgba(237,232,223,0.75);
+  margin-bottom: 0.9rem;
+}
+
+.remo-popup__cta {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  color: var(--color-charcoal);
+  background-color: var(--color-gold);
+  padding: 0.5rem 1rem;
+  transition: opacity var(--transition);
+}
+
+.remo-popup__cta:hover {
+  opacity: 0.85;
+}

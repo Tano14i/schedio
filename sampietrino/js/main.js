@@ -83,7 +83,30 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
 document.querySelectorAll('.details').forEach(details => {
   const summary = details.querySelector('.details__summary');
   if (!summary) return;
-  summary.addEventListener('click', () => {
-    // browser handles open/close, we just ensure smooth
-  });
+  summary.addEventListener('click', () => {});
 });
+
+/* Remo popup */
+(function initRemoPopup() {
+  const popup = document.getElementById('remo-popup');
+  const closeBtn = document.getElementById('remo-popup-close');
+  if (!popup) return;
+
+  if (sessionStorage.getItem('remo-seen')) return;
+
+  setTimeout(() => {
+    popup.classList.add('is-visible');
+  }, 2800);
+
+  function dismiss() {
+    popup.classList.remove('is-visible');
+    setTimeout(() => popup.classList.add('is-gone'), 450);
+    sessionStorage.setItem('remo-seen', '1');
+  }
+
+  closeBtn.addEventListener('click', dismiss);
+
+  popup.querySelector('.remo-popup__cta')?.addEventListener('click', () => {
+    sessionStorage.setItem('remo-seen', '1');
+  });
+})();
