@@ -3,6 +3,9 @@
   publish = "sampietrino"
   functions = "sampietrino/netlify/functions"
 
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
