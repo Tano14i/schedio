@@ -4,12 +4,12 @@
    ========================================================= */
 
 :root {
-  --color-cream:      #EDE8DF;
-  --color-terracotta: #D94030;
-  --color-charcoal:   #0D0C0A;
-  --color-gold:       #DBA945;
-  --color-light-line: #D9D4CA;
-  --color-muted:      #7A7268;
+  --color-cream:      #F0E6D8;  /* travertino caldo */
+  --color-terracotta: #7A2F3A;  /* Malbec di Mendoza */
+  --color-charcoal:   #100C0E;  /* basalto romano */
+  --color-gold:       #C8922A;  /* ambra argentina */
+  --color-light-line: #D8CCBE;
+  --color-muted:      #7A6B62;
 
   --font-serif:   'Syne', system-ui, sans-serif;
   --font-sans:    'DM Sans', system-ui, sans-serif;
