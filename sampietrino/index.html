@@ -9,7 +9,7 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -44,11 +44,11 @@
         </p>
         <a href="#club" class="btn">Join the Club &rarr;</a>
 
-        <p class="ticker" aria-hidden="true">
-          <span class="ticker__rule"></span>
-          <span class="ticker__text">ROME — BUENOS AIRES — AMSTERDAM — PARIS — VIENNA — BERLIN — COPENHAGEN</span>
-          <span class="ticker__rule"></span>
-        </p>
+        <div class="ticker-marquee" aria-hidden="true">
+          <div class="ticker-marquee__track">
+            <span>ROME</span><span class="ticker-marquee__dot"> · </span><span>BUENOS AIRES</span><span class="ticker-marquee__dot"> · </span><span>AMSTERDAM</span><span class="ticker-marquee__dot"> · </span><span>PARIS</span><span class="ticker-marquee__dot"> · </span><span>VIENNA</span><span class="ticker-marquee__dot"> · </span><span>BERLIN</span><span class="ticker-marquee__dot"> · </span><span>COPENHAGEN</span><span class="ticker-marquee__dot"> · </span><span>ROME</span><span class="ticker-marquee__dot"> · </span><span>BUENOS AIRES</span><span class="ticker-marquee__dot"> · </span><span>AMSTERDAM</span><span class="ticker-marquee__dot"> · </span><span>PARIS</span><span class="ticker-marquee__dot"> · </span><span>VIENNA</span><span class="ticker-marquee__dot"> · </span><span>BERLIN</span><span class="ticker-marquee__dot"> · </span><span>COPENHAGEN</span><span class="ticker-marquee__dot"> · </span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -67,7 +67,7 @@
     <!-- ── Manifesto ──────────────────────────────────────── -->
     <section class="philosophy section" aria-labelledby="manifesto-title">
       <div class="container">
-        <article class="editorial">
+        <article class="editorial" data-reveal>
           <p class="label">The Manifesto</p>
           <h2 class="editorial__title" id="manifesto-title">A stone, a ship, a table.</h2>
           <p>
@@ -87,28 +87,28 @@
     <!-- ── The Crossing ─────────────────────────────────── -->
     <section class="section section--ruled origins" aria-labelledby="origins-title">
       <div class="container">
-        <header class="section__header origins__header">
+        <header class="section__header origins__header" data-reveal>
           <p class="label">History</p>
           <h2 class="section__title" id="origins-title">Three million Italians. One taste at a time.</h2>
           <p class="origins__intro">This is not a food company. This is the return trip.</p>
         </header>
 
         <ol class="origin-list">
-          <li class="origin-entry">
+          <li class="origin-entry" data-reveal>
             <span class="origin-entry__number" aria-hidden="true">01</span>
             <div class="origin-entry__body">
               <p class="origin-entry__name">1860–1950</p>
               <p class="origin-entry__text">Three million Italians emigrate to Argentina from Calabria, Veneto, Campania, and Lazio. They carry their food and their habits — and they stay.</p>
             </div>
           </li>
-          <li class="origin-entry">
+          <li class="origin-entry" data-reveal>
             <span class="origin-entry__number" aria-hidden="true">02</span>
             <div class="origin-entry__body">
               <p class="origin-entry__name">LA BOCA, BUENOS AIRES</p>
               <p class="origin-entry__text">Genoese workers build a neighbourhood and paint the houses with leftover boat paint. They argue about pasta. They never quite become Argentine.</p>
             </div>
           </li>
-          <li class="origin-entry">
+          <li class="origin-entry" data-reveal>
             <span class="origin-entry__number" aria-hidden="true">03</span>
             <div class="origin-entry__body">
               <p class="origin-entry__name">MENDOZA, 1900</p>
