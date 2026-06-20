@@ -1,10 +1,8 @@
 [build]
+  base = "sampietrino"
   command = ""
-  publish = "sampietrino"
-  functions = "sampietrino/netlify/functions"
-
-[build.environment]
-  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  publish = "."
+  functions = "netlify/functions"
 
 [[redirects]]
   from = "/api/*"
