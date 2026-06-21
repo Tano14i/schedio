@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Background: brand charcoal -->
+  <rect width="32" height="32" fill="#100C0E" rx="5"/>
+  <!-- Thin gold border -->
+  <rect x="1.5" y="1.5" width="29" height="29" fill="none" stroke="#C8922A" stroke-width="0.75" rx="4"/>
+  <!-- S lettermark in gold -->
+  <text
+    x="16" y="24"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="23"
+    font-weight="700"
+    fill="#C8922A"
+    text-anchor="middle"
+  >S</text>
+</svg>
