@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  /* ── State ────────────────────────────────────────────── */
+  var API_URL = 'https://sampietrino.netlify.app/api/chef';
   var messages = []; // conversation history sent to API
   var isLoading = false;
 
@@ -54,7 +54,7 @@
     input.disabled = loading;
     if (statusEl) {
       statusEl.innerHTML = loading
-        ? '<span class="chef-topbar__dot" aria-hidden="true" style="background:#C9A96E"></span><span>Scrive...</span>'
+        ? '<span class="chef-topbar__dot" aria-hidden="true" style="background:#C9A96E"></span><span>Writing...</span>'
         : '<span class="chef-topbar__dot" aria-hidden="true"></span><span>Online</span>';
     }
   }
@@ -67,11 +67,11 @@
     article.className = 'message message--' + (role === 'assistant' ? 'chef' : 'user');
     if (opts.error) article.classList.add('message--error');
     article.setAttribute('role', 'article');
-    article.setAttribute('aria-label', role === 'assistant' ? 'Messaggio di Chef Remo' : 'Il tuo messaggio');
+    article.setAttribute('aria-label', role === 'assistant' ? 'Message from Chef Remo' : 'Your message');
 
     var sender = document.createElement('span');
     sender.className = 'message__sender';
-    sender.textContent = role === 'assistant' ? 'Chef Remo' : 'Tu';
+    sender.textContent = role === 'assistant' ? 'Chef Remo' : 'You';
 
     var bubble = document.createElement('div');
     bubble.className = 'message__bubble';
@@ -90,7 +90,7 @@
     var article = document.createElement('article');
     article.className = 'message message--chef';
     article.id = 'loading-indicator';
-    article.setAttribute('aria-label', 'Chef Remo sta scrivendo');
+    article.setAttribute('aria-label', 'Chef Remo is writing');
     article.setAttribute('aria-live', 'polite');
 
     var sender = document.createElement('span');
@@ -161,7 +161,7 @@
     // Build payload — send full history for context
     var payload = JSON.stringify({ messages: messages });
 
-    fetch('/api/chef', {
+    fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -178,13 +178,13 @@
       })
       .then(function (data) {
         removeLoadingDots();
-        var reply = (data && data.reply) ? data.reply : 'Non ho capito. Puoi ripetere?';
+        var reply = (data && data.reply) ? data.reply : 'I didn\'t quite catch that. Could you rephrase?';
         appendMessage('assistant', reply);
         messages.push({ role: 'assistant', content: reply });
       })
       .catch(function (err) {
         removeLoadingDots();
-        var errMsg = 'Scusa, ho avuto un problema di connessione. Riprova tra un momento.';
+        var errMsg = 'Sorry, I had a connection issue. Please try again in a moment.';
         appendMessage('assistant', errMsg, { error: true });
         console.error('[Chef Remo]', err);
       })
