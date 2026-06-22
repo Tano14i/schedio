@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"
+     role="img" aria-label="Sampietrino — Roman &amp; Argentinian Fusion Cuisine">
+  <title>Sampietrino</title>
+  <defs>
+    <path id="s-top" d="M 24,100 A 76,76 0 0,1 176,100"/>
+    <path id="s-bot" d="M 38,100 A 62,62 0 0,0 162,100"/>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="100" cy="100" r="100" fill="#100C0E"/>
+
+  <!-- Outer gold ring -->
+  <circle cx="100" cy="100" r="97"  fill="none" stroke="#C8922A" stroke-width="1.5"/>
+
+  <!-- Inner decorative ring -->
+  <circle cx="100" cy="100" r="84"  fill="none" stroke="#C8922A" stroke-width="0.5" opacity="0.55"/>
+
+  <!-- ── SAMPIETRINO (top arc) ── -->
+  <text font-family="Georgia,'Times New Roman',serif" font-size="13"
+        font-weight="700" fill="#C8922A" letter-spacing="5">
+    <textPath href="#s-top" startOffset="50%" text-anchor="middle">SAMPIETRINO</textPath>
+  </text>
+
+  <!-- ── Tagline ── -->
+  <text x="100" y="57" text-anchor="middle"
+        font-family="Arial,Helvetica,sans-serif"
+        font-size="5.5" fill="#F0E6D8" letter-spacing="1.5">ROMAN &amp; ARGENTINIAN</text>
+  <text x="100" y="66" text-anchor="middle"
+        font-family="Arial,Helvetica,sans-serif"
+        font-size="5.5" fill="#F0E6D8" letter-spacing="1.5">FUSION CUISINE</text>
+
+  <!-- ── Upper separator ── -->
+  <line x1="50" y1="71" x2="150" y2="71" stroke="#C8922A" stroke-width="0.4" opacity="0.45"/>
+
+  <!-- ══ COLOSSEUM silhouette ══ -->
+  <!-- Main cream body -->
+  <rect x="59" y="79" width="46" height="47" fill="#F0E6D8"/>
+  <!-- Gold top accent -->
+  <rect x="59" y="79" width="46" height="1.5" fill="#C8922A" opacity="0.4"/>
+
+  <!-- Upper arched windows (3) -->
+  <rect x="62" y="85" width="11" height="10" fill="#100C0E"/>
+  <ellipse cx="67.5" cy="85" rx="5.5" ry="5" fill="#100C0E"/>
+  <rect x="76" y="85" width="11" height="10" fill="#100C0E"/>
+  <ellipse cx="81.5" cy="85" rx="5.5" ry="5" fill="#100C0E"/>
+  <rect x="90" y="85" width="11" height="10" fill="#100C0E"/>
+  <ellipse cx="95.5" cy="85" rx="5.5" ry="5" fill="#100C0E"/>
+
+  <!-- Mid cornice -->
+  <rect x="59" y="97" width="46" height="1.5" fill="#8A7A6A" opacity="0.45"/>
+
+  <!-- Lower arches (3) -->
+  <rect x="62" y="110" width="11" height="16" fill="#100C0E"/>
+  <ellipse cx="67.5" cy="110" rx="5.5" ry="5" fill="#100C0E"/>
+  <rect x="76" y="110" width="11" height="16" fill="#100C0E"/>
+  <ellipse cx="81.5" cy="110" rx="5.5" ry="5" fill="#100C0E"/>
+  <rect x="90" y="110" width="11" height="16" fill="#100C0E"/>
+  <ellipse cx="95.5" cy="110" rx="5.5" ry="5" fill="#100C0E"/>
+
+  <!-- ══ BUENOS AIRES OBELISK silhouette ══ -->
+  <!-- Pyramid top -->
+  <polygon points="125,76 135,76 130,68" fill="#F0E6D8"/>
+  <!-- Tapering shaft -->
+  <polygon points="123,122 137,122 135,76 125,76" fill="#F0E6D8"/>
+  <!-- Base plinth -->
+  <rect x="120" y="122" width="20" height="4" fill="#F0E6D8"/>
+
+  <!-- ── Centre divider dot ── -->
+  <circle cx="112" cy="100" r="2" fill="#C8922A" opacity="0.6"/>
+
+  <!-- ── Lower separator ── -->
+  <line x1="50" y1="128" x2="150" y2="128" stroke="#C8922A" stroke-width="0.4" opacity="0.45"/>
+
+  <!-- ── ROMA • BUENOS AIRES (bottom arc) ── -->
+  <text font-family="Georgia,'Times New Roman',serif" font-size="7.5"
+        fill="#C8922A" letter-spacing="2">
+    <textPath href="#s-bot" startOffset="50%" text-anchor="middle">ROMA  •  BUENOS AIRES</textPath>
+  </text>
+</svg>

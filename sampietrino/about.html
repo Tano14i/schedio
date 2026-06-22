@@ -22,7 +22,9 @@
   <header class="nav" role="banner">
     <div class="container">
       <nav class="nav__inner" aria-label="Main navigation">
-        <a href="index.html" class="nav__logo" aria-label="Sampietrino — homepage">SAMPIETRINO</a>
+        <a href="index.html" class="nav__logo" aria-label="Sampietrino — homepage">
+          <img src="images/logo.svg" alt="" class="nav__logo-img" />
+        </a>
         <div class="nav__links">
           <a href="about.html" class="nav__link" aria-current="page">About</a>
           <a href="index.html#club" class="nav__link">The Club</a>
@@ -37,6 +39,9 @@
     <!-- ── Page header ───────────────────────────────────── -->
     <section class="hero" aria-labelledby="about-title" style="min-height:60svh;">
       <div class="hero__inner">
+        <div class="hero-badge" aria-hidden="true">
+          <img src="images/logo.svg" alt="" class="hero-badge__img" loading="lazy" />
+        </div>
         <p class="hero__eyebrow label">About Sampietrino</p>
         <h1 class="hero__title" id="about-title">
           Born in Rome.<br /><em>Raised in Buenos Aires.</em>
@@ -157,8 +162,7 @@
     <div class="container">
       <div class="footer__inner">
         <div>
-          <span class="footer__logo">SAMPIETRINO</span>
-          <p class="footer__copy" style="margin-top:0.3rem;letter-spacing:0.06em;">The Italo-Argentine Wine &amp; Food Club</p>
+          <img src="images/logo.svg" alt="Sampietrino — The Italo-Argentine Wine &amp; Food Club" class="footer__logo-img" loading="lazy" />
         </div>
         <ul class="footer__links">
           <li><a href="https://instagram.com/sampietrino" rel="noopener noreferrer">Instagram</a></li>
