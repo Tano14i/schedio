@@ -1883,10 +1883,72 @@ body:has(button:hover) .cursor-ring {
   }
 }
 
+/* ── Shop grid ────────────────────────────────────────── */
+.shop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-top: 1px solid var(--color-light-line);
+  border-left: 1px solid var(--color-light-line);
+}
+
+@media (min-width: 768px) {
+  .shop-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.shop-product {
+  padding: var(--space-md);
+  border-right: 1px solid var(--color-light-line);
+  border-bottom: 1px solid var(--color-light-line);
+  display: flex;
+  flex-direction: column;
+}
+
+.shop-product__origin {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: var(--space-xs);
+}
+
+.shop-product__name {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-charcoal);
+  margin-bottom: var(--space-xs);
+  line-height: 1.2;
+}
+
+.shop-product__desc {
+  font-size: 0.88rem;
+  color: var(--color-muted);
+  line-height: 1.65;
+  margin-bottom: auto;
+  padding-bottom: var(--space-sm);
+}
+
+.shop-product__price {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-gold);
+  margin-top: var(--space-sm);
+}
+
+.shop-product--highlight .shop-product__name {
+  color: var(--color-blue);
+}
+
 /* ── Very small screens (< 400px) ── */
 @media (max-width: 399px) {
-  .nav__link:nth-child(3) {
-    display: none; /* hide "Box N°01" on tiny screens, keep About + The Club */
+  .nav__link:nth-child(3),
+  .nav__link:nth-child(4) {
+    display: none;
   }
 
   .hero__title {
