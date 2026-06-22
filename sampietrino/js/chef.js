@@ -6,7 +6,7 @@
 (function () {
   'use strict';
 
-  var API_URL = 'https://sampietrino.netlify.app/api/chef';
+  var API_URL = 'https://sampietrinonl.netlify.app/api/chef';
   var messages = []; // conversation history sent to API
   var isLoading = false;
 
