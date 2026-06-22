@@ -5,7 +5,8 @@
 
 :root {
   --color-cream:      #F0E6D8;  /* travertino caldo */
-  --color-terracotta: #7A2F3A;  /* Malbec di Mendoza */
+  --color-terracotta: #B85C38;  /* terracotta romana */
+  --color-blue:       #1F5F9E;  /* blu Buenos Aires */
   --color-charcoal:   #100C0E;  /* basalto romano */
   --color-gold:       #C8922A;  /* ambra argentina */
   --color-light-line: #D8CCBE;
@@ -105,6 +106,8 @@ h1, h2, h3 {
   height: 40px;
   border-radius: 50%;
   display: block;
+  object-fit: cover;
+  object-position: center;
   transition: transform 0.5s ease, opacity 0.3s ease;
 }
 
@@ -156,11 +159,14 @@ h1, h2, h3 {
 }
 
 .hero-badge__img {
-  width: 128px;
-  height: 128px;
+  width: 148px;
+  height: 148px;
   border-radius: 50%;
   display: block;
-  filter: drop-shadow(0 0 28px rgba(200, 146, 42, 0.22));
+  object-fit: cover;
+  object-position: center;
+  filter: drop-shadow(0 4px 32px rgba(31, 95, 158, 0.18))
+          drop-shadow(0 0 48px rgba(200, 146, 42, 0.18));
 }
 
 /* ── Hero ─────────────────────────────────────────────── */
@@ -426,7 +432,8 @@ h1, h2, h3 {
   width: 90px;
   height: 90px;
   border-radius: 50%;
-  border: 1px solid var(--color-gold);
+  border: 1px solid var(--color-blue);
+  box-shadow: inset 0 0 0 3px rgba(31,95,158,0.12), 0 0 0 1px var(--color-gold);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -890,13 +897,15 @@ h1, h2, h3 {
   height: 72px;
   border-radius: 50%;
   display: block;
-  opacity: 0.85;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.88;
   transition: opacity var(--transition), transform 0.5s ease;
 }
 
 .footer__logo-img:hover {
   opacity: 1;
-  transform: scale(1.05);
+  transform: scale(1.06);
 }
 
 .footer__links {
@@ -1383,7 +1392,7 @@ html.chef-page-html {
 .cursor-ring {
   width: 38px;
   height: 38px;
-  border: 1px solid rgba(217,64,48,0.5);
+  border: 1px solid rgba(31,95,158,0.35);
   transition: width 0.35s ease, height 0.35s ease, opacity 0.35s ease, border-color 0.35s ease;
 }
 
@@ -1613,8 +1622,8 @@ body:has(button:hover) .cursor-ring {
 
   /* ── Hero badge ── */
   .hero-badge__img {
-    width: 90px;
-    height: 90px;
+    width: 100px;
+    height: 100px;
   }
 
   .nav__links {
