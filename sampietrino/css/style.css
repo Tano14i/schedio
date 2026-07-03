@@ -1355,6 +1355,54 @@ html.chef-page-html {
   margin-top: var(--space-lg);
 }
 
+/* ── MailerLite waitlist embed — coherent with dark club section ── */
+.ml-embed {
+  max-width: 420px;
+}
+
+/* Coax the pasted MailerLite form toward the site's look */
+.ml-embed input[type="email"],
+.ml-embed input[type="text"] {
+  width: 100%;
+  background-color: rgba(245, 240, 232, 0.06);
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0;
+  margin-bottom: 0.6rem;
+}
+
+.ml-embed input::placeholder {
+  color: rgba(245, 240, 232, 0.4);
+}
+
+.ml-embed input:focus-visible {
+  outline: none;
+  border-color: var(--color-gold);
+}
+
+.ml-embed button,
+.ml-embed input[type="submit"] {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-charcoal);
+  background-color: var(--color-gold);
+  border: none;
+  border-radius: 0;
+  padding: 0.75rem 1.4rem;
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.ml-embed button:hover,
+.ml-embed input[type="submit"]:hover {
+  opacity: 0.85;
+}
+
 /* ── Editorial image strip ───────────────────────────── */
 .editorial-image {
   overflow: hidden;
