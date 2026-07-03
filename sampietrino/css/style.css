@@ -499,6 +499,26 @@ h1, h2, h3 {
   letter-spacing: 0.04em;
 }
 
+/* Secondary channel (WhatsApp) — quieter than the primary CTA */
+.box-info__secondary {
+  margin-top: var(--space-sm);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  letter-spacing: 0.03em;
+}
+
+.box-info__secondary a {
+  color: var(--color-muted);
+  border-bottom: 1px solid var(--color-light-line);
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.box-info__secondary a:hover,
+.box-info__secondary a:focus-visible {
+  color: var(--color-charcoal);
+  border-bottom-color: var(--color-charcoal);
+}
+
 /* ── Tasting notes (wine-style label/value pairs) ─────── */
 .tasting-notes {
   border-top: 1px solid var(--color-light-line);
