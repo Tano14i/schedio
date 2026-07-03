@@ -2035,10 +2035,104 @@ body:has(button:hover) .cursor-ring {
   color: var(--color-blue);
 }
 
+/* ── Zakelijk (B2B, NL) ─────────────────────────────── */
+.zakelijk__pitch {
+  color: var(--color-muted);
+  max-width: 60ch;
+  margin-bottom: var(--space-lg);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.zakelijk-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+@media (min-width: 768px) {
+  .zakelijk-grid {
+    grid-template-columns: 1.3fr 1fr;
+    gap: var(--space-xl);
+    align-items: start;
+  }
+}
+
+.zakelijk-services {
+  list-style: none;
+  border-top: 1px solid var(--color-light-line);
+}
+
+.zakelijk-services li {
+  position: relative;
+  padding: var(--space-sm) 0 var(--space-sm) 1.8rem;
+  border-bottom: 1px solid var(--color-light-line);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-charcoal);
+}
+
+.zakelijk-services li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  top: var(--space-sm);
+  color: var(--color-gold);
+  font-size: 0.8rem;
+}
+
+.zakelijk-tiers {
+  border: 1px solid var(--color-light-line);
+  padding: var(--space-md);
+  background-color: rgba(200, 146, 42, 0.04);
+}
+
+.zakelijk-tiers__heading {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.zakelijk-tier {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--color-light-line);
+}
+
+.zakelijk-tier:first-of-type {
+  border-top: none;
+}
+
+.zakelijk-tier span:first-child {
+  font-weight: 600;
+  color: var(--color-charcoal);
+}
+
+.zakelijk-tier span:last-child {
+  color: var(--color-blue);
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+.zakelijk-tiers__note {
+  margin-top: var(--space-sm);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+
 /* ── Very small screens (< 400px) ── */
 @media (max-width: 399px) {
   .nav__link:nth-child(3),
-  .nav__link:nth-child(4) {
+  .nav__link:nth-child(4),
+  .nav__link:nth-child(5) {
     display: none;
   }
 
