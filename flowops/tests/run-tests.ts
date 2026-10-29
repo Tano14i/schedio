@@ -11,3 +11,4 @@ import "./job-financials.test";
 import "./estimate-lifecycle.test";
 import "./estimate-followup-p3.test";
 import "./invoice-lifecycle-p4.test";
+import "./demo-login.test";

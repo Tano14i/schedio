@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { DEMO_PASSWORD, setSessionCookie } from "@/lib/auth";
+import { canUseDemoLogin } from "@/lib/auth-cookie";
 import { getPostLoginPath } from "@/lib/authz";
 
 export async function POST(request: Request) {
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
     }
   });
 
-  if (!user || password !== DEMO_PASSWORD) {
+  if (!user || !canUseDemoLogin(user) || password !== DEMO_PASSWORD) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("error", "invalid_credentials");
     if (next) {

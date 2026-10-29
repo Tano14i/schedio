@@ -1,5 +1,7 @@
 export const SESSION_COOKIE_NAME = "schedio_session";
 export const DEMO_PASSWORD = "demo1234";
+export const DEMO_PASSWORD_HASH_MARKER = "demo_hash";
+export const DEMO_ACCOUNT_EMAILS = ["luca@schedio.it", "sara@schedio.it", "matteo@schedio.it"];
 export type SessionRole = "OWNER" | "WORKER";
 
 export type SessionPayload = {
@@ -78,6 +80,16 @@ export async function decodeSessionCookie(value?: string | null): Promise<Sessio
   } catch {
     return null;
   }
+}
+
+// La password demo vale solo per gli account del seed: mai per utenti reali,
+// che hanno un hash bcrypt o accedono con Google.
+export function canUseDemoLogin(user: { email: string; passwordHash: string | null }) {
+  return (
+    process.env.DISABLE_DEMO_LOGIN !== "true" &&
+    user.passwordHash === DEMO_PASSWORD_HASH_MARKER &&
+    DEMO_ACCOUNT_EMAILS.includes(user.email.trim().toLowerCase())
+  );
 }
 
 export function isWorker(role: SessionRole | string) {

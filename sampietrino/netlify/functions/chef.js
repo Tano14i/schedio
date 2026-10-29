@@ -7,6 +7,39 @@ const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 const MODEL = 'claude-sonnet-4-6';
 const MAX_TOKENS = 1024;
 
+/* ── Abuse limits ──────────────────────────────────────── */
+// Siti autorizzati a chiamare la function. Aggiungere il dominio
+// definitivo (es. Hostinger) in ALLOWED_ORIGINS, separato da virgole.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'https://sampietrinonl.netlify.app')
+  .split(',')
+  .map(function (o) { return o.trim().replace(/\/$/, ''); })
+  .filter(Boolean);
+const MAX_MESSAGES = 12;          // cronologia accettata dal client
+const MAX_CHARS_PER_MESSAGE = 1000;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_PER_IP = 20;     // richieste per IP per finestra
+const RATE_LIMIT_GLOBAL = 300;    // richieste per istanza per finestra
+
+// Best-effort: lo stato vive nella singola istanza della function e si
+// azzera a ogni cold start. Il tetto di spesa vero va impostato sulla
+// console Anthropic.
+const ipHits = new Map();
+let globalHits = [];
+
+function isRateLimited(ip, now) {
+  globalHits = globalHits.filter(function (t) { return now - t < RATE_LIMIT_WINDOW_MS; });
+  const hits = (ipHits.get(ip) || []).filter(function (t) { return now - t < RATE_LIMIT_WINDOW_MS; });
+  if (hits.length >= RATE_LIMIT_PER_IP || globalHits.length >= RATE_LIMIT_GLOBAL) {
+    ipHits.set(ip, hits);
+    return true;
+  }
+  hits.push(now);
+  globalHits.push(now);
+  ipHits.set(ip, hits);
+  if (ipHits.size > 5000) ipHits.clear();
+  return false;
+}
+
 const SYSTEM_PROMPT = `You are Remo — not an assistant, a cook. You know every Sampietrino box by heart: what's in it, where it comes from, how to treat it in the pan. You speak like a Roman who has lived long enough to know that shortcuts ruin everything. Warm, precise, never generic.
 
 You speak the language the user writes in — Italian, English, Dutch, Spanish, French, German — switching naturally without mentioning it.
@@ -35,15 +68,34 @@ Always recommend quality. Never suggest pancetta as a substitute for guanciale. 
 
 
 /* ── CORS headers ──────────────────────────────────────── */
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Content-Type': 'application/json',
-};
+function corsHeaders(origin) {
+  const headers = {
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json',
+    'Vary': 'Origin',
+  };
+  if (origin && ALLOWED_ORIGINS.indexOf(origin) !== -1) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
+  return headers;
+}
 
 /* ── Handler ───────────────────────────────────────────── */
 exports.handler = async function (event, context) {
+  const reqHeaders = event.headers || {};
+  const origin = String(reqHeaders.origin || reqHeaders.Origin || '').replace(/\/$/, '');
+  const CORS_HEADERS = corsHeaders(origin);
+
+  // Solo i siti autorizzati possono usare la chiave API
+  if (ALLOWED_ORIGINS.indexOf(origin) === -1) {
+    return {
+      statusCode: 403,
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ error: 'Origin not allowed' }),
+    };
+  }
+
   // Handle preflight OPTIONS
   if (event.httpMethod === 'OPTIONS') {
     return {
@@ -62,6 +114,18 @@ exports.handler = async function (event, context) {
     };
   }
 
+  const ip =
+    reqHeaders['x-nf-client-connection-ip'] ||
+    String(reqHeaders['x-forwarded-for'] || '').split(',')[0].trim() ||
+    'unknown';
+  if (isRateLimited(ip, Date.now())) {
+    return {
+      statusCode: 429,
+      headers: Object.assign({}, CORS_HEADERS, { 'Retry-After': '600' }),
+      body: JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+    };
+  }
+
   // Parse and validate body
   let messages;
   try {
@@ -70,11 +134,13 @@ exports.handler = async function (event, context) {
     if (!Array.isArray(messages) || messages.length === 0) {
       throw new Error('messages array is required');
     }
+    // Solo la coda della conversazione: il resto viene ignorato
+    messages = messages.slice(-MAX_MESSAGES);
     // Sanitize: only allow role/content, trim content
     messages = messages.map(function (m) {
       if (!m || !m.role || !m.content) throw new Error('Invalid message format');
       if (m.role !== 'user' && m.role !== 'assistant') throw new Error('Invalid role');
-      return { role: m.role, content: String(m.content).slice(0, 4000) };
+      return { role: m.role, content: String(m.content).slice(0, MAX_CHARS_PER_MESSAGE) };
     });
     // Enforce alternating user/assistant — last message must be user
     if (messages[messages.length - 1].role !== 'user') {
@@ -99,8 +165,9 @@ exports.handler = async function (event, context) {
     };
   }
 
-  // Limit conversation history to last 20 messages to avoid token bloat
-  const trimmedMessages = messages.slice(-20);
+  // Anthropic richiede che la conversazione inizi con un messaggio utente
+  while (messages.length && messages[0].role !== 'user') messages.shift();
+  const trimmedMessages = messages;
 
   // Call Anthropic API
   try {
