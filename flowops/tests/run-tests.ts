@@ -12,3 +12,4 @@ import "./estimate-lifecycle.test";
 import "./estimate-followup-p3.test";
 import "./invoice-lifecycle-p4.test";
 import "./demo-login.test";
+import "./message-format.test";

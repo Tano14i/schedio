@@ -66,7 +66,8 @@ async function main() {
       name: "Schedio",
       phone: "+39 347 555 1200",
       email: "ciao@schedio.it",
-      address: "Via Manzoni 24, Milano"
+      address: "Via Manzoni 24, Milano",
+      reviewUrl: "https://g.page/r/demo-review-link"
     }
   });
 

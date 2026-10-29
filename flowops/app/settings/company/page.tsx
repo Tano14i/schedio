@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { BillingEditForm } from "@/components/billing-edit-form";
 import { ButtonLink } from "@/components/button";
+import { CompanyFieldForm } from "@/components/company-field-form";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
 import { TradeEditForm } from "@/components/trade-edit-form";
@@ -26,6 +27,7 @@ export default async function CompanySetupPage() {
         locale: true,
         vatNumber: true,
         iban: true,
+        reviewUrl: true,
         defaultTaxRate: true,
         invoiceCounter: true,
         invoiceYear: true
@@ -48,6 +50,29 @@ export default async function CompanySetupPage() {
               <Field label="Email" value={company.email ?? undefined} />
               <Field label="Telefono" value={company.phone ?? undefined} />
               <Field label="Indirizzo" value={company.address ?? undefined} />
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title="Messaggi ai clienti"
+            subtitle="Preventivi, fatture e promemoria partono per email. Le risposte dei clienti arrivano a questo indirizzo."
+          >
+            <div className="space-y-4">
+              <CompanyFieldForm
+                field="email"
+                label="Email per le risposte dei clienti"
+                type="email"
+                currentValue={company.email}
+                placeholder="es. info@tuaditta.it"
+              />
+              <CompanyFieldForm
+                field="reviewUrl"
+                label="Link per le recensioni"
+                type="url"
+                currentValue={company.reviewUrl}
+                placeholder="es. https://g.page/r/..."
+                hint="Lo mandiamo al cliente dopo il pagamento. Senza link la richiesta di recensione non parte."
+              />
             </div>
           </SectionCard>
 

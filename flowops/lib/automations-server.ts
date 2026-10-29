@@ -6,7 +6,7 @@ import { sendDueInvoiceReminders, sendDueReviewRequests } from "@/lib/invoices-s
 const coreAutomations = [
   {
     type: AutomationType.ESTIMATE_FOLLOWUP,
-    channel: AutomationChannel.SMS,
+    channel: AutomationChannel.EMAIL,
     delayMinutes: 2880,
     template:
       "Ciao {{firstName}}, hai avuto modo di vedere il preventivo? Se vuoi possiamo chiarire qualsiasi dubbio. {{link}}",
@@ -14,7 +14,7 @@ const coreAutomations = [
   },
   {
     type: AutomationType.INVOICE_REMINDER,
-    channel: AutomationChannel.SMS,
+    channel: AutomationChannel.EMAIL,
     delayMinutes: 4320,
     template:
       "Ciao {{firstName}}, ti ricordiamo la fattura {{invoiceNumber}}. Se hai bisogno di chiarimenti siamo a disposizione.",
@@ -22,7 +22,7 @@ const coreAutomations = [
   },
   {
     type: AutomationType.REVIEW_REQUEST,
-    channel: AutomationChannel.SMS,
+    channel: AutomationChannel.EMAIL,
     delayMinutes: 1440,
     template:
       "Grazie ancora per averci scelto. Se ti va, ci lasci una recensione? {{reviewLink}}",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { ManualWhatsAppLink } from "@/components/manual-whatsapp-link";
 import { Button, ButtonLink } from "@/components/button";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
@@ -39,6 +40,7 @@ export function InvoicesWorkspace({
   const [filter, setFilter] = useState<"all" | "draft" | "sent" | "paid" | "overdue" | "due">("all");
   const [reviewRequests, setReviewRequests] = useState(initialReviewRequests);
   const [feedback, setFeedback] = useState("");
+  const [manualWhatsAppLink, setManualWhatsAppLink] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [aiReminderAssist, setAiReminderAssist] = useState<InvoiceReminderAiAssist | null>(null);
   const [isAiReminderLoading, setIsAiReminderLoading] = useState(false);
@@ -129,6 +131,7 @@ export function InvoicesWorkspace({
   function sendInvoice(invoiceId: string) {
     setFeedback("");
     startTransition(async () => {
+      setManualWhatsAppLink(null);
       const response = await fetch(`/api/invoices/${invoiceId}/send`, { method: "POST" });
       const result = await response.json();
 
@@ -139,7 +142,10 @@ export function InvoicesWorkspace({
 
       const current = invoices.find((invoice) => invoice.id === invoiceId);
       updateLocalInvoice(normalizeInvoice(result.item, current?.customerName));
-      setFeedback("Fattura inviata al cliente.");
+      setFeedback(result.message ?? "Fattura inviata al cliente.");
+      if (!result.delivery?.delivered) {
+        setManualWhatsAppLink(result.delivery?.whatsappLink ?? null);
+      }
     });
   }
 
@@ -163,16 +169,18 @@ export function InvoicesWorkspace({
         setReviewRequests(reviewResult.items);
       }
 
-      setFeedback("Pagamento registrato e richiesta recensione pianificata.");
+      setFeedback("Pagamento registrato. La richiesta di recensione parte dopo 24 ore, se hai impostato il link nelle impostazioni.");
     });
   }
 
   function sendReviewNow(reviewRequestId: string) {
     startTransition(async () => {
+      setManualWhatsAppLink(null);
       const response = await fetch(`/api/review-requests/${reviewRequestId}/send-now`, { method: "POST" });
       const result = await response.json();
       if (!response.ok) {
         setFeedback(result?.message ?? "Impossibile inviare la richiesta recensione.");
+        setManualWhatsAppLink(result?.delivery?.whatsappLink ?? null);
         return;
       }
 
@@ -187,7 +195,7 @@ export function InvoicesWorkspace({
             : item
         )
       );
-      setFeedback("Richiesta recensione inviata.");
+      setFeedback(result.message ?? "Richiesta recensione inviata.");
     });
   }
 
@@ -541,6 +549,7 @@ export function InvoicesWorkspace({
               </div>
 
               {feedback ? <p className="text-sm text-primary-700">{feedback}</p> : null}
+              <ManualWhatsAppLink href={manualWhatsAppLink} onDone={() => setManualWhatsAppLink(null)} />
             </div>
           ) : (
             <EmptyState

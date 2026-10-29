@@ -4,9 +4,7 @@ import {
   InvoiceReminderStatus,
   InvoiceStatus,
   Prisma,
-  ReviewRequestStatus,
-  WhatsAppMessageStatus,
-  WhatsAppMessageType
+  ReviewRequestStatus
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getAppUrl } from "@/lib/app-url";
@@ -28,7 +26,7 @@ import {
   shouldScheduleReviewRequest,
   shouldSendInvoiceReminder
 } from "@/lib/invoice-lifecycle";
-import { persistOutboundMessage } from "@/lib/whatsapp-server";
+import { deliverToCustomer, describeUndelivered } from "@/lib/messaging";
 
 type InvoiceItemInput = {
   label: string;
@@ -461,6 +459,7 @@ export async function sendInvoiceToCustomer(companyId: string, invoiceId: string
   const invoice = await prisma.invoice.findFirstOrThrow({
     where: { id: invoiceId, companyId },
     include: {
+      company: true,
       customer: true,
       items: { orderBy: { sortOrder: "asc" } }
     }
@@ -489,16 +488,13 @@ export async function sendInvoiceToCustomer(companyId: string, invoiceId: string
   });
 
   const link = `${getAppUrl()}/public/invoices/${updated.publicToken}`;
-  if (thread) {
-    await persistOutboundMessage({
-      companyId: invoice.companyId,
-      contactId: thread.contactId,
-      threadId: thread.id,
-      type: WhatsAppMessageType.TEXT,
-      textBody: `Ciao ${invoice.customer.fullName}, ecco la fattura ${updated.number}: ${link}`,
-      status: WhatsAppMessageStatus.SENT
-    });
-  }
+  const delivery = await deliverToCustomer({
+    company: invoice.company,
+    customer: invoice.customer,
+    thread,
+    subject: `Fattura ${updated.number} - ${invoice.company.name}`,
+    text: `Ciao ${invoice.customer.fullName}, ecco la fattura ${updated.number}: ${link}`
+  });
 
   await scheduleInvoiceReminder(updated.companyId, updated.id);
 
@@ -508,11 +504,13 @@ export async function sendInvoiceToCustomer(companyId: string, invoiceId: string
     entityId: invoice.id,
     eventType: "invoice_sent",
     metadata: {
-      publicToken: updated.publicToken
+      publicToken: updated.publicToken,
+      email: delivery.email,
+      whatsapp: delivery.whatsapp
     }
   });
 
-  return updated;
+  return { ...updated, delivery };
 }
 
 export async function markInvoiceViewed(publicToken: string) {
@@ -564,6 +562,22 @@ export async function scheduleReviewRequest(companyId: string, invoiceId: string
     return existing;
   }
 
+  // Senza link recensioni configurato non si manda nulla al cliente
+  const company = await prisma.company.findUniqueOrThrow({ where: { id: invoice.companyId } });
+  const reviewLink = company.reviewUrl?.trim();
+  if (!reviewLink) {
+    await logActivity({
+      companyId: invoice.companyId,
+      entityType: "invoice",
+      entityId: invoice.id,
+      eventType: "review_request_skipped",
+      metadata: {
+        message: "Richiesta recensione non pianificata: imposta il link recensioni nelle impostazioni."
+      }
+    });
+    return null;
+  }
+
   const scheduledFor = new Date(invoice.paidAt!);
   scheduledFor.setHours(scheduledFor.getHours() + 24);
 
@@ -574,7 +588,7 @@ export async function scheduleReviewRequest(companyId: string, invoiceId: string
       jobId: invoice.jobId,
       invoiceId: invoice.id,
       channel: "whatsapp",
-      reviewLink: "https://g.page/r/demo-review-link",
+      reviewLink,
       scheduledFor,
       status: ReviewRequestStatus.PENDING
     }
@@ -663,6 +677,7 @@ export async function sendDueInvoiceReminders(companyId?: string) {
     include: {
       invoice: {
         include: {
+          company: true,
           customer: true
         }
       }
@@ -690,7 +705,24 @@ export async function sendDueInvoiceReminders(companyId?: string) {
     }
 
     const thread = await findLatestThreadByLead(invoice.leadId);
-    if (!thread) {
+    const assist = await buildInvoiceReminderAiAssist({
+      customerName: invoice.customer.fullName,
+      invoiceNumber: invoice.number,
+      total: invoice.total,
+      dueDate: invoice.dueDate,
+      publicUrl: invoice.publicToken ? `${getAppUrl()}/public/invoices/${invoice.publicToken}` : null,
+      reason: reminder.reason.toLowerCase()
+    });
+
+    const delivery = await deliverToCustomer({
+      company: invoice.company,
+      customer: invoice.customer,
+      thread,
+      subject: `Promemoria fattura ${invoice.number} - ${invoice.company.name}`,
+      text: assist.message
+    });
+
+    if (!delivery.delivered) {
       await prisma.invoiceReminder.update({
         where: { id: reminder.id },
         data: {
@@ -701,28 +733,10 @@ export async function sendDueInvoiceReminders(companyId?: string) {
         automationType: AutomationType.INVOICE_REMINDER,
         relatedEntityType: "invoice_reminder",
         relatedEntityId: reminder.id,
-        errorMessage: "Nessun thread WhatsApp collegato al lead della fattura."
+        errorMessage: describeUndelivered(delivery)
       });
       continue;
     }
-
-    const assist = await buildInvoiceReminderAiAssist({
-      customerName: invoice.customer.fullName,
-      invoiceNumber: invoice.number,
-      total: invoice.total,
-      dueDate: invoice.dueDate,
-      publicUrl: invoice.publicToken ? `${getAppUrl()}/public/invoices/${invoice.publicToken}` : null,
-      reason: reminder.reason.toLowerCase()
-    });
-
-    await persistOutboundMessage({
-      companyId: invoice.companyId,
-      contactId: thread.contactId,
-      threadId: thread.id,
-      type: WhatsAppMessageType.TEXT,
-      textBody: assist.message,
-      status: WhatsAppMessageStatus.SENT
-    });
 
     await prisma.invoiceReminder.update({
       where: { id: reminder.id },
@@ -756,6 +770,7 @@ export async function sendReviewRequestNow(companyId: string, reviewRequestId: s
   const request = await prisma.reviewRequest.findFirstOrThrow({
     where: { id: reviewRequestId, companyId },
     include: {
+      company: true,
       customer: true,
       invoice: true
     }
@@ -772,16 +787,14 @@ export async function sendReviewRequestNow(companyId: string, reviewRequestId: s
     reviewLink: request.reviewLink,
     workSummary: request.invoice?.title
   });
-  if (thread) {
-    await persistOutboundMessage({
-      companyId: request.companyId,
-      contactId: thread.contactId,
-      threadId: thread.id,
-      type: WhatsAppMessageType.TEXT,
-      textBody: assist.message,
-      status: WhatsAppMessageStatus.SENT
-    });
-  } else {
+  const delivery = await deliverToCustomer({
+    company: request.company,
+    customer: request.customer,
+    thread,
+    subject: `Com'e' andata? - ${request.company.name}`,
+    text: assist.message
+  });
+  if (!delivery.delivered) {
     const nextAttempt = new Date();
     nextAttempt.setHours(nextAttempt.getHours() + 24);
     await prisma.reviewRequest.update({
@@ -794,9 +807,9 @@ export async function sendReviewRequestNow(companyId: string, reviewRequestId: s
       automationType: AutomationType.REVIEW_REQUEST,
       relatedEntityType: "review_request",
       relatedEntityId: request.id,
-      errorMessage: "Nessun thread WhatsApp collegato per inviare la review request."
+      errorMessage: describeUndelivered(delivery)
     });
-    return request;
+    return { ...request, delivery };
   }
 
   const updated = await prisma.reviewRequest.update({
@@ -822,7 +835,7 @@ export async function sendReviewRequestNow(companyId: string, reviewRequestId: s
     }
   });
 
-  return updated;
+  return { ...updated, delivery };
 }
 
 export async function cancelReviewRequest(companyId: string, reviewRequestId: string) {

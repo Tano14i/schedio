@@ -226,6 +226,7 @@ model Company {
   locale           String          @default("nl-NL")
   vatNumber        String?
   iban             String?
+  reviewUrl        String?
   defaultTaxRate   Float           @default(0.21)
   invoiceCounter   Int             @default(0)
   invoiceYear      Int             @default(0)

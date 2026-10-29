@@ -8,6 +8,8 @@ export async function PATCH(request: Request) {
 
   const body = await request.json() as {
     trade?: string;
+    email?: string | null;
+    reviewUrl?: string | null;
     vatNumber?: string | null;
     iban?: string | null;
     defaultTaxRate?: number;
@@ -20,6 +22,20 @@ export async function PATCH(request: Request) {
 
   if ("trade" in body) {
     data.trade = typeof body.trade === "string" ? body.trade.trim() || null : null;
+  }
+  if ("email" in body) {
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return Response.json({ error: "Email non valida." }, { status: 400 });
+    }
+    data.email = email || null;
+  }
+  if ("reviewUrl" in body) {
+    const url = typeof body.reviewUrl === "string" ? body.reviewUrl.trim() : "";
+    if (url && !/^https:\/\/\S+$/.test(url)) {
+      return Response.json({ error: "Il link deve iniziare con https://" }, { status: 400 });
+    }
+    data.reviewUrl = url || null;
   }
   if ("vatNumber" in body) {
     data.vatNumber = typeof body.vatNumber === "string" ? body.vatNumber.trim() || null : null;
@@ -53,6 +69,8 @@ export async function PATCH(request: Request) {
     select: {
       id: true,
       trade: true,
+      email: true,
+      reviewUrl: true,
       vatNumber: true,
       iban: true,
       defaultTaxRate: true,

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ManualWhatsAppLink } from "@/components/manual-whatsapp-link";
 import { Button } from "@/components/button";
 import { Drawer } from "@/components/drawer";
 import { EmptyState } from "@/components/empty-state";
@@ -510,15 +511,42 @@ function DecisionPanel({ selected }: { selected: WhatsAppAdminItem }) {
 }
 
 function PrimaryAction({ selected }: { selected: WhatsAppAdminItem }) {
+  const [outcome, setOutcome] = useState<{ message: string; link: string | null } | null>(null);
+
+  return (
+    <div className="space-y-2">
+      <PrimaryActionButton selected={selected} onOutcome={setOutcome} />
+      {outcome ? <p className="text-sm text-primary-700">{outcome.message}</p> : null}
+      {outcome ? <ManualWhatsAppLink href={outcome.link} onDone={() => setOutcome(null)} /> : null}
+    </div>
+  );
+}
+
+function PrimaryActionButton({
+  selected,
+  onOutcome
+}: {
+  selected: WhatsAppAdminItem;
+  onOutcome: (outcome: { message: string; link: string | null } | null) => void;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function run(url: string, success: string, body?: Record<string, unknown>) {
+    onOutcome(null);
     startTransition(async () => {
-      await fetch(url, {
+      const response = await fetch(url, {
         method: "POST",
         headers: body ? { "Content-Type": "application/json" } : undefined,
         body: body ? JSON.stringify(body) : undefined
+      });
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+        delivery?: { delivered: boolean; whatsappLink: string | null };
+      } | null;
+      onOutcome({
+        message: result?.message ?? (response.ok ? success : "Qualcosa non ha funzionato, riprova."),
+        link: result?.delivery && !result.delivery.delivered ? result.delivery.whatsappLink : null
       });
       router.refresh();
     });

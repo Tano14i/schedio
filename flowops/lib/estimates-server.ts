@@ -4,9 +4,7 @@ import {
   JobCompletionStatus,
   JobStatus,
   LeadStatus,
-  Prisma,
-  WhatsAppMessageStatus,
-  WhatsAppMessageType
+  Prisma
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { calculateJobFinancialSummary } from "@/lib/job-financials";
@@ -18,7 +16,7 @@ import {
   removeQueuedAutomationLogs
 } from "@/lib/automation-runtime";
 import { buildEstimateFollowUpAiAssist } from "@/lib/ai-followups";
-import { persistOutboundMessage } from "@/lib/whatsapp-server";
+import { deliverToCustomer, describeUndelivered } from "@/lib/messaging";
 
 type EstimateItemInput = {
   label: string;
@@ -574,6 +572,7 @@ export async function sendEstimateToCustomer(companyId: string, estimateId: stri
   const estimate = await prisma.estimate.findFirstOrThrow({
     where: { id: estimateId, companyId },
     include: {
+      company: true,
       customer: true,
       lead: {
         include: {
@@ -610,18 +609,15 @@ export async function sendEstimateToCustomer(companyId: string, estimateId: stri
 
   const thread = estimate.lead?.whatsappThreads[0];
   const link = `${getAppUrl()}/public/estimates/${token}`;
-  const text = `Ciao ${estimate.customer.fullName}, ti abbiamo inviato il preventivo. Puoi vederlo qui: ${link}`;
+  const text = `Ciao ${estimate.customer.fullName}, ti abbiamo inviato il preventivo ${estimate.number}. Puoi vederlo e accettarlo qui: ${link}`;
 
-  if (thread) {
-    await persistOutboundMessage({
-      companyId: estimate.companyId,
-      contactId: thread.contactId,
-      threadId: thread.id,
-      type: WhatsAppMessageType.TEXT,
-      textBody: text,
-      status: WhatsAppMessageStatus.SENT
-    });
-  }
+  const delivery = await deliverToCustomer({
+    company: estimate.company,
+    customer: estimate.customer,
+    thread,
+    subject: `Preventivo ${estimate.number} - ${estimate.company.name}`,
+    text
+  });
 
   await logActivity({
     companyId: estimate.companyId,
@@ -630,13 +626,14 @@ export async function sendEstimateToCustomer(companyId: string, estimateId: stri
     eventType: "estimate_sent",
     metadata: {
       publicToken: token,
-      channel: thread ? "whatsapp" : "manual"
+      email: delivery.email,
+      whatsapp: delivery.whatsapp
     }
   });
 
   await scheduleEstimateFollowUp(estimate.companyId, estimate.id);
 
-  return updated;
+  return { ...updated, delivery };
 }
 
 export async function markEstimateViewed(publicToken: string) {
@@ -769,6 +766,7 @@ export async function sendDueEstimateFollowUps(companyId?: string) {
     include: {
       estimate: {
         include: {
+          company: true,
           customer: true,
           lead: {
             include: {
@@ -819,7 +817,15 @@ export async function sendDueEstimateFollowUps(companyId?: string) {
       reason: item.reason
     });
 
-    if (!thread) {
+    const delivery = await deliverToCustomer({
+      company: estimate.company,
+      customer: estimate.customer,
+      thread,
+      subject: `Promemoria preventivo ${estimate.number} - ${estimate.company.name}`,
+      text: assist.message
+    });
+
+    if (!delivery.delivered) {
       await prisma.estimateFollowUp.update({
         where: { id: item.id },
         data: { status: "failed" }
@@ -828,19 +834,10 @@ export async function sendDueEstimateFollowUps(companyId?: string) {
         automationType: AutomationType.ESTIMATE_FOLLOWUP,
         relatedEntityType: "estimate_follow_up",
         relatedEntityId: item.id,
-        errorMessage: "Nessun thread WhatsApp collegato al lead del preventivo."
+        errorMessage: describeUndelivered(delivery)
       });
       continue;
     }
-
-    await persistOutboundMessage({
-      companyId: estimate.companyId,
-      contactId: thread.contactId,
-      threadId: thread.id,
-      type: WhatsAppMessageType.TEXT,
-      textBody: assist.message,
-      status: WhatsAppMessageStatus.SENT
-    });
 
     await prisma.estimateFollowUp.update({
       where: { id: item.id },
@@ -883,6 +880,23 @@ export async function sendEstimateFollowUpNow(companyId: string, estimateId: str
   });
 
   await sendDueEstimateFollowUps(companyId);
+
+  // Esito reale dell'invio, per mostrarlo a chi ha premuto il pulsante
+  const latest = await prisma.estimateFollowUp.findFirst({
+    where: { companyId, estimateId },
+    orderBy: { createdAt: "desc" }
+  });
+  const log = latest
+    ? await prisma.automationLog.findFirst({
+        where: { companyId, relatedEntityType: "estimate_follow_up", relatedEntityId: latest.id },
+        orderBy: { scheduledFor: "desc" }
+      })
+    : null;
+
+  return {
+    sent: latest?.status === "sent",
+    errorMessage: latest?.status === "failed" ? log?.errorMessage ?? null : null
+  };
 }
 
 export async function snoozeEstimateFollowUp(companyId: string, estimateId: string, hours = 24) {

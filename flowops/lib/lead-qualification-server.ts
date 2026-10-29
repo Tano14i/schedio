@@ -4,9 +4,7 @@ import {
   Prisma,
   QualificationConfidence,
   QualificationStatus,
-  ServiceAreaMatch,
-  WhatsAppMessageStatus,
-  WhatsAppMessageType
+  ServiceAreaMatch
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
@@ -16,7 +14,7 @@ import {
   toPrismaQualificationValue,
   type QualificationReasonCode
 } from "@/lib/lead-qualification";
-import { persistOutboundMessage } from "@/lib/whatsapp-server";
+import { deliverToCustomer } from "@/lib/messaging";
 
 function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
@@ -133,16 +131,15 @@ export async function requestClarification(companyId: string, leadId: string) {
   });
 
   const thread = lead.whatsappThreads[0];
-  if (thread) {
-    await persistOutboundMessage({
-      companyId: lead.companyId,
-      contactId: thread.contactId,
-      threadId: thread.id,
-      type: WhatsAppMessageType.TEXT,
-      textBody: message,
-      status: WhatsAppMessageStatus.SENT
-    });
-  }
+  const company = await prisma.company.findUniqueOrThrow({ where: { id: lead.companyId } });
+  const delivery = await deliverToCustomer({
+    company,
+    customer: lead.customer,
+    thread,
+    subject: `Richiesta di dettagli - ${company.name}`,
+    text: message,
+    channels: ["whatsapp"]
+  });
 
   await prisma.activityLog.create({
     data: {
@@ -154,7 +151,7 @@ export async function requestClarification(companyId: string, leadId: string) {
     }
   });
 
-  return { leadId: lead.id, message };
+  return { leadId: lead.id, message, delivery };
 }
 
 export async function setLeadQualification(companyId: string, leadId: string, input: {
@@ -192,13 +189,14 @@ export async function setLeadQualification(companyId: string, leadId: string, in
   const thread = currentLead.whatsappThreads[0];
 
   if (thread && outboundMessage) {
-    await persistOutboundMessage({
-      companyId: lead.companyId,
-      contactId: thread.contactId,
-      threadId: thread.id,
-      type: WhatsAppMessageType.TEXT,
-      textBody: outboundMessage,
-      status: WhatsAppMessageStatus.SENT
+    const company = await prisma.company.findUniqueOrThrow({ where: { id: lead.companyId } });
+    await deliverToCustomer({
+      company,
+      customer: { fullName: thread.contact.profileName ?? "", email: null, phone: thread.contact.waId },
+      thread,
+      subject: company.name,
+      text: outboundMessage,
+      channels: ["whatsapp"]
     });
 
     await prisma.whatsAppThread.update({

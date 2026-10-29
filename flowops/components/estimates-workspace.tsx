@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { ManualWhatsAppLink } from "@/components/manual-whatsapp-link";
 import { Button, ButtonLink } from "@/components/button";
 import { Drawer } from "@/components/drawer";
 import { EmptyState } from "@/components/empty-state";
@@ -42,6 +43,7 @@ export function EstimatesWorkspace({
   const [selectedId, setSelectedId] = useState(initialEstimates[0]?.id ?? "");
   const [filter, setFilter] = useState<"all" | "waiting" | "viewed" | "follow_up" | "accepted" | "rejected">("all");
   const [feedback, setFeedback] = useState("");
+  const [manualWhatsAppLink, setManualWhatsAppLink] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [aiAssist, setAiAssist] = useState<EstimateAiAssist | null>(null);
   const [isAiAssistLoading, setIsAiAssistLoading] = useState(false);
@@ -223,6 +225,7 @@ export function EstimatesWorkspace({
         return;
       }
 
+      setManualWhatsAppLink(null);
       const response = await fetch(`/api/estimates/${estimateId}/send`, { method: "POST" });
       const result = await response.json();
 
@@ -237,7 +240,10 @@ export function EstimatesWorkspace({
         customerName:
           estimates.find((estimate) => estimate.id === estimateId)?.customerName ?? selectedCustomerName
       });
-      setFeedback("Preventivo inviato al cliente.");
+      setFeedback(result.message ?? "Preventivo inviato al cliente.");
+      if (!result.delivery?.delivered) {
+        setManualWhatsAppLink(result.delivery?.whatsappLink ?? null);
+      }
     });
   }
 
@@ -927,6 +933,7 @@ export function EstimatesWorkspace({
               ) : null}
 
               {feedback ? <p className="text-sm text-primary-700">{feedback}</p> : null}
+              <ManualWhatsAppLink href={manualWhatsAppLink} onDone={() => setManualWhatsAppLink(null)} />
             </div>
           ) : (
             <EmptyState

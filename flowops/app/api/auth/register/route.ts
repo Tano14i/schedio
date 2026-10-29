@@ -52,11 +52,11 @@ export async function POST(request: Request) {
   });
 
   // Email di benvenuto — fire and forget, non blocca la registrazione
-  if (process.env.RESEND_API_KEY) {
+  if (process.env.RESEND_API_KEY && process.env.EMAIL_FROM) {
     const resend = new Resend(process.env.RESEND_API_KEY);
     resend.emails
       .send({
-        from: "onboarding@schedio.it",
+        from: process.env.EMAIL_FROM,
         to: email,
         subject: `Benvenuto su Schedio, ${name}!`,
         text: [

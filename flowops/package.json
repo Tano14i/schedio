@@ -9,7 +9,7 @@
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts",
     "test": "tsx tests/run-tests.ts",
-    "test:db": "tsx tests/tenant-isolation.db-test.ts"
+    "test:db": "tsx tests/tenant-isolation.db-test.ts && tsx tests/messaging.db-test.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",

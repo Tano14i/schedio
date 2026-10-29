@@ -15,6 +15,7 @@ import {
   WhatsAppThreadStatus
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { deliverToCustomer } from "@/lib/messaging";
 import { normalizePhone, parseWhatsAppWebhookPayload } from "@/lib/whatsapp";
 import { getThreadStatusAfterInbound, shouldConvertThreadToLead } from "@/lib/whatsapp-p0";
 import { analyzeWorkIntake } from "@/lib/ai-intake";
@@ -665,6 +666,7 @@ export async function sendVisitProposalToCustomer(companyId: string, proposalId:
   const proposal = await prisma.schedulingProposal.findFirstOrThrow({
     where: { id: proposalId, companyId },
     include: {
+      company: true,
       thread: { include: { contact: true } },
       lead: { include: { customer: true } },
       selectedSlot: true
@@ -683,6 +685,19 @@ export async function sendVisitProposalToCustomer(companyId: string, proposalId:
     }
   ).format(proposal.selectedSlot.startsAt)}. Ti va bene?`;
 
+  const delivery = await deliverToCustomer({
+    company: proposal.company,
+    customer: proposal.lead.customer,
+    thread: proposal.thread,
+    subject: `Proposta sopralluogo - ${proposal.company.name}`,
+    text
+  });
+
+  if (!delivery.delivered) {
+    // La proposta resta approvata: il titolare puo' inviarla a mano con il link
+    return { proposal, delivery };
+  }
+
   const updated = await prisma.schedulingProposal.update({
     where: { id: proposal.id },
     data: {
@@ -699,16 +714,7 @@ export async function sendVisitProposalToCustomer(companyId: string, proposalId:
     }
   });
 
-  await persistOutboundMessage({
-    companyId: proposal.companyId,
-    contactId: proposal.thread.contactId,
-    threadId: proposal.threadId!,
-    type: WhatsAppMessageType.TEXT,
-    textBody: text,
-    status: WhatsAppMessageStatus.SENT
-  });
-
-  return updated;
+  return { proposal: updated, delivery };
 }
 
 export async function confirmCustomerSlot(publicToken: string) {
