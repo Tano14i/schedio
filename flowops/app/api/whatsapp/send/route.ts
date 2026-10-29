@@ -1,15 +1,22 @@
 import { jsonCreated } from "@/lib/api";
-import { requireSession } from "@/lib/auth";
+import { isOwner, requireSession } from "@/lib/auth";
 import {
   buildWhatsAppTemplatePayload,
   buildWhatsAppTextPayload,
   sendWhatsAppTemplate,
   sendWhatsAppTextMessage
 } from "@/lib/whatsapp";
+import { isWhatsAppNumberOwner } from "@/lib/whatsapp-server";
 
 export async function POST(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
+  if (!isOwner(session.role) || !(await isWhatsAppNumberOwner(session.companyId))) {
+    return Response.json(
+      { message: "Il numero WhatsApp non e collegato alla tua azienda." },
+      { status: 403 }
+    );
+  }
   const body = (await request.json()) as {
     to?: string;
     message?: string;

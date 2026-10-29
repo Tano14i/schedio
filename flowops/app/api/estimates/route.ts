@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") ?? "1", 10);
   const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
-  const { estimates, pagination } = await getEstimatePageData({ page, limit });
+  const { estimates, pagination } = await getEstimatePageData(session.companyId, { page, limit });
   return jsonOk({ data: estimates, pagination });
 }
 
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as { jobId?: string; customerId?: string };
 
   if (body.customerId && !body.jobId) {
-    const item = await createEstimateDraftForCustomer(body.customerId);
+    const item = await createEstimateDraftForCustomer(session.companyId, body.customerId);
     return jsonCreated({ message: "Bozza preventivo creata per il cliente.", item });
   }
 
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const item = await createEstimateDraftFromJob(body.jobId);
+  const item = await createEstimateDraftFromJob(session.companyId, body.jobId);
   return jsonCreated({
     message: "Bozza preventivo creata dal sopralluogo.",
     item

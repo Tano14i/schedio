@@ -10,7 +10,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return Response.json({ message: "Permessi insufficienti." }, { status: 403 });
   }
 
-  const item = await createInvoiceDraftFromJob(id);
+  const item = await createInvoiceDraftFromJob(session.companyId, id);
   return jsonCreated({
     message: "Bozza fattura creata dal lavoro completato.",
     item

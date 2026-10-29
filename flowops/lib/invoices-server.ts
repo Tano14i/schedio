@@ -57,12 +57,6 @@ function normalizeItems(items: InvoiceItemInput[]) {
   }));
 }
 
-async function getDefaultCompany() {
-  return prisma.company.findFirstOrThrow({
-    orderBy: { createdAt: "asc" }
-  });
-}
-
 async function logActivity(input: {
   companyId: string;
   entityType: string;
@@ -139,9 +133,9 @@ async function findLatestThreadByLead(leadId?: string | null) {
   });
 }
 
-export async function createInvoiceDraftFromEstimate(estimateId: string) {
-  const estimate = await prisma.estimate.findUniqueOrThrow({
-    where: { id: estimateId },
+export async function createInvoiceDraftFromEstimate(companyId: string, estimateId: string) {
+  const estimate = await prisma.estimate.findFirstOrThrow({
+    where: { id: estimateId, companyId },
     include: {
       items: { orderBy: { sortOrder: "asc" } },
       customer: true,
@@ -217,9 +211,9 @@ export async function createInvoiceDraftFromEstimate(estimateId: string) {
   return invoice;
 }
 
-export async function createInvoiceDraftFromJob(jobId: string) {
-  const job = await prisma.job.findUniqueOrThrow({
-    where: { id: jobId },
+export async function createInvoiceDraftFromJob(companyId: string, jobId: string) {
+  const job = await prisma.job.findFirstOrThrow({
+    where: { id: jobId, companyId },
     include: {
       customer: true,
       lead: true,
@@ -300,6 +294,7 @@ export async function createInvoiceDraftFromJob(jobId: string) {
 }
 
 export async function updateInvoice(
+  companyId: string,
   invoiceId: string,
   input: {
     title?: string | null;
@@ -310,8 +305,8 @@ export async function updateInvoice(
     items?: InvoiceItemInput[];
   }
 ) {
-  const existing = await prisma.invoice.findUniqueOrThrow({
-    where: { id: invoiceId },
+  const existing = await prisma.invoice.findFirstOrThrow({
+    where: { id: invoiceId, companyId },
     include: { items: { orderBy: { sortOrder: "asc" } } }
   });
   const taxRate = input.taxRate ?? existing.taxRate;
@@ -366,9 +361,9 @@ export async function updateInvoice(
   return invoice;
 }
 
-export async function scheduleInvoiceReminder(invoiceId: string) {
-  const invoice = await prisma.invoice.findUniqueOrThrow({
-    where: { id: invoiceId }
+export async function scheduleInvoiceReminder(companyId: string, invoiceId: string) {
+  const invoice = await prisma.invoice.findFirstOrThrow({
+    where: { id: invoiceId, companyId }
   });
 
   if (!shouldScheduleInvoiceReminder({
@@ -431,9 +426,10 @@ export async function scheduleInvoiceReminder(invoiceId: string) {
   return reminder;
 }
 
-export async function cancelInvoiceReminders(invoiceId: string) {
+export async function cancelInvoiceReminders(companyId: string, invoiceId: string) {
   const pending = await prisma.invoiceReminder.findMany({
     where: {
+      companyId,
       invoiceId,
       status: InvoiceReminderStatus.SCHEDULED,
       canceledAt: null
@@ -443,6 +439,7 @@ export async function cancelInvoiceReminders(invoiceId: string) {
 
   await prisma.invoiceReminder.updateMany({
     where: {
+      companyId,
       invoiceId,
       status: InvoiceReminderStatus.SCHEDULED,
       canceledAt: null
@@ -460,9 +457,9 @@ export async function cancelInvoiceReminders(invoiceId: string) {
   });
 }
 
-export async function sendInvoiceToCustomer(invoiceId: string) {
-  const invoice = await prisma.invoice.findUniqueOrThrow({
-    where: { id: invoiceId },
+export async function sendInvoiceToCustomer(companyId: string, invoiceId: string) {
+  const invoice = await prisma.invoice.findFirstOrThrow({
+    where: { id: invoiceId, companyId },
     include: {
       customer: true,
       items: { orderBy: { sortOrder: "asc" } }
@@ -503,7 +500,7 @@ export async function sendInvoiceToCustomer(invoiceId: string) {
     });
   }
 
-  await scheduleInvoiceReminder(updated.id);
+  await scheduleInvoiceReminder(updated.companyId, updated.id);
 
   await logActivity({
     companyId: invoice.companyId,
@@ -542,9 +539,9 @@ export async function markInvoiceViewed(publicToken: string) {
   return updated;
 }
 
-export async function scheduleReviewRequest(invoiceId: string) {
-  const invoice = await prisma.invoice.findUniqueOrThrow({
-    where: { id: invoiceId }
+export async function scheduleReviewRequest(companyId: string, invoiceId: string) {
+  const invoice = await prisma.invoice.findFirstOrThrow({
+    where: { id: invoiceId, companyId }
   });
 
   if (!shouldScheduleReviewRequest({
@@ -606,9 +603,9 @@ export async function scheduleReviewRequest(invoiceId: string) {
   return request;
 }
 
-export async function markInvoicePaid(invoiceId: string) {
-  const invoice = await prisma.invoice.findUniqueOrThrow({
-    where: { id: invoiceId }
+export async function markInvoicePaid(companyId: string, invoiceId: string) {
+  const invoice = await prisma.invoice.findFirstOrThrow({
+    where: { id: invoiceId, companyId }
   });
 
   const updated = await prisma.invoice.update({
@@ -625,8 +622,8 @@ export async function markInvoicePaid(invoiceId: string) {
     }
   });
 
-  await cancelInvoiceReminders(invoice.id);
-  await scheduleReviewRequest(invoice.id);
+  await cancelInvoiceReminders(invoice.companyId, invoice.id);
+  await scheduleReviewRequest(invoice.companyId, invoice.id);
 
   await logActivity({
     companyId: invoice.companyId,
@@ -638,9 +635,10 @@ export async function markInvoicePaid(invoiceId: string) {
   return updated;
 }
 
-export async function getPendingInvoiceReminders() {
+export async function getPendingInvoiceReminders(companyId: string) {
   return prisma.invoiceReminder.findMany({
     where: {
+      companyId,
       status: InvoiceReminderStatus.SCHEDULED,
       canceledAt: null
     },
@@ -654,9 +652,10 @@ export async function getPendingInvoiceReminders() {
   });
 }
 
-export async function sendDueInvoiceReminders() {
+export async function sendDueInvoiceReminders(companyId?: string) {
   const queued = await prisma.invoiceReminder.findMany({
     where: {
+      ...(companyId ? { companyId } : {}),
       status: InvoiceReminderStatus.SCHEDULED,
       canceledAt: null,
       scheduledFor: { lte: new Date() }
@@ -753,9 +752,9 @@ export async function sendDueInvoiceReminders() {
   return queued.length;
 }
 
-export async function sendReviewRequestNow(reviewRequestId: string) {
-  const request = await prisma.reviewRequest.findUniqueOrThrow({
-    where: { id: reviewRequestId },
+export async function sendReviewRequestNow(companyId: string, reviewRequestId: string) {
+  const request = await prisma.reviewRequest.findFirstOrThrow({
+    where: { id: reviewRequestId, companyId },
     include: {
       customer: true,
       invoice: true
@@ -826,7 +825,8 @@ export async function sendReviewRequestNow(reviewRequestId: string) {
   return updated;
 }
 
-export async function cancelReviewRequest(reviewRequestId: string) {
+export async function cancelReviewRequest(companyId: string, reviewRequestId: string) {
+  await prisma.reviewRequest.findFirstOrThrow({ where: { id: reviewRequestId, companyId } });
   await removeQueuedAutomationLogs({
     automationType: AutomationType.REVIEW_REQUEST,
     relatedEntityType: "review_request",
@@ -841,23 +841,24 @@ export async function cancelReviewRequest(reviewRequestId: string) {
   });
 }
 
-export async function sendDueReviewRequests() {
+export async function sendDueReviewRequests(companyId?: string) {
   const queued = await prisma.reviewRequest.findMany({
     where: {
+      ...(companyId ? { companyId } : {}),
       status: ReviewRequestStatus.PENDING,
       scheduledFor: { lte: new Date() }
     }
   });
 
   for (const request of queued) {
-    await sendReviewRequestNow(request.id);
+    await sendReviewRequestNow(request.companyId, request.id);
   }
 
   return queued.length;
 }
 
-export async function getInvoiceMetrics() {
-  const company = await getDefaultCompany();
+export async function getInvoiceMetrics(companyId: string) {
+  const company = { id: companyId };
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const [invoices, reviewRequests] = await Promise.all([
@@ -898,8 +899,8 @@ export async function getInvoiceMetrics() {
   };
 }
 
-export async function getInvoiceWorklist() {
-  const company = await getDefaultCompany();
+export async function getInvoiceWorklist(companyId: string) {
+  const company = { id: companyId };
   const invoices = await prisma.invoice.findMany({
     where: { companyId: company.id },
     include: {
@@ -959,8 +960,8 @@ export async function getInvoiceWorklist() {
     });
 }
 
-export async function getInvoicePageData(opts?: { page?: number; limit?: number }) {
-  const company = await getDefaultCompany();
+export async function getInvoicePageData(companyId: string, opts?: { page?: number; limit?: number }) {
+  const company = await prisma.company.findUniqueOrThrow({ where: { id: companyId } });
   const page = Math.max(1, opts?.page ?? 1);
   const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
   const paginate = opts !== undefined;

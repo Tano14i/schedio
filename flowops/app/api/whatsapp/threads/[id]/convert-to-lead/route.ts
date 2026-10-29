@@ -6,7 +6,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const { id } = await context.params;
-  const lead = await createLeadFromWhatsAppThread(id);
+  const lead = await createLeadFromWhatsAppThread(session.companyId, id);
 
   return jsonCreated({
     message: "Thread WhatsApp convertito in customer + lead.",

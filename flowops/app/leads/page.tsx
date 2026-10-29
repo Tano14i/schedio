@@ -1,3 +1,4 @@
+import { requirePageSession } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
 import { LeadsWorkspace } from "@/components/leads-workspace";
 import { deriveLeadNextAction, getLeadsPageData } from "@/lib/crm-server";
@@ -9,10 +10,11 @@ export default async function LeadsPage({
 }: {
   searchParams: Promise<{ action?: string; customerId?: string }>;
 }) {
+  const session = await requirePageSession();
   const resolvedSearchParams = await searchParams;
 
   try {
-    const { customers: dbCustomers, leads: dbLeads, jobs: dbJobs } = await getLeadsPageData();
+    const { customers: dbCustomers, leads: dbLeads, jobs: dbJobs } = await getLeadsPageData(session.user.companyId);
 
     return (
       <AppShell pathname="/leads">

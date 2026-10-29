@@ -9,8 +9,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (session instanceof Response) return session;
   const { id } = await context.params;
 
-  const estimate = await prisma.estimate.findUnique({
-    where: { id },
+  const estimate = await prisma.estimate.findFirst({
+    where: { id, companyId: session.companyId },
     include: {
       customer: true,
       followUps: {

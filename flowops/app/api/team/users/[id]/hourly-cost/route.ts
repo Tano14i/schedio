@@ -27,7 +27,7 @@ export async function PATCH(
     return Response.json({ message: "Inserisci un costo orario valido." }, { status: 400 });
   }
 
-  const item = await updateUserHourlyCost(id, {
+  const item = await updateUserHourlyCost(session.companyId, id, {
     hourlyCost: normalized
   });
 

@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { JobDetailWorkspace } from "@/components/job-detail-workspace";
-import { getCurrentSession, isOwner } from "@/lib/auth";
+import { requirePageSession, isOwner } from "@/lib/auth";
 import { getActivityFeed, getActivityMessage } from "@/lib/crm-server";
 import { getJobDetailData } from "@/lib/estimates-server";
 
@@ -8,15 +8,15 @@ export const dynamic = "force-dynamic";
 
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  const session = await getCurrentSession();
+  const session = await requirePageSession();
   const ownerMode = isOwner(session?.user.role ?? "OWNER");
 
   try {
-    const job = await getJobDetailData(resolvedParams.id);
+    const job = await getJobDetailData(session.user.companyId, resolvedParams.id);
     if (job && session?.user.role === "WORKER" && job.assignedUserId !== session.user.id) {
       throw new Error("Forbidden");
     }
-    const activity = await getActivityFeed();
+    const activity = await getActivityFeed(session.user.companyId);
     const entityIds = new Set([
       resolvedParams.id,
       ...(job?.estimates.map((estimate) => estimate.id) ?? [])

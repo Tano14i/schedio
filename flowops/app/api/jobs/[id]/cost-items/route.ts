@@ -8,15 +8,16 @@ export async function POST(
 ) {
   const { id } = await context.params;
   const session = await getSessionFromRequest(request);
+  if (!session) {
+    return Response.json({ message: "Non autorizzato." }, { status: 401 });
+  }
   const job = await getJobByIdForUser(
     id,
-    session
-      ? {
-          id: session.userId,
-          companyId: session.companyId,
-          role: session.role
-        }
-      : undefined
+    {
+      id: session.userId,
+      companyId: session.companyId,
+      role: session.role
+    }
   );
 
   if (!job) {
@@ -42,7 +43,7 @@ export async function POST(
     );
   }
 
-  const result = await addJobCostItem(id, {
+  const result = await addJobCostItem(session.companyId, id, {
     label: body.label,
     category: body.category,
     qty: Number(body.qty),

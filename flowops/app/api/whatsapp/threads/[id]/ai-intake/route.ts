@@ -10,8 +10,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (session instanceof Response) return session;
   const { id } = await context.params;
 
-  const thread = await prisma.whatsAppThread.findUnique({
-    where: { id },
+  const thread = await prisma.whatsAppThread.findFirst({
+    where: { id, companyId: session.companyId },
     include: {
       contact: true,
       customer: true,

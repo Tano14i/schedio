@@ -6,7 +6,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const { id } = await context.params;
-  const item = await getCustomerDetailData(id);
+  const item = await getCustomerDetailData(session.companyId, id);
   return jsonOk({ item });
 }
 
@@ -23,7 +23,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     notes?: string | null;
   };
 
-  const item = await updateCustomer(id, body);
+  const item = await updateCustomer(session.companyId, id, body);
   return jsonUpdated({
     message: "Cliente aggiornato.",
     item

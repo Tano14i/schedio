@@ -6,7 +6,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const { id } = await context.params;
-  await cancelInvoiceReminders(id);
+  await cancelInvoiceReminders(session.companyId, id);
   return jsonUpdated({
     message: "Reminder fattura annullati."
   });

@@ -8,15 +8,16 @@ export async function DELETE(
 ) {
   const { id, costItemId } = await context.params;
   const session = await getSessionFromRequest(request);
+  if (!session) {
+    return Response.json({ message: "Non autorizzato." }, { status: 401 });
+  }
   const job = await getJobByIdForUser(
     id,
-    session
-      ? {
-          id: session.userId,
-          companyId: session.companyId,
-          role: session.role
-        }
-      : undefined
+    {
+      id: session.userId,
+      companyId: session.companyId,
+      role: session.role
+    }
   );
 
   if (!job) {
@@ -27,7 +28,7 @@ export async function DELETE(
     return Response.json({ message: "Solo il titolare puo rimuovere costi." }, { status: 403 });
   }
 
-  const result = await deleteJobCostItem(id, costItemId);
+  const result = await deleteJobCostItem(session.companyId, id, costItemId);
 
   return jsonUpdated({
     message: "Costo lavoro rimosso.",

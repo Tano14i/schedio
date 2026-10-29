@@ -6,7 +6,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const { id } = await context.params;
-  const { invoices } = await getInvoicePageData();
+  const { invoices } = await getInvoicePageData(session.companyId);
   const item = invoices.find((invoice) => invoice.id === id) ?? null;
   return jsonOk({ item });
 }
@@ -30,7 +30,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }>;
   };
 
-  const item = await updateInvoice(id, body);
+  const item = await updateInvoice(session.companyId, id, body);
   return jsonUpdated({
     message: "Fattura aggiornata.",
     item

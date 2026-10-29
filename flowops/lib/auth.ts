@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { type User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
@@ -81,6 +82,18 @@ export async function requireCurrentSession() {
   const session = await getCurrentSession();
   if (!session) {
     throw new Error("Unauthenticated");
+  }
+  return session;
+}
+
+/**
+ * Per le pagine server: restituisce la sessione o porta al login.
+ * Da usare fuori da try/catch, perche' redirect() lancia un'eccezione.
+ */
+export async function requirePageSession(): Promise<AuthSession> {
+  const session = await getCurrentSession();
+  if (!session) {
+    redirect("/login");
   }
   return session;
 }

@@ -8,7 +8,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { id } = await context.params;
 
   try {
-    const createdInvoice = await createInvoiceDraftFromEstimate(id);
+    const createdInvoice = await createInvoiceDraftFromEstimate(session.companyId, id);
 
     return jsonCreated({
       message: "Bozza fattura creata dal preventivo.",

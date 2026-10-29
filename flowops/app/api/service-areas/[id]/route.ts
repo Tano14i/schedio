@@ -13,6 +13,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     active?: boolean;
   };
 
-  const item = await updateServiceArea(id, body);
+  const item = await updateServiceArea(session.companyId, id, body);
   return jsonUpdated({ item });
 }

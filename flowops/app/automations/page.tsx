@@ -1,3 +1,4 @@
+import { requirePageSession } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
 import { AutomationsWorkspace } from "@/components/automations-workspace";
 import { getAutomationsPageData } from "@/lib/automations-server";
@@ -5,7 +6,8 @@ import { getAutomationsPageData } from "@/lib/automations-server";
 export const dynamic = "force-dynamic";
 
 export default async function AutomationsPage() {
-  const data = await getAutomationsPageData();
+  const session = await requirePageSession();
+  const data = await getAutomationsPageData(session.user.companyId);
 
   return (
     <AppShell pathname="/automations">

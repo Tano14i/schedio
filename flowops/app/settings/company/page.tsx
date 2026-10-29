@@ -5,16 +5,15 @@ import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
 import { TradeEditForm } from "@/components/trade-edit-form";
 import { WhatsAppSetupCard } from "@/components/whatsapp-setup-card";
-import { getCurrentSession } from "@/lib/auth";
+import { requirePageSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getWhatsAppConnectionStatus } from "@/lib/whatsapp-config";
 
 export default async function CompanySetupPage() {
+  const session = await requirePageSession();
   try {
-    const session = await getCurrentSession();
-    const company = await prisma.company.findFirstOrThrow({
-      where: session ? { id: session.user.company.id } : undefined,
-      orderBy: { createdAt: "asc" },
+    const company = await prisma.company.findUniqueOrThrow({
+      where: { id: session.user.companyId },
       select: {
         id: true,
         name: true,

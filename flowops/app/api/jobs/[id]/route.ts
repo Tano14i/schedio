@@ -6,15 +6,16 @@ import { getJobByIdForUser, updateJob } from "@/lib/jobs-server";
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const session = await getSessionFromRequest(request);
+  if (!session) {
+    return Response.json({ message: "Non autorizzato." }, { status: 401 });
+  }
   const item = await getJobByIdForUser(
     id,
-    session
-      ? {
-          id: session.userId,
-          companyId: session.companyId,
-          role: session.role
-        }
-      : undefined
+    {
+      id: session.userId,
+      companyId: session.companyId,
+      role: session.role
+    }
   );
   if (!item) {
     return Response.json({ message: "Lavoro non trovato." }, { status: 404 });
@@ -25,15 +26,16 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const session = await getSessionFromRequest(request);
+  if (!session) {
+    return Response.json({ message: "Non autorizzato." }, { status: 401 });
+  }
   const job = await getJobByIdForUser(
     id,
-    session
-      ? {
-          id: session.userId,
-          companyId: session.companyId,
-          role: session.role
-        }
-      : undefined
+    {
+      id: session.userId,
+      companyId: session.companyId,
+      role: session.role
+    }
   );
 
   if (!job) {
@@ -54,7 +56,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     ? sanitizeJobPatchForRole("WORKER", body)
     : body;
 
-  const item = await updateJob(id, nextBody);
+  const item = await updateJob(session.companyId, id, nextBody);
   return jsonUpdated({
     message: "Lavoro aggiornato.",
     item

@@ -1,16 +1,8 @@
 import { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-async function getDefaultCompany() {
-  return prisma.company.findFirstOrThrow({
-    orderBy: { createdAt: "asc" }
-  });
-}
-
-export async function getTeamPageData(companyId?: string) {
-  const company = companyId
-    ? await prisma.company.findUniqueOrThrow({ where: { id: companyId } })
-    : await getDefaultCompany();
+export async function getTeamPageData(companyId: string) {
+  const company = await prisma.company.findUniqueOrThrow({ where: { id: companyId } });
 
   const users = await prisma.user.findMany({
     where: {
@@ -26,11 +18,13 @@ export async function getTeamPageData(companyId?: string) {
 }
 
 export async function updateUserHourlyCost(
+  companyId: string,
   userId: string,
   input: {
     hourlyCost: number | null;
   }
 ) {
+  await prisma.user.findFirstOrThrow({ where: { id: userId, companyId } });
   const user = await prisma.user.update({
     where: { id: userId },
     data: {

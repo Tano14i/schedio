@@ -35,6 +35,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Job schedulato: la route verifica CRON_SECRET da sola
+  if (pathname.startsWith("/api/internal/") && request.headers.get("authorization")?.startsWith("Bearer ")) {
+    return NextResponse.next();
+  }
+
   const session = await decodeSessionCookie(request.cookies.get(SESSION_COOKIE_NAME)?.value);
 
   if (!session) {

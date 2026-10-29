@@ -6,7 +6,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const { id } = await context.params;
-  const lead = await getLeadById(id);
+  const lead = await getLeadById(session.companyId, id);
 
   return jsonOk({
     item: lead
@@ -50,7 +50,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     preferredDate?: string | null;
   };
 
-  const lead = await updateLead(id, body);
+  const lead = await updateLead(session.companyId, id, body);
 
   return jsonUpdated({
     message: "Richiesta aggiornata.",

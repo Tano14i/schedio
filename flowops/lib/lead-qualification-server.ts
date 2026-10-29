@@ -22,24 +22,16 @@ function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
-export async function getServiceAreas(companyId?: string) {
-  const company = companyId
-    ? await prisma.company.findUnique({ where: { id: companyId } })
-    : await prisma.company.findFirst({ orderBy: { createdAt: "asc" } });
-
-  if (!company) {
-    return [];
-  }
-
+export async function getServiceAreas(companyId: string) {
   return prisma.serviceArea.findMany({
-    where: { companyId: company.id },
+    where: { companyId },
     orderBy: { createdAt: "asc" }
   });
 }
 
-export async function qualifyLead(leadId: string) {
-  const lead = await prisma.lead.findUniqueOrThrow({
-    where: { id: leadId },
+export async function qualifyLead(companyId: string, leadId: string) {
+  const lead = await prisma.lead.findFirstOrThrow({
+    where: { id: leadId, companyId },
     include: {
       customer: true,
       whatsappThreads: {
@@ -117,9 +109,9 @@ export async function qualifyLead(leadId: string) {
   return { lead: updatedLead, decision };
 }
 
-export async function requestClarification(leadId: string) {
-  const lead = await prisma.lead.findUniqueOrThrow({
-    where: { id: leadId },
+export async function requestClarification(companyId: string, leadId: string) {
+  const lead = await prisma.lead.findFirstOrThrow({
+    where: { id: leadId, companyId },
     include: {
       customer: true,
       whatsappThreads: {
@@ -165,14 +157,14 @@ export async function requestClarification(leadId: string) {
   return { leadId: lead.id, message };
 }
 
-export async function setLeadQualification(leadId: string, input: {
+export async function setLeadQualification(companyId: string, leadId: string, input: {
   qualificationStatus: QualificationStatus;
   nextBestAction: NextBestAction;
   qualificationReason: string;
   qualificationConfidence?: QualificationConfidence;
 }) {
-  const currentLead = await prisma.lead.findUniqueOrThrow({
-    where: { id: leadId },
+  const currentLead = await prisma.lead.findFirstOrThrow({
+    where: { id: leadId, companyId },
     include: {
       whatsappThreads: {
         include: { contact: true },
@@ -235,12 +227,12 @@ export async function setLeadQualification(leadId: string, input: {
   return lead;
 }
 
-export async function overrideLeadQualification(leadId: string, input: {
+export async function overrideLeadQualification(companyId: string, leadId: string, input: {
   qualificationStatus: QualificationStatus;
   nextBestAction: NextBestAction;
   qualificationReason: string;
 }) {
-  const lead = await setLeadQualification(leadId, {
+  const lead = await setLeadQualification(companyId, leadId, {
     ...input,
     qualificationConfidence: QualificationConfidence.HIGH
   });
@@ -259,16 +251,13 @@ export async function overrideLeadQualification(leadId: string, input: {
 }
 
 export async function createServiceArea(input: {
-  companyId?: string;
+  companyId: string;
   label: string;
   city?: string;
   postalCodePrefix?: string;
   active?: boolean;
 }) {
-  const company =
-    input.companyId
-      ? await prisma.company.findUniqueOrThrow({ where: { id: input.companyId } })
-      : await prisma.company.findFirstOrThrow({ orderBy: { createdAt: "asc" } });
+  const company = { id: input.companyId };
 
   return prisma.serviceArea.create({
     data: {
@@ -281,12 +270,13 @@ export async function createServiceArea(input: {
   });
 }
 
-export async function updateServiceArea(areaId: string, input: {
+export async function updateServiceArea(companyId: string, areaId: string, input: {
   label?: string;
   city?: string | null;
   postalCodePrefix?: string | null;
   active?: boolean;
 }) {
+  await prisma.serviceArea.findFirstOrThrow({ where: { id: areaId, companyId } });
   return prisma.serviceArea.update({
     where: { id: areaId },
     data: {
@@ -298,11 +288,8 @@ export async function updateServiceArea(areaId: string, input: {
   });
 }
 
-export async function getQualificationKpis() {
-  const company = await prisma.company.findFirst({ orderBy: { createdAt: "asc" } });
-  if (!company) {
-    return null;
-  }
+export async function getQualificationKpis(companyId: string) {
+  const company = { id: companyId };
 
   const whatsappLeads = await prisma.lead.findMany({
     where: { companyId: company.id, source: "WHATSAPP" },

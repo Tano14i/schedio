@@ -1,3 +1,4 @@
+import { requirePageSession } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
 import { ActivityWorkspace } from "@/components/activity-workspace";
 import { getActivityFeed, getActivityMessage } from "@/lib/crm-server";
@@ -5,8 +6,9 @@ import { getActivityFeed, getActivityMessage } from "@/lib/crm-server";
 export const dynamic = "force-dynamic";
 
 export default async function ActivityPage() {
+  const session = await requirePageSession();
   try {
-    const items = await getActivityFeed();
+    const items = await getActivityFeed(session.user.companyId);
 
     return (
       <AppShell pathname="/activity">

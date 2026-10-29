@@ -7,8 +7,8 @@ export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const [funnel, invoices] = await Promise.all([
-    computeFunnelMetrics(),
-    getInvoiceMetrics()
+    computeFunnelMetrics(session.companyId),
+    getInvoiceMetrics(session.companyId)
   ]);
 
   return jsonOk({

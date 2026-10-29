@@ -1,3 +1,4 @@
+import { requirePageSession } from "@/lib/auth";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { DataTable } from "@/components/data-table";
@@ -9,8 +10,9 @@ import { formatCompactDate } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export default async function CustomersPage() {
+  const session = await requirePageSession();
   try {
-    const { data: items } = await getCustomersPageData();
+    const { data: items } = await getCustomersPageData(session.user.companyId);
     const firstCustomer = items[0];
 
     return (

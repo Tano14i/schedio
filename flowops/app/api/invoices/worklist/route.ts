@@ -5,6 +5,6 @@ import { getInvoiceWorklist } from "@/lib/invoices-server";
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const items = await getInvoiceWorklist();
+  const items = await getInvoiceWorklist(session.companyId);
   return jsonOk({ items });
 }

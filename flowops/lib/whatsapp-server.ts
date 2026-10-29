@@ -49,7 +49,15 @@ function getTimestamp(value?: string) {
   return new Date(value);
 }
 
-async function getDefaultCompany() {
+// Il numero WhatsApp Cloud API e' unico (variabili d'ambiente): i messaggi in
+// arrivo vanno all'azienda proprietaria del numero, indicata da
+// WHATSAPP_COMPANY_ID. Senza variabile si usa l'azienda piu' vecchia.
+async function getWebhookCompany() {
+  const configuredId = process.env.WHATSAPP_COMPANY_ID?.trim();
+  if (configuredId) {
+    return prisma.company.findUniqueOrThrow({ where: { id: configuredId } });
+  }
+
   const existing = await prisma.company.findFirst({
     orderBy: { createdAt: "asc" }
   });
@@ -63,6 +71,12 @@ async function getDefaultCompany() {
       name: DEFAULT_COMPANY_NAME
     }
   });
+}
+
+// Solo l'azienda proprietaria del numero puo' inviare messaggi liberi da li'.
+export async function isWhatsAppNumberOwner(companyId: string) {
+  const owner = await getWebhookCompany();
+  return owner.id === companyId;
 }
 
 async function getDefaultHandyman(companyId: string) {
@@ -296,9 +310,9 @@ export async function downloadWhatsAppMedia(input: {
   };
 }
 
-export async function createLeadFromWhatsAppThread(threadId: string) {
-  const thread = await prisma.whatsAppThread.findUnique({
-    where: { id: threadId },
+export async function createLeadFromWhatsAppThread(companyId: string, threadId: string) {
+  const thread = await prisma.whatsAppThread.findFirst({
+    where: { id: threadId, companyId },
     include: {
       contact: true,
       customer: true,
@@ -411,7 +425,7 @@ export async function createLeadFromWhatsAppThread(threadId: string) {
   return lead;
 }
 
-export async function createLeadCaptureFromWhatsAppIntake(input: {
+export async function createLeadCaptureFromWhatsAppIntake(companyId: string, input: {
   customerName: string;
   phone: string;
   serviceType: string;
@@ -422,7 +436,7 @@ export async function createLeadCaptureFromWhatsAppIntake(input: {
   preferredWindow?: string;
   photos?: string[];
 }) {
-  const company = await getDefaultCompany();
+  const company = await prisma.company.findUniqueOrThrow({ where: { id: companyId } });
   const contact = await upsertWhatsAppContact({
     companyId: company.id,
     waId: input.phone,
@@ -476,7 +490,7 @@ export async function createLeadCaptureFromWhatsAppIntake(input: {
     );
   }
 
-  const lead = await createLeadFromWhatsAppThread(thread.id);
+  const lead = await createLeadFromWhatsAppThread(company.id, thread.id);
 
   return { company, contact, thread, lead };
 }
@@ -488,10 +502,10 @@ export async function generateCandidateSlots(input: {
   limit?: number;
 }) {
   const handyman = input.handymanUserId
-    ? await prisma.user.findUniqueOrThrow({ where: { id: input.handymanUserId } })
+    ? await prisma.user.findFirstOrThrow({ where: { id: input.handymanUserId, companyId: input.companyId } })
     : await getDefaultHandyman(input.companyId);
-  const lead = await prisma.lead.findUniqueOrThrow({
-    where: { id: input.leadId },
+  const lead = await prisma.lead.findFirstOrThrow({
+    where: { id: input.leadId, companyId: input.companyId },
     include: { customer: true }
   });
   const limit = input.limit ?? 3;
@@ -536,7 +550,7 @@ export async function createSchedulingProposal(input: {
   slotIds: string[];
 }) {
   const slots = await prisma.availabilitySlot.findMany({
-    where: { id: { in: input.slotIds } },
+    where: { id: { in: input.slotIds }, companyId: input.companyId },
     orderBy: { startsAt: "asc" }
   });
 
@@ -562,9 +576,9 @@ export async function createSchedulingProposal(input: {
   });
 }
 
-export async function createProposalForLead(input: { leadId: string; limit?: number }) {
-  const lead = await prisma.lead.findUniqueOrThrow({
-    where: { id: input.leadId }
+export async function createProposalForLead(input: { companyId: string; leadId: string; limit?: number }) {
+  const lead = await prisma.lead.findFirstOrThrow({
+    where: { id: input.leadId, companyId: input.companyId }
   });
 
   const { handyman, slots } = await generateCandidateSlots({
@@ -600,12 +614,13 @@ export async function createProposalForLead(input: { leadId: string; limit?: num
 }
 
 export async function approveSchedulingProposal(input: {
+  companyId: string;
   proposalId: string;
   selectedSlotId?: string;
   approvedVia?: ProposalApprovedVia;
 }) {
-  const proposal = await prisma.schedulingProposal.findUniqueOrThrow({
-    where: { id: input.proposalId },
+  const proposal = await prisma.schedulingProposal.findFirstOrThrow({
+    where: { id: input.proposalId, companyId: input.companyId },
     include: {
       lead: { include: { customer: true } },
       thread: { include: { contact: true } }
@@ -616,6 +631,10 @@ export async function approveSchedulingProposal(input: {
   if (!selectedSlotId) {
     throw new Error("No selected slot for proposal");
   }
+
+  await prisma.availabilitySlot.findFirstOrThrow({
+    where: { id: selectedSlotId, companyId: input.companyId }
+  });
 
   const updated = await prisma.schedulingProposal.update({
     where: { id: proposal.id },
@@ -642,9 +661,9 @@ export async function approveSchedulingProposal(input: {
   return updated;
 }
 
-export async function sendVisitProposalToCustomer(proposalId: string) {
-  const proposal = await prisma.schedulingProposal.findUniqueOrThrow({
-    where: { id: proposalId },
+export async function sendVisitProposalToCustomer(companyId: string, proposalId: string) {
+  const proposal = await prisma.schedulingProposal.findFirstOrThrow({
+    where: { id: proposalId, companyId },
     include: {
       thread: { include: { contact: true } },
       lead: { include: { customer: true } },
@@ -774,7 +793,7 @@ export async function confirmCustomerSlot(publicToken: string) {
 }
 
 export async function handleWhatsAppWebhook(payload: unknown) {
-  const company = await getDefaultCompany();
+  const company = await getWebhookCompany();
   const parsed = parseWhatsAppWebhookPayload(payload);
 
   for (const contactInfo of parsed.contacts) {
@@ -916,7 +935,7 @@ export async function handleWhatsAppWebhook(payload: unknown) {
         imageMessageCount
       })
     ) {
-      await createLeadFromWhatsAppThread(updatedThread.id);
+      await createLeadFromWhatsAppThread(company.id, updatedThread.id);
     }
   }
 

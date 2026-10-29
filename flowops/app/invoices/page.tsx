@@ -1,11 +1,13 @@
+import { requirePageSession } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
 import { InvoicesWorkspace } from "@/components/invoices-workspace";
 import { getInvoiceMetrics, getInvoicePageData, getInvoiceWorklist } from "@/lib/invoices-server";
 
 export default async function InvoicesPage() {
+  const session = await requirePageSession();
   try {
     const [{ customers: dbCustomers, invoices: dbInvoices, reviewRequests }, metrics, worklist] =
-      await Promise.all([getInvoicePageData(), getInvoiceMetrics(), getInvoiceWorklist()]);
+      await Promise.all([getInvoicePageData(session.user.companyId), getInvoiceMetrics(session.user.companyId), getInvoiceWorklist(session.user.companyId)]);
 
     return (
       <AppShell pathname="/invoices">

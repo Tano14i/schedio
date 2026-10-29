@@ -9,8 +9,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (session instanceof Response) return session;
   const { id } = await context.params;
 
-  const invoice = await prisma.invoice.findUnique({
-    where: { id },
+  const invoice = await prisma.invoice.findFirst({
+    where: { id, companyId: session.companyId },
     include: {
       customer: true,
       reminders: {

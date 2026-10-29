@@ -11,7 +11,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     template?: string;
     delayMinutes?: number;
   };
-  const item = await updateAutomation(id, body);
+  const item = await updateAutomation(session.companyId, id, body);
   return jsonUpdated({
     message: "Automazione aggiornata.",
     item

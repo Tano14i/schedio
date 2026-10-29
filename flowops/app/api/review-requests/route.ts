@@ -5,6 +5,6 @@ import { getInvoicePageData } from "@/lib/invoices-server";
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const { reviewRequests } = await getInvoicePageData();
+  const { reviewRequests } = await getInvoicePageData(session.companyId);
   return jsonOk({ items: reviewRequests });
 }

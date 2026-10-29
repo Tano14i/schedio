@@ -1,20 +1,20 @@
 import { AppShell } from "@/components/app-shell";
 import { JobsWorkspace } from "@/components/jobs-workspace";
-import { getCurrentSession, isOwner } from "@/lib/auth";
+import { requirePageSession, isOwner } from "@/lib/auth";
 import { getJobsPageData } from "@/lib/jobs-server";
 
 export const dynamic = "force-dynamic";
 
 export default async function JobsPage() {
-  const session = await getCurrentSession();
+  const session = await requirePageSession();
 
   try {
     const items = await getJobsPageData(
-      session ? {
+      {
         id: session.user.id,
         companyId: session.user.companyId,
         role: session.user.role
-      } : undefined
+      }
     );
 
     return (

@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const created = await createLeadCaptureFromWhatsAppIntake({
+  const created = await createLeadCaptureFromWhatsAppIntake(session.companyId, {
     customerName,
     phone: body.phone,
     serviceType,

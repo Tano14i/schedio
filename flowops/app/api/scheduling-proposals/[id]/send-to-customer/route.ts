@@ -6,7 +6,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const { id } = await context.params;
-  const proposal = await sendVisitProposalToCustomer(id);
+  const proposal = await sendVisitProposalToCustomer(session.companyId, id);
 
   return jsonUpdated({
     message: "Proposta inviata al cliente su WhatsApp.",

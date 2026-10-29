@@ -1,3 +1,4 @@
+import { requirePageSession } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
 import { WhatsAppAdminPanel, type WhatsAppAdminItem } from "@/components/whatsapp-admin-panel";
 import { getWhatsAppAdminItems } from "@/lib/whatsapp-admin";
@@ -10,6 +11,7 @@ export default async function WhatsAppPage({
 }: {
   searchParams: Promise<{ action?: string; thread?: string }>;
 }) {
+  const session = await requirePageSession();
   const resolvedSearchParams = await searchParams;
 
   let items: WhatsAppAdminItem[] = [];
@@ -17,7 +19,7 @@ export default async function WhatsAppPage({
   const connection = getWhatsAppConnectionStatus();
 
   try {
-    items = await getWhatsAppAdminItems();
+    items = await getWhatsAppAdminItems(session.user.companyId);
   } catch {
     notice = "Non riesco a leggere i thread WhatsApp dal database. Controlla connessione e webhook.";
   }

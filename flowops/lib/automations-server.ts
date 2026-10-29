@@ -30,12 +30,6 @@ const coreAutomations = [
   }
 ] as const;
 
-async function getDefaultCompany() {
-  return prisma.company.findFirstOrThrow({
-    orderBy: { createdAt: "asc" }
-  });
-}
-
 export async function ensureCoreAutomations(companyId: string) {
   for (const automation of coreAutomations) {
     const existing = await prisma.automation.findFirst({
@@ -61,8 +55,8 @@ export async function ensureCoreAutomations(companyId: string) {
   }
 }
 
-export async function getAutomationsPageData() {
-  const company = await getDefaultCompany();
+export async function getAutomationsPageData(companyId: string) {
+  const company = await prisma.company.findUniqueOrThrow({ where: { id: companyId } });
   await ensureCoreAutomations(company.id);
 
   const [automations, recentLogs, queueCounts] = await Promise.all([
@@ -119,6 +113,7 @@ export async function getAutomationsPageData() {
 }
 
 export async function updateAutomation(
+  companyId: string,
   automationId: string,
   input: {
     enabled?: boolean;
@@ -126,6 +121,7 @@ export async function updateAutomation(
     delayMinutes?: number;
   }
 ) {
+  await prisma.automation.findFirstOrThrow({ where: { id: automationId, companyId } });
   return prisma.automation.update({
     where: { id: automationId },
     data: {
@@ -136,19 +132,24 @@ export async function updateAutomation(
   });
 }
 
-export async function runAutomationSuite() {
-  const company = await getDefaultCompany();
-  await ensureCoreAutomations(company.id);
+/**
+ * Con companyId esegue solo le automazioni di quell'azienda (avvio manuale
+ * dal pannello). Senza companyId le esegue per tutte (job schedulato).
+ */
+export async function runAutomationSuite(companyId?: string) {
+  if (companyId) {
+    await ensureCoreAutomations(companyId);
+  }
 
   const [estimateFollowUpsSent, invoiceRemindersSent, reviewRequestsSent] = await Promise.all([
-    sendDueEstimateFollowUps(),
-    sendDueInvoiceReminders(),
-    sendDueReviewRequests()
+    sendDueEstimateFollowUps(companyId),
+    sendDueInvoiceReminders(companyId),
+    sendDueReviewRequests(companyId)
   ]);
 
   const failedRuns = await prisma.automationLog.count({
     where: {
-      companyId: company.id,
+      ...(companyId ? { companyId } : {}),
       status: "FAILED"
     }
   });

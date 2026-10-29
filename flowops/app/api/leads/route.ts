@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") ?? "1", 10);
   const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
-  const { leads, pagination } = await getLeadsPageData({ page, limit });
+  const { leads, pagination } = await getLeadsPageData(session.companyId, { page, limit });
   return jsonOk({
     data: leads.map((lead) => ({
       id: lead.id,
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const lead = await createLeadWithCustomer({
+  const lead = await createLeadWithCustomer(session.companyId, {
     fullName: body.fullName,
     phone: body.phone,
     email: body.email,

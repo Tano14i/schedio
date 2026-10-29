@@ -1,3 +1,4 @@
+import { requirePageSession } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ButtonLink } from "@/components/button";
@@ -15,10 +16,11 @@ export default async function CustomerDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await requirePageSession();
   const { id } = await params;
 
   try {
-    const customer = await getCustomerDetailData(id);
+    const customer = await getCustomerDetailData(session.user.companyId, id);
 
     if (!customer) {
       notFound();
@@ -31,7 +33,7 @@ export default async function CustomerDetailPage({
       ...customer.estimates.map((item) => item.id),
       ...customer.invoices.map((item) => item.id)
     ]);
-    const logs = await getActivityFeed();
+    const logs = await getActivityFeed(session.user.companyId);
     const customerActivity = logs
       .filter((item) => entityIds.has(item.entityId))
       .map((item) => ({

@@ -5,7 +5,7 @@ import { createEstimateTemplate, getEstimateTemplates } from "@/lib/estimates-se
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const items = await getEstimateTemplates();
+  const items = await getEstimateTemplates(session.companyId);
   return jsonOk({ items });
 }
 

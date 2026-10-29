@@ -7,7 +7,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const { id } = await context.params;
-  const item = await setLeadQualification(id, {
+  const item = await setLeadQualification(session.companyId, id, {
     qualificationStatus: QualificationStatus.LOW_PRIORITY,
     nextBestAction: NextBestAction.DEFER,
     qualificationReason: "too_small"

@@ -7,8 +7,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const { id } = await context.params;
-  const existing = await prisma.estimate.findUniqueOrThrow({
-    where: { id },
+  const existing = await prisma.estimate.findFirstOrThrow({
+    where: { id, companyId: session.companyId },
     include: { items: { orderBy: { sortOrder: "asc" } } }
   });
 

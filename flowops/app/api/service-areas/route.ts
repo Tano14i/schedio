@@ -5,7 +5,7 @@ import { createServiceArea, getServiceAreas } from "@/lib/lead-qualification-ser
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const items = await getServiceAreas();
+  const items = await getServiceAreas(session.companyId);
   return jsonOk({ items });
 }
 
@@ -24,6 +24,9 @@ export async function POST(request: Request) {
     return Response.json({ message: "Inserisci il nome della zona servita." }, { status: 400 });
   }
 
-  const item = await createServiceArea(body as { label: string; city?: string; postalCodePrefix?: string; active?: boolean });
+  const item = await createServiceArea({
+    ...(body as { label: string; city?: string; postalCodePrefix?: string; active?: boolean }),
+    companyId: session.companyId
+  });
   return jsonCreated({ item });
 }

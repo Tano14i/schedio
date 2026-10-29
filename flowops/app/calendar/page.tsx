@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { CalendarWorkspace } from "@/components/calendar-workspace";
-import { getCurrentSession, isWorker } from "@/lib/auth";
+import { requirePageSession, isWorker } from "@/lib/auth";
 import { deriveLeadNextAction } from "@/lib/crm-server";
 import { getCalendarData } from "@/lib/jobs-server";
 
@@ -17,16 +17,16 @@ export default async function CalendarPage({
   }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const session = await getCurrentSession();
+  const session = await requirePageSession();
   const workerMode = isWorker(session?.user.role ?? "OWNER");
 
   try {
     const { customers: dbCustomers, leads: dbLeads, jobs: dbJobs } = await getCalendarData(
-      session ? {
+      {
         id: session.user.id,
         companyId: session.user.companyId,
         role: session.user.role
-      } : undefined
+      }
     );
 
     return (

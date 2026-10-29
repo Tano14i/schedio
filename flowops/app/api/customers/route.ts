@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") ?? "1", 10);
   const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
-  const { data: items, pagination } = await getCustomersPageData({ page, limit });
+  const { data: items, pagination } = await getCustomersPageData(session.companyId, { page, limit });
   return jsonOk({
     data: items.map((customer) => ({
       id: customer.id,
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const customer = await createCustomer(body as {
+  const customer = await createCustomer(session.companyId, body as {
     fullName: string;
     phone: string;
     email?: string;

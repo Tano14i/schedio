@@ -24,7 +24,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     );
   }
 
-  const item = await overrideLeadQualification(id, {
+  const item = await overrideLeadQualification(session.companyId, id, {
     qualificationStatus: QualificationStatus[body.qualificationStatus],
     nextBestAction: NextBestAction[body.nextBestAction],
     qualificationReason: body.qualificationReason

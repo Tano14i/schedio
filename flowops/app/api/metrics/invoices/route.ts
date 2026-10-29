@@ -5,6 +5,6 @@ import { getInvoiceMetrics } from "@/lib/invoices-server";
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const item = await getInvoiceMetrics();
+  const item = await getInvoiceMetrics(session.companyId);
   return jsonOk({ item });
 }

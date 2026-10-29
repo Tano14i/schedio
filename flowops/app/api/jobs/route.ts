@@ -4,14 +4,15 @@ import { createJob, getJobsPageData } from "@/lib/jobs-server";
 
 export async function GET(request: Request) {
   const session = await getSessionFromRequest(request);
+  if (!session) {
+    return Response.json({ message: "Non autorizzato." }, { status: 401 });
+  }
   const items = await getJobsPageData(
-    session
-      ? {
-          id: session.userId,
-          companyId: session.companyId,
-          role: session.role
-        }
-      : undefined
+    {
+      id: session.userId,
+      companyId: session.companyId,
+      role: session.role
+    }
   );
   return jsonOk({
     items: items.map((job) => ({
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
     }, { status: 400 });
   }
 
-  const item = await createJob({
+  const item = await createJob(session.companyId, {
     leadId: body.leadId,
     customerId: body.customerId,
     title: body.title,

@@ -63,12 +63,6 @@ export function calculateEstimateTotals(items: EstimateItemInput[], taxRate = 0)
   };
 }
 
-async function getDefaultCompany() {
-  return prisma.company.findFirstOrThrow({
-    orderBy: { createdAt: "asc" }
-  });
-}
-
 async function logActivity(input: {
   companyId: string;
   entityType: string;
@@ -148,6 +142,7 @@ export async function applyEstimateTemplate(companyId: string, serviceType?: str
 }
 
 export async function completeJobAndCaptureSummary(
+  companyId: string,
   jobId: string,
   input: {
     completionNotes?: string;
@@ -155,6 +150,7 @@ export async function completeJobAndCaptureSummary(
     notes?: string;
   }
 ) {
+  await prisma.job.findFirstOrThrow({ where: { id: jobId, companyId } });
   const job = await prisma.job.update({
     where: { id: jobId },
     data: {
@@ -181,8 +177,9 @@ export async function completeJobAndCaptureSummary(
   return job;
 }
 
-export async function createEstimateDraftForCustomer(customerId: string) {
-  const company = await getDefaultCompany();
+export async function createEstimateDraftForCustomer(companyId: string, customerId: string) {
+  const company = await prisma.company.findUniqueOrThrow({ where: { id: companyId } });
+  await prisma.customer.findFirstOrThrow({ where: { id: customerId, companyId } });
   const number = await nextEstimateNumber(company.id);
   const validUntil = new Date();
   validUntil.setDate(validUntil.getDate() + 7);
@@ -218,9 +215,9 @@ export async function createEstimateDraftForCustomer(customerId: string) {
   return estimate;
 }
 
-export async function createEstimateDraftFromJob(jobId: string) {
-  const job = await prisma.job.findUniqueOrThrow({
-    where: { id: jobId },
+export async function createEstimateDraftFromJob(companyId: string, jobId: string) {
+  const job = await prisma.job.findFirstOrThrow({
+    where: { id: jobId, companyId },
     include: {
       customer: true,
       assignedUser: true,
@@ -330,9 +327,9 @@ export async function createEstimateDraftFromJob(jobId: string) {
   return estimate;
 }
 
-export async function createJobFromEstimate(estimateId: string) {
-  const estimate = await prisma.estimate.findUniqueOrThrow({
-    where: { id: estimateId },
+export async function createJobFromEstimate(companyId: string, estimateId: string) {
+  const estimate = await prisma.estimate.findFirstOrThrow({
+    where: { id: estimateId, companyId },
     include: {
       customer: true,
       lead: true
@@ -410,6 +407,7 @@ export async function createJobFromEstimate(estimateId: string) {
 }
 
 export async function updateEstimate(
+  companyId: string,
   estimateId: string,
   input: {
     title?: string | null;
@@ -422,8 +420,8 @@ export async function updateEstimate(
     items?: EstimateItemInput[];
   }
 ) {
-  const existing = await prisma.estimate.findUniqueOrThrow({
-    where: { id: estimateId },
+  const existing = await prisma.estimate.findFirstOrThrow({
+    where: { id: estimateId, companyId },
     include: { items: { orderBy: { sortOrder: "asc" } } }
   });
   const taxRate = input.taxRate ?? existing.taxRate;
@@ -480,9 +478,9 @@ export async function updateEstimate(
   return estimate;
 }
 
-export async function scheduleEstimateFollowUp(estimateId: string) {
-  const estimate = await prisma.estimate.findUniqueOrThrow({
-    where: { id: estimateId }
+export async function scheduleEstimateFollowUp(companyId: string, estimateId: string) {
+  const estimate = await prisma.estimate.findFirstOrThrow({
+    where: { id: estimateId, companyId }
   });
 
   if (
@@ -541,9 +539,10 @@ export async function scheduleEstimateFollowUp(estimateId: string) {
   return followUp;
 }
 
-export async function cancelEstimateFollowUps(estimateId: string) {
+export async function cancelEstimateFollowUps(companyId: string, estimateId: string) {
   const pending = await prisma.estimateFollowUp.findMany({
     where: {
+      companyId,
       estimateId,
       status: "scheduled",
       canceledAt: null
@@ -553,6 +552,7 @@ export async function cancelEstimateFollowUps(estimateId: string) {
 
   await prisma.estimateFollowUp.updateMany({
     where: {
+      companyId,
       estimateId,
       status: "scheduled",
       canceledAt: null
@@ -570,9 +570,9 @@ export async function cancelEstimateFollowUps(estimateId: string) {
   });
 }
 
-export async function sendEstimateToCustomer(estimateId: string) {
-  const estimate = await prisma.estimate.findUniqueOrThrow({
-    where: { id: estimateId },
+export async function sendEstimateToCustomer(companyId: string, estimateId: string) {
+  const estimate = await prisma.estimate.findFirstOrThrow({
+    where: { id: estimateId, companyId },
     include: {
       customer: true,
       lead: {
@@ -634,7 +634,7 @@ export async function sendEstimateToCustomer(estimateId: string) {
     }
   });
 
-  await scheduleEstimateFollowUp(estimate.id);
+  await scheduleEstimateFollowUp(estimate.companyId, estimate.id);
 
   return updated;
 }
@@ -687,7 +687,7 @@ export async function acceptEstimate(publicToken: string) {
     });
   }
 
-  await cancelEstimateFollowUps(estimate.id);
+  await cancelEstimateFollowUps(estimate.companyId, estimate.id);
 
   await logActivity({
     companyId: estimate.companyId,
@@ -720,7 +720,7 @@ export async function rejectEstimate(publicToken: string) {
     });
   }
 
-  await cancelEstimateFollowUps(estimate.id);
+  await cancelEstimateFollowUps(estimate.companyId, estimate.id);
 
   await logActivity({
     companyId: estimate.companyId,
@@ -732,9 +732,10 @@ export async function rejectEstimate(publicToken: string) {
   return updated;
 }
 
-export async function getPendingEstimateFollowUps() {
+export async function getPendingEstimateFollowUps(companyId: string) {
   return prisma.estimateFollowUp.findMany({
     where: {
+      companyId,
       status: "scheduled",
       canceledAt: null
     },
@@ -757,9 +758,10 @@ export async function getPendingEstimateFollowUps() {
   });
 }
 
-export async function sendDueEstimateFollowUps() {
+export async function sendDueEstimateFollowUps(companyId?: string) {
   const queued = await prisma.estimateFollowUp.findMany({
     where: {
+      ...(companyId ? { companyId } : {}),
       status: "scheduled",
       canceledAt: null,
       scheduledFor: { lte: new Date() }
@@ -865,10 +867,12 @@ export async function sendDueEstimateFollowUps() {
   return queued.length;
 }
 
-export async function sendEstimateFollowUpNow(estimateId: string) {
-  await scheduleEstimateFollowUp(estimateId);
+export async function sendEstimateFollowUpNow(companyId: string, estimateId: string) {
+  await prisma.estimate.findFirstOrThrow({ where: { id: estimateId, companyId } });
+  await scheduleEstimateFollowUp(companyId, estimateId);
   await prisma.estimateFollowUp.updateMany({
     where: {
+      companyId,
       estimateId,
       status: "scheduled",
       canceledAt: null
@@ -878,12 +882,13 @@ export async function sendEstimateFollowUpNow(estimateId: string) {
     }
   });
 
-  await sendDueEstimateFollowUps();
+  await sendDueEstimateFollowUps(companyId);
 }
 
-export async function snoozeEstimateFollowUp(estimateId: string, hours = 24) {
+export async function snoozeEstimateFollowUp(companyId: string, estimateId: string, hours = 24) {
   const followUp = await prisma.estimateFollowUp.findFirst({
     where: {
+      companyId,
       estimateId,
       status: "scheduled",
       canceledAt: null
@@ -904,8 +909,8 @@ export async function snoozeEstimateFollowUp(estimateId: string, hours = 24) {
   });
 }
 
-export async function computeFunnelMetrics() {
-  const company = await getDefaultCompany();
+export async function computeFunnelMetrics(companyId: string) {
+  const company = { id: companyId };
   const [leads, jobs, estimates] = await Promise.all([
     prisma.lead.findMany({ where: { companyId: company.id } }),
     prisma.job.findMany({ where: { companyId: company.id } }),
@@ -932,8 +937,8 @@ function averageHours(items: number[]) {
   return Number((items.reduce((sum, value) => sum + value, 0) / items.length).toFixed(1));
 }
 
-export async function computeOperationalMetrics() {
-  const company = await getDefaultCompany();
+export async function computeOperationalMetrics(companyId: string) {
+  const company = { id: companyId };
   const [leads, jobs, estimates] = await Promise.all([
     prisma.lead.findMany({ where: { companyId: company.id } }),
     prisma.job.findMany({ where: { companyId: company.id, type: "ESTIMATE_VISIT" } }),
@@ -972,8 +977,8 @@ export async function computeOperationalMetrics() {
   };
 }
 
-export async function getFollowUpWorklist() {
-  const company = await getDefaultCompany();
+export async function getFollowUpWorklist(companyId: string) {
+  const company = { id: companyId };
   const estimates = await prisma.estimate.findMany({
     where: {
       companyId: company.id,
@@ -1015,10 +1020,8 @@ export async function getFollowUpWorklist() {
   });
 }
 
-export async function getEstimateTemplates(companyId?: string) {
-  const company = companyId
-    ? await prisma.company.findUniqueOrThrow({ where: { id: companyId } })
-    : await getDefaultCompany();
+export async function getEstimateTemplates(companyId: string) {
+  const company = { id: companyId };
 
   return prisma.estimateTemplate.findMany({
     where: { companyId: company.id },
@@ -1027,7 +1030,7 @@ export async function getEstimateTemplates(companyId?: string) {
 }
 
 export async function createEstimateTemplate(input: {
-  companyId?: string;
+  companyId: string;
   name: string;
   serviceType?: string | null;
   introText?: string | null;
@@ -1036,9 +1039,7 @@ export async function createEstimateTemplate(input: {
   terms?: string | null;
   itemsJson: EstimateItemInput[];
 }) {
-  const company = input.companyId
-    ? await prisma.company.findUniqueOrThrow({ where: { id: input.companyId } })
-    : await getDefaultCompany();
+  const company = { id: input.companyId };
 
   return prisma.estimateTemplate.create({
     data: {
@@ -1055,6 +1056,7 @@ export async function createEstimateTemplate(input: {
 }
 
 export async function updateEstimateTemplate(
+  companyId: string,
   templateId: string,
   input: {
     name?: string;
@@ -1067,6 +1069,7 @@ export async function updateEstimateTemplate(
     itemsJson?: EstimateItemInput[];
   }
 ) {
+  await prisma.estimateTemplate.findFirstOrThrow({ where: { id: templateId, companyId } });
   return prisma.estimateTemplate.update({
     where: { id: templateId },
     data: {
@@ -1082,8 +1085,8 @@ export async function updateEstimateTemplate(
   });
 }
 
-export async function getEstimatePageData(opts?: { page?: number; limit?: number }) {
-  const company = await getDefaultCompany();
+export async function getEstimatePageData(companyId: string, opts?: { page?: number; limit?: number }) {
+  const company = await prisma.company.findUniqueOrThrow({ where: { id: companyId } });
   const page = Math.max(1, opts?.page ?? 1);
   const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
   const paginate = opts !== undefined;
@@ -1120,9 +1123,9 @@ export async function getEstimatePageData(opts?: { page?: number; limit?: number
   };
 }
 
-export async function getJobDetailData(jobId: string) {
-  const job = await prisma.job.findUnique({
-    where: { id: jobId },
+export async function getJobDetailData(companyId: string, jobId: string) {
+  const job = await prisma.job.findFirst({
+    where: { id: jobId, companyId },
     include: {
       customer: true,
       assignedUser: true,

@@ -6,8 +6,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const { id } = await context.params;
-  const body = (await request.json()) as Parameters<typeof updateEstimateTemplate>[1];
-  const item = await updateEstimateTemplate(id, body);
+  const body = (await request.json()) as Parameters<typeof updateEstimateTemplate>[2];
+  const item = await updateEstimateTemplate(session.companyId, id, body);
   return jsonUpdated({
     message: "Template preventivo aggiornato.",
     item

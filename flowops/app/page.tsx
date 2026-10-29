@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   }
 
   const [funnel, operations, worklist, invoiceMetrics, invoiceWorklist, marginOverview, activityItems] = await Promise.all([
-    computeFunnelMetrics().catch(() => ({
+    computeFunnelMetrics(session.user.companyId).catch(() => ({
       leadsReceived: 40,
       leadsQualified: 28,
       visitsConfirmed: 20,
@@ -39,13 +39,13 @@ export default async function DashboardPage() {
       estimatesViewed: 9,
       estimatesAccepted: 5
     })),
-    computeOperationalMetrics().catch(() => ({
+    computeOperationalMetrics(session.user.companyId).catch(() => ({
       avgLeadToQualificationHours: 0.4,
       avgLeadToVisitConfirmationHours: 18,
       avgVisitCompletedToEstimateSentHours: 2.2,
       avgEstimateSentToViewedHours: 7.5
     })),
-    getFollowUpWorklist().catch(() => [
+    getFollowUpWorklist(session.user.companyId).catch(() => [
       {
         estimateId: "demo-1",
         customerName: "Mario Rossi",
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
         recommendation: "call_customer" as const
       }
     ]),
-    getInvoiceMetrics().catch(() => ({
+    getInvoiceMetrics(session.user.companyId).catch(() => ({
       openInvoices: 1,
       overdueInvoices: 1,
       paidInvoices: 1,
@@ -74,7 +74,7 @@ export default async function DashboardPage() {
       reviewRequestsClicked: 0,
       avgInvoiceSentToPaidHours: 8.8
     })),
-    getInvoiceWorklist().catch(() => [
+    getInvoiceWorklist(session.user.companyId).catch(() => [
       {
         invoiceId: "demo-invoice-1",
         customerName: "Laura Bianchi",
@@ -87,7 +87,7 @@ export default async function DashboardPage() {
         recommendation: "send_reminder" as const
       }
     ]),
-    getJobMarginOverview().catch(() => ({
+    getJobMarginOverview(session.user.companyId).catch(() => ({
       jobs: [],
       metrics: {
         trackedJobs: 0,
@@ -99,7 +99,7 @@ export default async function DashboardPage() {
         averageMarginRate: null
       }
     })),
-    getActivityFeed()
+    getActivityFeed(session.user.companyId)
       .then((items) =>
         items.slice(0, 12).map((item) => ({
           id: item.id,

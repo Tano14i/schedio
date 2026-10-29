@@ -23,7 +23,7 @@ export async function DELETE(
     return Response.json({ message: "Lavoro non trovato." }, { status: 404 });
   }
 
-  const result = await deleteJobWorkLog(id, workLogId);
+  const result = await deleteJobWorkLog(session.companyId, id, workLogId);
   return jsonOk({
     message: "Ore rimosse.",
     financials: result.financials

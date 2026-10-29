@@ -1,3 +1,4 @@
+import { requirePageSession } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
 import { EstimatesWorkspace } from "@/components/estimates-workspace";
 import { deriveLeadNextAction, getLeadsPageData } from "@/lib/crm-server";
@@ -11,12 +12,13 @@ export default async function EstimatesPage({
 }: {
   searchParams: Promise<{ action?: string; customerId?: string }>;
 }) {
+  const session = await requirePageSession();
   const resolvedSearchParams = await searchParams;
 
   try {
     const [{ estimates, templates }, { customers, leads }] = await Promise.all([
-      getEstimatePageData(),
-      getLeadsPageData()
+      getEstimatePageData(session.user.companyId),
+      getLeadsPageData(session.user.companyId)
     ]);
 
     return (

@@ -36,12 +36,6 @@ function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
-async function getDefaultCompany() {
-  return prisma.company.findFirstOrThrow({
-    orderBy: { createdAt: "asc" }
-  });
-}
-
 async function logActivity(input: {
   companyId: string;
   entityType: string;
@@ -76,14 +70,12 @@ async function findAssignedUser(companyId: string, assignedTo?: string) {
   });
 }
 
-export async function getJobsPageData(currentUser?: JobsAccessUser) {
-  const company = currentUser
-    ? { id: currentUser.companyId }
-    : await getDefaultCompany();
+export async function getJobsPageData(currentUser: JobsAccessUser) {
+  const company = { id: currentUser.companyId };
   const jobs = await prisma.job.findMany({
     where: {
       companyId: company.id,
-      ...(currentUser?.role === UserRole.WORKER ? { assignedUserId: currentUser.id } : {})
+      ...(currentUser.role === UserRole.WORKER ? { assignedUserId: currentUser.id } : {})
     },
     include: {
       customer: true,
@@ -112,13 +104,11 @@ export async function getJobsPageData(currentUser?: JobsAccessUser) {
   }));
 }
 
-export async function getCalendarData(currentUser?: JobsAccessUser) {
-  const company = currentUser
-    ? { id: currentUser.companyId }
-    : await getDefaultCompany();
+export async function getCalendarData(currentUser: JobsAccessUser) {
+  const company = { id: currentUser.companyId };
   const jobWhere = {
     companyId: company.id,
-    ...(currentUser?.role === UserRole.WORKER ? { assignedUserId: currentUser.id } : {})
+    ...(currentUser.role === UserRole.WORKER ? { assignedUserId: currentUser.id } : {})
   };
   const jobs = await prisma.job.findMany({
       where: jobWhere,
@@ -134,14 +124,14 @@ export async function getCalendarData(currentUser?: JobsAccessUser) {
 
   const [customers, leads] = await Promise.all([
     prisma.customer.findMany({
-      where: currentUser?.role === UserRole.WORKER
-        ? { id: { in: customerIds } }
+      where: currentUser.role === UserRole.WORKER
+        ? { companyId: company.id, id: { in: customerIds } }
         : { companyId: company.id },
       orderBy: { createdAt: "desc" }
     }),
     prisma.lead.findMany({
-      where: currentUser?.role === UserRole.WORKER
-        ? { id: { in: leadIds } }
+      where: currentUser.role === UserRole.WORKER
+        ? { companyId: company.id, id: { in: leadIds } }
         : { companyId: company.id },
       orderBy: { createdAt: "desc" }
     })
@@ -150,7 +140,7 @@ export async function getCalendarData(currentUser?: JobsAccessUser) {
   return { customers, leads, jobs };
 }
 
-export async function createJob(input: {
+export async function createJob(companyId: string, input: {
   leadId?: string;
   customerId: string;
   title: string;
@@ -161,7 +151,12 @@ export async function createJob(input: {
   address: string;
   notes?: string;
 }) {
-  const company = await getDefaultCompany();
+  const company = { id: companyId };
+  // Cliente e richiesta devono appartenere all'azienda dell'utente
+  await prisma.customer.findFirstOrThrow({ where: { id: input.customerId, companyId } });
+  if (input.leadId) {
+    await prisma.lead.findFirstOrThrow({ where: { id: input.leadId, companyId } });
+  }
   const assignedUser = await findAssignedUser(company.id, input.assignedTo);
 
   const job = await prisma.job.create({
@@ -218,9 +213,9 @@ export async function createJob(input: {
   return job;
 }
 
-export async function getJobById(id: string) {
-  return prisma.job.findUnique({
-    where: { id },
+export async function getJobById(companyId: string, id: string) {
+  return prisma.job.findFirst({
+    where: { id, companyId },
     include: {
       customer: true,
       assignedUser: true,
@@ -245,8 +240,8 @@ export async function getJobById(id: string) {
   });
 }
 
-export async function getJobMarginOverview() {
-  const company = await getDefaultCompany();
+export async function getJobMarginOverview(companyId: string) {
+  const company = { id: companyId };
   const jobs = await prisma.job.findMany({
     where: {
       companyId: company.id
@@ -313,14 +308,14 @@ export async function getJobMarginOverview() {
   };
 }
 
-export async function getJobByIdForUser(id: string, currentUser?: JobsAccessUser) {
-  const job = await getJobById(id);
+export async function getJobByIdForUser(id: string, currentUser: JobsAccessUser) {
+  const job = await getJobById(currentUser.companyId, id);
 
   if (!job) {
     return null;
   }
 
-  if (currentUser?.role === UserRole.WORKER && job.assignedUserId !== currentUser.id) {
+  if (currentUser.role === UserRole.WORKER && job.assignedUserId !== currentUser.id) {
     return null;
   }
 
@@ -328,6 +323,7 @@ export async function getJobByIdForUser(id: string, currentUser?: JobsAccessUser
 }
 
 export async function updateJob(
+  companyId: string,
   id: string,
   input: {
     title?: string;
@@ -339,8 +335,8 @@ export async function updateJob(
     notes?: string | null;
   }
 ) {
-  const existing = await prisma.job.findUniqueOrThrow({
-    where: { id }
+  const existing = await prisma.job.findFirstOrThrow({
+    where: { id, companyId }
   });
   const assignedUser =
     input.assignedTo === undefined
@@ -381,6 +377,7 @@ export async function updateJob(
 }
 
 export async function addJobCostItem(
+  companyId: string,
   jobId: string,
   input: {
     label: string;
@@ -390,8 +387,8 @@ export async function addJobCostItem(
     note?: string | null;
   }
 ) {
-  const job = await prisma.job.findUniqueOrThrow({
-    where: { id: jobId },
+  const job = await prisma.job.findFirstOrThrow({
+    where: { id: jobId, companyId },
     include: {
       estimates: {
         orderBy: { createdAt: "desc" },
@@ -443,6 +440,7 @@ export async function addJobCostItem(
 }
 
 export async function addJobWorkLog(
+  companyId: string,
   jobId: string,
   input: {
     actorUserId: string;
@@ -452,8 +450,8 @@ export async function addJobWorkLog(
     workedAt?: string | null;
   }
 ) {
-  const job = await prisma.job.findUniqueOrThrow({
-    where: { id: jobId },
+  const job = await prisma.job.findFirstOrThrow({
+    where: { id: jobId, companyId },
     include: {
       estimates: {
         orderBy: { createdAt: "desc" },
@@ -465,8 +463,8 @@ export async function addJobWorkLog(
       }
     }
   });
-  const actor = await prisma.user.findUniqueOrThrow({
-    where: { id: input.actorUserId }
+  const actor = await prisma.user.findFirstOrThrow({
+    where: { id: input.actorUserId, companyId }
   });
 
   const hourlyCostSnapshot = Number(input.hourlyCost ?? actor.hourlyCost ?? 0);
@@ -517,9 +515,9 @@ export async function addJobWorkLog(
   };
 }
 
-export async function deleteJobCostItem(jobId: string, costItemId: string) {
-  const job = await prisma.job.findUniqueOrThrow({
-    where: { id: jobId },
+export async function deleteJobCostItem(companyId: string, jobId: string, costItemId: string) {
+  const job = await prisma.job.findFirstOrThrow({
+    where: { id: jobId, companyId },
     include: {
       estimates: {
         orderBy: { createdAt: "desc" },
@@ -568,9 +566,9 @@ export async function deleteJobCostItem(jobId: string, costItemId: string) {
   };
 }
 
-export async function deleteJobWorkLog(jobId: string, workLogId: string) {
-  const job = await prisma.job.findUniqueOrThrow({
-    where: { id: jobId },
+export async function deleteJobWorkLog(companyId: string, jobId: string, workLogId: string) {
+  const job = await prisma.job.findFirstOrThrow({
+    where: { id: jobId, companyId },
     include: {
       estimates: {
         orderBy: { createdAt: "desc" },

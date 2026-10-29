@@ -5,7 +5,7 @@ import { getActivityFeed, getActivityMessage } from "@/lib/crm-server";
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const items = await getActivityFeed();
+  const items = await getActivityFeed(session.companyId);
   return jsonOk({
     items: items.map((item) => ({
       id: item.id,

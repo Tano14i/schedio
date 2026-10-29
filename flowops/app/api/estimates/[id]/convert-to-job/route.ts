@@ -8,7 +8,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { id } = await context.params;
 
   try {
-    const createdJob = await createJobFromEstimate(id);
+    const createdJob = await createJobFromEstimate(session.companyId, id);
 
     return jsonCreated({
       message: "Lavoro creato dal preventivo.",

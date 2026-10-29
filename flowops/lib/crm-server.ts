@@ -9,12 +9,6 @@ function toJsonValue(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
-async function getDefaultCompany() {
-  return prisma.company.findFirstOrThrow({
-    orderBy: { createdAt: "asc" }
-  });
-}
-
 function formatEventLabel(eventType: string) {
   return eventType
     .replaceAll("_", " ")
@@ -82,8 +76,8 @@ async function logActivity(input: {
   });
 }
 
-export async function getLeadsPageData(opts?: { page?: number; limit?: number }) {
-  const company = await getDefaultCompany();
+export async function getLeadsPageData(companyId: string, opts?: { page?: number; limit?: number }) {
+  const company = await prisma.company.findUniqueOrThrow({ where: { id: companyId } });
   const page = Math.max(1, opts?.page ?? 1);
   const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
   const paginate = opts !== undefined;
@@ -121,7 +115,7 @@ export async function getLeadsPageData(opts?: { page?: number; limit?: number })
   };
 }
 
-export async function createLeadWithCustomer(input: {
+export async function createLeadWithCustomer(companyId: string, input: {
   fullName: string;
   phone: string;
   email?: string;
@@ -132,7 +126,7 @@ export async function createLeadWithCustomer(input: {
   preferredDate?: string;
   source?: "manual" | "web_form" | "phone" | "whatsapp" | "referral";
 }) {
-  const company = await getDefaultCompany();
+  const company = { id: companyId };
 
   const existingCustomer = await prisma.customer.findFirst({
     where: {
@@ -181,14 +175,15 @@ export async function createLeadWithCustomer(input: {
   return lead;
 }
 
-export async function getLeadById(id: string) {
-  return prisma.lead.findUnique({
-    where: { id },
+export async function getLeadById(companyId: string, id: string) {
+  return prisma.lead.findFirst({
+    where: { id, companyId },
     include: { customer: true }
   });
 }
 
 export async function updateLead(
+  companyId: string,
   id: string,
   input: {
     status?: "new" | "contacted" | "scheduled" | "quoted" | "won" | "lost";
@@ -198,8 +193,8 @@ export async function updateLead(
     preferredDate?: string | null;
   }
 ) {
-  const existing = await prisma.lead.findUniqueOrThrow({
-    where: { id }
+  const existing = await prisma.lead.findFirstOrThrow({
+    where: { id, companyId }
   });
 
   const lead = await prisma.lead.update({
@@ -229,8 +224,8 @@ export async function updateLead(
   return lead;
 }
 
-export async function getCustomersPageData(opts?: { page?: number; limit?: number }) {
-  const company = await getDefaultCompany();
+export async function getCustomersPageData(companyId: string, opts?: { page?: number; limit?: number }) {
+  const company = { id: companyId };
   const page = Math.max(1, opts?.page ?? 1);
   const limit = Math.min(200, Math.max(1, opts?.limit ?? 50));
   const paginate = opts !== undefined;
@@ -263,14 +258,14 @@ export async function getCustomersPageData(opts?: { page?: number; limit?: numbe
   };
 }
 
-export async function createCustomer(input: {
+export async function createCustomer(companyId: string, input: {
   fullName: string;
   phone: string;
   email?: string;
   address?: string;
   notes?: string;
 }) {
-  const company = await getDefaultCompany();
+  const company = { id: companyId };
   const customer = await prisma.customer.create({
     data: {
       companyId: company.id,
@@ -295,9 +290,9 @@ export async function createCustomer(input: {
   return customer;
 }
 
-export async function getCustomerDetailData(id: string) {
-  return prisma.customer.findUnique({
-    where: { id },
+export async function getCustomerDetailData(companyId: string, id: string) {
+  return prisma.customer.findFirst({
+    where: { id, companyId },
     include: {
       leads: {
         orderBy: { createdAt: "desc" }
@@ -318,6 +313,7 @@ export async function getCustomerDetailData(id: string) {
 }
 
 export async function updateCustomer(
+  companyId: string,
   id: string,
   input: {
     fullName?: string;
@@ -327,6 +323,7 @@ export async function updateCustomer(
     notes?: string | null;
   }
 ) {
+  await prisma.customer.findFirstOrThrow({ where: { id, companyId } });
   const customer = await prisma.customer.update({
     where: { id },
     data: {
@@ -351,10 +348,9 @@ export async function updateCustomer(
   return customer;
 }
 
-export async function getActivityFeed() {
-  const company = await getDefaultCompany();
+export async function getActivityFeed(companyId: string) {
   return prisma.activityLog.findMany({
-    where: { companyId: company.id },
+    where: { companyId },
     orderBy: { createdAt: "desc" },
     take: 100
   });

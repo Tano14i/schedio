@@ -4,14 +4,15 @@ import { getCalendarData } from "@/lib/jobs-server";
 
 export async function GET(request: Request) {
   const session = await getSessionFromRequest(request);
+  if (!session) {
+    return Response.json({ message: "Non autorizzato." }, { status: 401 });
+  }
   const { jobs } = await getCalendarData(
-    session
-      ? {
-          id: session.userId,
-          companyId: session.companyId,
-          role: session.role
-        }
-      : undefined
+    {
+      id: session.userId,
+      companyId: session.companyId,
+      role: session.role
+    }
   );
   return jsonOk({
     items: jobs.map((job) => ({

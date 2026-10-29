@@ -32,7 +32,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return Response.json({ message: "Inserisci ore valide." }, { status: 400 });
   }
 
-  const item = await addJobWorkLog(id, {
+  const item = await addJobWorkLog(session.companyId, id, {
     actorUserId: session.userId,
     hours,
     hourlyCost: isOwner(session.role) ? body.hourlyCost : undefined,

@@ -5,6 +5,6 @@ import { getFollowUpWorklist } from "@/lib/estimates-server";
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const items = await getFollowUpWorklist();
+  const items = await getFollowUpWorklist(session.companyId);
   return jsonOk({ items });
 }

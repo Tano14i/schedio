@@ -5,7 +5,7 @@ import { getAutomationsPageData, runAutomationSuite } from "@/lib/automations-se
 export async function GET(request: Request) {
   const session = await requireSession(request);
   if (session instanceof Response) return session;
-  const data = await getAutomationsPageData();
+  const data = await getAutomationsPageData(session.companyId);
   return jsonOk(data);
 }
 

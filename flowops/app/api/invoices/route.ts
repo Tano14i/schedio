@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page") ?? "1", 10);
   const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
-  const { invoices, pagination } = await getInvoicePageData({ page, limit });
+  const { invoices, pagination } = await getInvoicePageData(session.companyId, { page, limit });
   return jsonOk({ data: invoices, pagination });
 }
 
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const item = await createInvoiceDraftFromJob(body.jobId);
+  const item = await createInvoiceDraftFromJob(session.companyId, body.jobId);
   return jsonCreated({
     message: "Bozza fattura creata.",
     item

@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import type { WhatsAppAdminItem } from "@/components/whatsapp-admin-panel";
 
-export async function getWhatsAppAdminItems(): Promise<WhatsAppAdminItem[]> {
+export async function getWhatsAppAdminItems(companyId: string): Promise<WhatsAppAdminItem[]> {
   const threads = await prisma.whatsAppThread.findMany({
+    where: { companyId },
     include: {
       contact: true,
       customer: true,

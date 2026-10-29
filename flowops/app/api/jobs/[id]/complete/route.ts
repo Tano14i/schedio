@@ -6,15 +6,16 @@ import { getJobByIdForUser } from "@/lib/jobs-server";
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const session = await getSessionFromRequest(request);
+  if (!session) {
+    return Response.json({ message: "Non autorizzato." }, { status: 401 });
+  }
   const job = await getJobByIdForUser(
     id,
-    session
-      ? {
-          id: session.userId,
-          companyId: session.companyId,
-          role: session.role
-        }
-      : undefined
+    {
+      id: session.userId,
+      companyId: session.companyId,
+      role: session.role
+    }
   );
 
   if (!job) {
@@ -27,7 +28,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     notes?: string;
   };
 
-  const item = await completeJobAndCaptureSummary(id, body);
+  const item = await completeJobAndCaptureSummary(session.companyId, id, body);
 
   return jsonUpdated({
     message: "Sopralluogo completato.",

@@ -8,6 +8,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { id } = await context.params;
   const body = (await request.json().catch(() => ({}))) as { selectedSlotId?: string };
   const proposal = await approveSchedulingProposal({
+    companyId: session.companyId,
     proposalId: id,
     selectedSlotId: body.selectedSlotId
   });

@@ -6,7 +6,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const session = await requireSession(request);
   if (session instanceof Response) return session;
   const { id } = await context.params;
-  const item = await cancelReviewRequest(id);
+  const item = await cancelReviewRequest(session.companyId, id);
   return jsonUpdated({
     message: "Review request annullata.",
     item
